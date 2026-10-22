@@ -330,6 +330,9 @@ for n, c in enumerate(CROPS):
     p.step(seed, recipes[seed][0])
     users = sorted({k for k in FINAL + made_toppings if c in json.dumps(recipe_page(k, 'x', 0)['ingredients'])}, key=name)
     pid_of = {k: (topping_page(k) if k in made_toppings else k.split(':')[1].replace('item_', '')) for k in users}
+    if c in json.dumps(json.load(open(os.path.join(OUT, 'pizza.json')))['ingredients']):
+        users = sorted(users + ['morefood:item_pizza_cooked'], key=name)
+        pid_of['morefood:item_pizza_cooked'] = 'pizza'
     steps = p.steps
     if users:
         steps = steps + [{'kind': 'links', 'header': 'Used in:', 'columns': 3, 'links': [{'item': u, 'page': pid_of[u]} for u in users[:18]]}]
