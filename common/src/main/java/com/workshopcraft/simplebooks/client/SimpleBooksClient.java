@@ -11,6 +11,9 @@ import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public final class SimpleBooksClient {
     private SimpleBooksClient() {}
 
@@ -55,8 +58,15 @@ public final class SimpleBooksClient {
         }
         int bad = 0;
         for (String e : b.errors()) say(Component.literal(e).withStyle(ChatFormatting.RED));
-        for (Book.Page p : b.pages()) {
-            for (String e : p.errors()) {
+        for (int i = 0; i < b.pages().size(); i++) {
+            Book.Page p = b.pages().get(i);
+            List<String> errs = new ArrayList<>(p.errors());
+            if (!p.broken() && b.errors().isEmpty()) {
+                Spread s = new Spread(null, Minecraft.getInstance().font, b, p, i);
+                s.content();
+                errs.addAll(s.runtimeErrors());
+            }
+            for (String e : errs) {
                 say(Component.literal(p.file() + " " + e).withStyle(ChatFormatting.RED));
                 bad++;
             }

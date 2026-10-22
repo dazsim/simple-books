@@ -33,7 +33,7 @@ public class Spread {
         }
     }
 
-    private final GuiGraphicsExtractor g;
+    private final @Nullable GuiGraphicsExtractor g;
     private final Font font;
     private final Book book;
     private final Book.@Nullable Page page;
@@ -44,7 +44,7 @@ public class Spread {
     private boolean draw = true;
     private final List<String> runtimeErrors = new ArrayList<>();
 
-    public Spread(GuiGraphicsExtractor g, Font font, Book book, Book.@Nullable Page page, int spreadNo) {
+    public Spread(@Nullable GuiGraphicsExtractor g, Font font, Book book, Book.@Nullable Page page, int spreadNo) {
         this.g = g;
         this.font = font;
         this.book = book;
@@ -100,7 +100,7 @@ public class Spread {
     // ---------- primitives ----------
 
     void fill(float x0, float y0, float x1, float y1, int col) {
-        if (!draw) return;
+        if (!draw || g == null) return;
         g.pose().pushMatrix();
         g.pose().translate(x0, y0);
         g.fill(0, 0, Math.round(x1 - x0), Math.round(y1 - y0), col);
@@ -116,7 +116,7 @@ public class Spread {
     }
 
     void text(FormattedCharSequence s, float x, float y, float sc, int col) {
-        if (!draw) return;
+        if (!draw || g == null) return;
         g.pose().pushMatrix();
         g.pose().translate(x, y);
         g.pose().scale(2 * sc, 2 * sc);
@@ -212,7 +212,7 @@ public class Spread {
             hits.add(new Hit(x, y, x + size, y + size, ref.name().copy().append(" (missing)")));
             return;
         }
-        if (draw) {
+        if (draw && g != null) {
             g.pose().pushMatrix();
             g.pose().translate(x, y);
             g.pose().scale(size / 16f, size / 16f);
@@ -250,7 +250,7 @@ public class Spread {
         float r = Math.max(w / size[0], h / size[1]);
         float uw = w / r / size[0], vh = h / r / size[1];
         float u0 = (1 - uw) / 2, v0 = (1 - vh) / 2;
-        if (draw) {
+        if (draw && g != null) {
             g.pose().pushMatrix();
             g.pose().translate(x, y);
             g.pose().scale(0.5f, 0.5f);
