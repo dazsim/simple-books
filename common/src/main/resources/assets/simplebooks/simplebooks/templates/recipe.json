@@ -1,0 +1,32 @@
+{
+  "vars": {
+    "ink": "#3f2a14",
+    "soft": "#785c3c",
+    "head": "#802c16",
+    "link": "#284896",
+    "rule": "#c4ac82",
+    "arrow": "#5c3e22"
+  },
+  "styles": {
+    "title": { "color": "$ink", "scale": 2, "align": "center" },
+    "subtitle": { "color": "$soft", "align": "center" },
+    "body": { "color": "$ink" },
+    "note": { "color": "$soft" },
+    "heading": { "color": "$head" }
+  },
+  "slots": {
+    "left.title": { "type": "title", "box": [0, 18, 644, 32], "bind": "title", "icon": "icon", "style": "title" },
+    "left.subtitle": { "type": "subtitle", "box": [0, 64, 644, 18], "bind": "subtitle", "style": "subtitle", "optional": true },
+    "left.rule": { "type": "rule", "box": [0, 88, 644, 0] },
+    "left.need": { "type": "need_list", "box": [0, 100, 644, 290], "note": "need_note" },
+    "left.steps": { "type": "step_rows", "box": [0, 402, 644, 470], "bind": "steps", "row_height": 92 },
+    "left.page": { "type": "page_number", "box": [0, 882, 644, 16] },
+    "left.turn": { "type": "arrow", "box": [604, 888, 40, 0] },
+    "right.title": { "type": "title", "box": [0, 18, 644, 32], "bind": "right_title|title", "icon": "right_icon|icon", "style": "title" },
+    "right.subtitle": { "type": "subtitle", "box": [0, 64, 644, 18], "bind": "right_subtitle|subtitle", "style": "subtitle", "optional": true },
+    "right.rule": { "type": "rule", "box": [0, 88, 644, 0] },
+    "right.steps": { "type": "step_rows", "box": [0, 100, 644, 772], "bind": "steps", "row_height": 92 },
+    "right.links": { "type": "link_list", "box": [0, 830, 644, 40], "bind": "links", "optional": true },
+    "right.page": { "type": "page_number", "box": [0, 882, 644, 16] }
+  }
+}

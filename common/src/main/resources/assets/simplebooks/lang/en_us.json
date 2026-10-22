@@ -1,0 +1,13 @@
+{
+  "item.simplebooks.guide": "Guide Book",
+  "simplebooks.need_header": "For this recipe you will need...",
+  "simplebooks.ingredients": "Ingredients",
+  "simplebooks.tools": "Tools and appliances",
+  "simplebooks.shapeless": "Crafting Table (shapeless)",
+  "simplebooks.shaped": "Crafting Table",
+  "simplebooks.in": "in",
+  "simplebooks.on": "on",
+  "simplebooks.page": "Page %s",
+  "simplebooks.error.title": "This spread has errors",
+  "simplebooks.unknown_book": "Unknown book: %s"
+}

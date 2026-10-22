@@ -1,0 +1,10 @@
+{
+  "extends": "simplebooks:recipe",
+  "slots": {
+    "left.need": null,
+    "left.steps": null,
+    "left.turn": null,
+    "left.body": { "type": "text", "box": [0, 100, 644, 760], "bind": "text", "style": "body", "optional": true },
+    "right.steps": { "type": "step_rows", "box": [0, 100, 644, 720], "bind": "steps", "optional": true }
+  }
+}
