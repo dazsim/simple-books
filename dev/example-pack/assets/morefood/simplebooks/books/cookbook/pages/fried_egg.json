@@ -17,7 +17,7 @@
     {
       "kind": "process",
       "title": "Fried Egg",
-      "note": "5 seconds,\nfrom the stove\noutput slot",
+      "note": "5 seconds,\nfrom the stove\noutput",
       "inputs": [
         "minecraft:egg"
       ],

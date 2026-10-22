@@ -13,7 +13,7 @@
         "morefood:item_tomato_chopped",
         "morefood:item_fruit_tomato"
       ],
-      "name": "Chopped Tomato or Tomato"
+      "name": "Chopped Tomato or other"
     }
   ],
   "tools": [
@@ -85,7 +85,7 @@
             "morefood:item_tomato_chopped",
             "morefood:item_fruit_tomato"
           ],
-          "name": "Chopped Tomato or Tomato",
+          "name": "Chopped Tomato or other",
           "note": "third"
         },
         {

@@ -73,7 +73,7 @@
     {
       "kind": "process",
       "title": "Bagette",
-      "note": "10 seconds,\nin the oven slot,\nor use a Baking Peel",
+      "note": "10 seconds\nin the oven",
       "inputs": [
         "morefood:item_dough_medium"
       ],
@@ -95,16 +95,21 @@
       "output": "morefood:item_cheese"
     },
     {
-      "kind": "craft_shapeless",
-      "inputs": [
+      "kind": "sequence",
+      "title": "Footlong",
+      "text_first": false,
+      "text": "Crafting Table (shapeless): put these in the grid in any order.",
+      "cells": [
         "morefood:item_bagette",
         "morefood:item_cheese",
         "morefood:item_fruit_tomato",
         "morefood:item_lettuce",
-        "minecraft:cooked_chicken"
-      ],
-      "output": "morefood:item_footlong",
-      "label_width": 158
+        "minecraft:cooked_chicken",
+        {
+          "item": "morefood:item_footlong",
+          "note": "result"
+        }
+      ]
     }
   ]
 }

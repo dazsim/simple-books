@@ -18,7 +18,7 @@
         "minecraft:bone",
         "morefood:item_chicken_bone"
       ],
-      "name": "Bone or Chicken Bone"
+      "name": "Any Bone"
     },
     {
       "items": [
@@ -57,7 +57,7 @@
     {
       "kind": "process",
       "title": "Sausage",
-      "note": "5 seconds,\nfrom the stove\noutput slot",
+      "note": "5 seconds,\nfrom the stove\noutput",
       "inputs": [
         "morefood:item_sausage_uncooked"
       ],
@@ -68,7 +68,7 @@
     {
       "kind": "sequence",
       "title": "Stock in the Pot",
-      "text_first": true,
+      "text_first": false,
       "text": "Put these in the Pot on the Stove, in any order, 20 seconds (or over a campfire, slower). Scoop out each portion with a Glass Bottle.",
       "cells": [
         "minecraft:water_bucket",
@@ -77,7 +77,7 @@
             "minecraft:bone",
             "morefood:item_chicken_bone"
           ],
-          "name": "Bone or Chicken Bone"
+          "name": "Any Bone"
         },
         {
           "items": [
@@ -98,7 +98,7 @@
     {
       "kind": "sequence",
       "title": "Sausage, Kale and Bean Stew in the Pot",
-      "text_first": true,
+      "text_first": false,
       "text": "Put these in the Pot on the Stove, in any order, 20 seconds (or over a campfire, slower). Scoop out each portion with a Bowl.",
       "cells": [
         "minecraft:water_bucket",

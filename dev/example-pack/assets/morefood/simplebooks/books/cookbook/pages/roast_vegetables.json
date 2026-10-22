@@ -67,8 +67,11 @@
       "output": "morefood:item_butter"
     },
     {
-      "kind": "craft_shapeless",
-      "inputs": [
+      "kind": "sequence",
+      "title": "Uncooked Roast Vegetables",
+      "text_first": false,
+      "text": "Crafting Table (shapeless): put these in the grid in any order.",
+      "cells": [
         "morefood:item_parsnip",
         {
           "items": [
@@ -79,15 +82,17 @@
         },
         "minecraft:carrot",
         "morefood:item_onion_chopped",
-        "morefood:item_butter"
-      ],
-      "output": "morefood:item_roast_veg_uncooked",
-      "label_width": 158
+        "morefood:item_butter",
+        {
+          "item": "morefood:item_roast_veg_uncooked",
+          "note": "result"
+        }
+      ]
     },
     {
       "kind": "process",
       "title": "Roast Vegetables",
-      "note": "10 seconds,\nin the oven slot,\nor use a Baking Peel",
+      "note": "10 seconds\nin the oven",
       "inputs": [
         "morefood:item_roast_veg_uncooked"
       ],

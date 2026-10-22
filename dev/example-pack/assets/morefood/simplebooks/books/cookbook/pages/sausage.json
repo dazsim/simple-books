@@ -32,7 +32,7 @@
     {
       "kind": "process",
       "title": "Sausage",
-      "note": "5 seconds,\nfrom the stove\noutput slot",
+      "note": "5 seconds,\nfrom the stove\noutput",
       "inputs": [
         "morefood:item_sausage_uncooked"
       ],

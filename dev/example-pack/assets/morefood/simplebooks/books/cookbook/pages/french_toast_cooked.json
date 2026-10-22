@@ -47,7 +47,7 @@
     {
       "kind": "process",
       "title": "Cooked French Toast",
-      "note": "5 seconds,\nfrom the stove\noutput slot",
+      "note": "5 seconds,\nfrom the stove\noutput",
       "inputs": [
         "morefood:item_french_toast_uncooked"
       ],

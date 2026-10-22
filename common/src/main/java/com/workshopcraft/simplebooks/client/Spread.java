@@ -375,7 +375,7 @@ public class Spread {
             case "rule" -> rule(x, x + w, y);
             case "arrow" -> arrow(x, y, w > 0 ? w : h, w == 0, num(slot, "unit", 3), color("$arrow"));
             case "page_number" -> ctext(Component.translatable("simplebooks.page", spreadNo * 2 + (left ? 1 : 2)), x + w / 2, y, 1, color("$soft"));
-            case "need_list", "ingredient_list", "tool_list" -> needList(slot, x, y, w);
+            case "need_list", "ingredient_list", "tool_list" -> needList(slot, x, y, w, h);
             case "step_rows" -> stepRows(slot, x, y, w, h);
             case "link_list" -> {
                 if (val != null) linkGrid(val.getAsJsonArray(), x, y, w, (int) num(slot, "columns", 4));
@@ -396,7 +396,7 @@ public class Spread {
 
     // ---------- ingredient and tool lists ----------
 
-    private void needList(JsonObject slot, float x, float y, float w) {
+    private void needList(JsonObject slot, float x, float y, float w, float h) {
         JsonObject json = page.json();
         String header = str(slot, "header", "simplebooks.need_header");
         text(Texts.of(header), x, y, 1, color("$ink"));
@@ -421,6 +421,7 @@ public class Spread {
             yy += 24;
         }
         rule(x, x + w, yy);
+        if (yy > y + h + 4) runtimeErrors.add("need list is " + Math.round(yy - y - h) + " taller than its box");
     }
 
     private static JsonArray defaultGroups() {

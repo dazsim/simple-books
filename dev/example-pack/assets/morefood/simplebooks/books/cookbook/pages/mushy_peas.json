@@ -48,7 +48,7 @@
     {
       "kind": "sequence",
       "title": "Mushy Peas in the Pot",
-      "text_first": true,
+      "text_first": false,
       "text": "Put these in the Pot on the Stove, in any order, 20 seconds (or over a campfire, slower). Scoop out each portion with a Bowl.",
       "cells": [
         "minecraft:water_bucket",

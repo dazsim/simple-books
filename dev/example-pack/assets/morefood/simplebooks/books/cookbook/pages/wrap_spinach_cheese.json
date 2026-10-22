@@ -89,7 +89,7 @@
     {
       "kind": "process",
       "title": "Flatbread",
-      "note": "5 seconds,\nfrom the stove\noutput slot",
+      "note": "5 seconds,\nfrom the stove\noutput",
       "inputs": [
         "morefood:item_dough_small"
       ],

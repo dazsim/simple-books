@@ -86,7 +86,7 @@
     {
       "kind": "sequence",
       "title": "Spaghetti in Tomato Sauce in the Pot",
-      "text_first": true,
+      "text_first": false,
       "text": "Put these in the Pot on the Stove, in any order, 20 seconds (or over a campfire, slower). Scoop out each portion with a Bowl.",
       "cells": [
         "morefood:item_spaghetti",

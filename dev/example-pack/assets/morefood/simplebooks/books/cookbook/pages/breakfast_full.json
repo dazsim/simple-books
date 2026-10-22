@@ -1,6 +1,6 @@
 {
   "section": "recipes",
-  "template": "simplebooks:recipe",
+  "template": "morefood:recipe_long",
   "sort": 1060,
   "title": "Full English Breakfast",
   "icon": "morefood:item_breakfast_full",
@@ -11,7 +11,7 @@
         "minecraft:red_mushroom",
         "minecraft:brown_mushroom"
       ],
-      "name": "Red Mushroom or Brown Mushroom"
+      "name": "Red Mushroom or other"
     },
     "minecraft:egg",
     "morefood:item_joint_bacon",
@@ -45,14 +45,14 @@
     {
       "kind": "process",
       "title": "Fried Mushroom",
-      "note": "5 seconds,\nfrom the stove\noutput slot",
+      "note": "5 seconds,\nfrom the stove\noutput",
       "inputs": [
         {
           "items": [
             "minecraft:red_mushroom",
             "minecraft:brown_mushroom"
           ],
-          "name": "Red Mushroom or Brown Mushroom"
+          "name": "Red Mushroom or other"
         }
       ],
       "appliance": "morefood:item_frying_pan",
@@ -62,7 +62,7 @@
     {
       "kind": "process",
       "title": "Fried Egg",
-      "note": "5 seconds,\nfrom the stove\noutput slot",
+      "note": "5 seconds,\nfrom the stove\noutput",
       "inputs": [
         "minecraft:egg"
       ],
@@ -88,7 +88,7 @@
     {
       "kind": "process",
       "title": "Bacon",
-      "note": "5 seconds,\nfrom the stove\noutput slot",
+      "note": "5 seconds,\nfrom the stove\noutput",
       "inputs": [
         "morefood:item_bacon_uncooked"
       ],
@@ -111,7 +111,7 @@
     {
       "kind": "process",
       "title": "Sausage",
-      "note": "5 seconds,\nfrom the stove\noutput slot",
+      "note": "5 seconds,\nfrom the stove\noutput",
       "inputs": [
         "morefood:item_sausage_uncooked"
       ],
@@ -137,7 +137,7 @@
     {
       "kind": "process",
       "title": "Toast",
-      "note": "10 seconds,\nin the oven slot,\nor use a Baking Peel",
+      "note": "10 seconds\nin the oven",
       "inputs": [
         "morefood:item_bread_slice"
       ],
@@ -166,14 +166,6 @@
       "appliance": "morefood:item_pot",
       "on": "morefood:block_stove",
       "output": "morefood:item_potato_boiled"
-    },
-    {
-      "kind": "craft_shapeless",
-      "inputs": [
-        "morefood:item_mincer",
-        "morefood:item_potato_boiled"
-      ],
-      "output": "morefood:item_potato_mashed"
     }
   ],
   "links": [

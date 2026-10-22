@@ -89,7 +89,7 @@
     {
       "kind": "process",
       "title": "Bun",
-      "note": "10 seconds,\nin the oven slot,\nor use a Baking Peel",
+      "note": "10 seconds\nin the oven",
       "inputs": [
         "morefood:item_dough_small"
       ],
@@ -121,7 +121,7 @@
     {
       "kind": "process",
       "title": "Beef Patty",
-      "note": "5 seconds,\nfrom the stove\noutput slot",
+      "note": "5 seconds,\nfrom the stove\noutput",
       "inputs": [
         "morefood:item_beef_patty_uncooked"
       ],

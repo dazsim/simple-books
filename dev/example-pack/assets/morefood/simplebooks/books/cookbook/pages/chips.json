@@ -35,7 +35,7 @@
     {
       "kind": "process",
       "title": "Chips",
-      "note": "5 seconds,\nfrom the stove\noutput slot",
+      "note": "5 seconds,\nfrom the stove\noutput",
       "inputs": [
         "morefood:item_potato_peeled_chipped"
       ],

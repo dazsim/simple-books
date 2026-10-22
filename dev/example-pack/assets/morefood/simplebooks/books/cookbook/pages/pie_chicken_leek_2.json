@@ -10,7 +10,7 @@
     {
       "kind": "sequence",
       "title": "Chicken and Leek Filling in the Pot",
-      "text_first": true,
+      "text_first": false,
       "text": "Put these in the Pot on the Stove, in any order, 15 seconds (or over a campfire, slower).",
       "cells": [
         "minecraft:cooked_chicken",
@@ -51,7 +51,7 @@
     {
       "kind": "process",
       "title": "Chicken and Leek Pie",
-      "note": "15 seconds,\nin the oven slot,\nor use a Baking Peel",
+      "note": "15 seconds\nin the oven",
       "inputs": [
         "morefood:item_pie_chicken_leek_uncooked"
       ],

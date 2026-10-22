@@ -72,7 +72,7 @@
     {
       "kind": "process",
       "title": "Bagette",
-      "note": "10 seconds,\nin the oven slot,\nor use a Baking Peel",
+      "note": "10 seconds\nin the oven",
       "inputs": [
         "morefood:item_dough_medium"
       ],
@@ -133,7 +133,7 @@
     {
       "kind": "process",
       "title": "Garlic Bread",
-      "note": "10 seconds,\nin the oven slot,\nor use a Baking Peel",
+      "note": "10 seconds\nin the oven",
       "inputs": [
         "morefood:item_garlic_bread_uncooked"
       ],

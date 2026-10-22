@@ -5,8 +5,16 @@
   "contents": false,
   "title": "Full English Breakfast, continued",
   "icon": "morefood:item_breakfast_full",
-  "first_step": 12,
+  "first_step": 11,
   "steps": [
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_mincer",
+        "morefood:item_potato_boiled"
+      ],
+      "output": "morefood:item_potato_mashed"
+    },
     {
       "kind": "craft_shapeless",
       "inputs": [
@@ -18,7 +26,7 @@
     {
       "kind": "process",
       "title": "Hashbrown",
-      "note": "5 seconds,\nfrom the stove\noutput slot",
+      "note": "5 seconds,\nfrom the stove\noutput",
       "inputs": [
         "morefood:item_hashbrown_uncooked"
       ],
@@ -29,7 +37,7 @@
     {
       "kind": "sequence",
       "title": "Cooked Breakfast",
-      "text_first": true,
+      "text_first": false,
       "text": "Crafting Table (shapeless): put these in the grid in any order.",
       "cells": [
         "morefood:item_mushroom_fried",
@@ -57,7 +65,7 @@
     {
       "kind": "sequence",
       "title": "Baked Beans in the Pot",
-      "text_first": true,
+      "text_first": false,
       "text": "Put these in the Pot on the Stove, in any order, 20 seconds (or over a campfire, slower). Scoop out each portion with a Bowl.",
       "cells": [
         "minecraft:water_bucket",

@@ -16,7 +16,10 @@ for f in glob.glob(RES + '/data/morefood/tags/item/*.json'):
 
 def name(i):
     if isinstance(i, list):
-        return name(i[0]) + (' or ' + name(i[1]) if len(i) == 2 else ' or other')
+        a, b = name(i[0]), name(i[1])
+        if len(i) == 2 and b.endswith(' ' + a):
+            return 'Any ' + a
+        return a + (' or ' + b if len(i) == 2 and len(a + b) < 14 else ' or other')
     if i.startswith('#'):
         return {'morefood:roast_veg': 'Roast Veg', 'morefood:pizza_toppings': 'Toppings'}.get(i[1:], i[1:].split(':')[1].replace('_', ' ').title())
     ns, p = i.split(':')
@@ -131,9 +134,7 @@ class Page:
             cells = cells[1:] + ['>', 'x']
             s = {'kind': 'craft_shapeless', 'inputs': [ref(i) for i in order], 'output': out}
             if row_width(cells) > 430:
-                s['label_width'] = max(140, 644 - row_width(cells) - 4)
-            if row_width(cells) > 500:
-                s = {'kind': 'sequence', 'title': name(item), 'text_first': True,
+                s = {'kind': 'sequence', 'title': name(item), 'text_first': False,
                      'text': 'Crafting Table (shapeless): put these in the grid in any order.',
                      'cells': [ref(i) for i in order] + [ref(item, count=cnt if cnt > 1 else None, note='result')]}
             self.steps.append(s)
@@ -164,15 +165,15 @@ class Page:
             else:
                 txt = (f'Put these in the Pot on the Stove, in any order, {secs(r["cookingtime"])} (or over a campfire, slower).'
                        + (f' Scoop out each portion with a {name(vessel)}.' if vessel else ''))
-                self.steps.append({'kind': 'sequence', 'title': name(item) + ' in the Pot', 'text_first': True, 'text': txt,
+                self.steps.append({'kind': 'sequence', 'title': name(item) + ' in the Pot', 'text_first': False, 'text': txt,
                                    'cells': [ref(i) for i in pot] + [ref(item, count=portions if portions > 1 else None, note='result')]})
         elif t == 'morefood:frying':
             self.tools |= {'morefood:item_frying_pan', 'morefood:block_stove'}
-            self.steps.append({'kind': 'process', 'title': name(item), 'note': secs(r['cookingtime']) + ',\nfrom the stove\noutput slot',
+            self.steps.append({'kind': 'process', 'title': name(item), 'note': secs(r['cookingtime']) + ',\nfrom the stove\noutput',
                                'inputs': [ref(ins[0])], 'appliance': 'morefood:item_frying_pan', 'on': 'morefood:block_stove', 'output': out})
         elif t == 'morefood:baking':
             self.tools.add('morefood:block_stove')
-            self.steps.append({'kind': 'process', 'title': name(item), 'note': secs(r['cookingtime']) + ',\nin the oven slot,\nor use a Baking Peel',
+            self.steps.append({'kind': 'process', 'title': name(item), 'note': secs(r['cookingtime']) + '\nin the oven',
                                'inputs': [ref(ins[0])], 'appliance': {'item': 'morefood:block_stove', 'name': 'Stove oven'}, 'output': out})
         elif t == 'minecraft:smelting':
             self.tools.add('minecraft:furnace')
@@ -211,7 +212,12 @@ def recipe_page(item, section, sort, subtitle=None, extra=None):
     j['tools'] = tools
     j['need_note'] = 'Tools and Buckets are not consumed'
     j['steps'] = p.steps + (extra or [])
+    if rows(ings) + rows(tools) > 4:
+        j['template'] = 'morefood:recipe_long'
     return j
+
+def rows(l):
+    return (len(l) + 4) // 5
 
 def last_kind(item):
     return recipes[item][0]['type'] if item in recipes else None
@@ -269,8 +275,8 @@ for n, t in enumerate(TOOL_TEXT):
         'subtitle': sub, 'text': txt, 'steps': [{'kind': 'text', 'text': 'How to make it:'}] + p.steps}
 
 # pages too long for one spread go on over a second one; numbers are how many steps did not fit
-OVER = {'pie_chicken_leek': 2, 'pie_cottage': 4, 'pie_shepherds': 4, 'pie_vegetable': 1, 'burger_bacon_cheese': 3,
-        'breakfast_full': 5, 'cheese_burger': 1, 'burger_salad': 1, 'wrap_spinach_cheese': 1}
+OVER = {'pie_chicken_leek': 2, 'pie_cottage': 4, 'pie_shepherds': 4, 'pie_vegetable': 2, 'burger_bacon_cheese': 3,
+        'breakfast_full': 6, 'cheese_burger': 1, 'burger_salad': 1, 'wrap_spinach_cheese': 1}
 NUMBERED = {'craft_shapeless', 'craft_shaped', 'process', 'assembly', 'sequence'}
 
 def split(pid):

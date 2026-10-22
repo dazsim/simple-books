@@ -5,8 +5,25 @@
   "contents": false,
   "title": "Vegetable Pie, continued",
   "icon": "morefood:item_pie_vegetable",
-  "first_step": 8,
+  "first_step": 7,
   "steps": [
+    {
+      "kind": "sequence",
+      "title": "Vegetable Pie Filling in the Pot",
+      "text_first": false,
+      "text": "Put these in the Pot on the Stove, in any order, 15 seconds (or over a campfire, slower).",
+      "cells": [
+        "morefood:item_parsnip",
+        "minecraft:carrot",
+        "morefood:item_peas",
+        "morefood:item_spinach",
+        "morefood:item_gravy",
+        {
+          "item": "morefood:item_filling_vegetable",
+          "note": "result"
+        }
+      ]
+    },
     {
       "kind": "assembly",
       "title": "Build it on the Assembly Board",
@@ -34,7 +51,7 @@
     {
       "kind": "process",
       "title": "Vegetable Pie",
-      "note": "15 seconds,\nin the oven slot,\nor use a Baking Peel",
+      "note": "15 seconds\nin the oven",
       "inputs": [
         "morefood:item_pie_vegetable_uncooked"
       ],

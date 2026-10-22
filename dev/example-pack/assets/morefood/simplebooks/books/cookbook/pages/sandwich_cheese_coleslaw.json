@@ -98,7 +98,7 @@
     {
       "kind": "sequence",
       "title": "Coleslaw",
-      "text_first": true,
+      "text_first": false,
       "text": "Crafting Table (shapeless): put these in the grid in any order.",
       "cells": [
         "morefood:item_mixing_bowl",

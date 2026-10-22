@@ -53,7 +53,7 @@
     {
       "kind": "process",
       "title": "Bread",
-      "note": "10 seconds,\nin the oven slot,\nor use a Baking Peel",
+      "note": "10 seconds\nin the oven",
       "inputs": [
         "morefood:item_dough"
       ],

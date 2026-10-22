@@ -58,7 +58,7 @@
     {
       "kind": "process",
       "title": "Shepherd's Pie",
-      "note": "15 seconds,\nin the oven slot,\nor use a Baking Peel",
+      "note": "15 seconds\nin the oven",
       "inputs": [
         "morefood:item_pie_shepherds_uncooked"
       ],

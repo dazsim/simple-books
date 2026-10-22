@@ -57,19 +57,22 @@
       "output": "morefood:item_butter"
     },
     {
-      "kind": "craft_shapeless",
-      "inputs": [
+      "kind": "sequence",
+      "title": "Pastry",
+      "text_first": false,
+      "text": "Crafting Table (shapeless): put these in the grid in any order.",
+      "cells": [
         "morefood:item_mixing_bowl",
         "morefood:item_flour",
         "morefood:item_flour",
         "morefood:item_butter",
-        "minecraft:water_bucket"
-      ],
-      "output": {
-        "item": "morefood:item_pastry",
-        "count": 3
-      },
-      "label_width": 158
+        "minecraft:water_bucket",
+        {
+          "item": "morefood:item_pastry",
+          "count": 3,
+          "note": "result"
+        }
+      ]
     },
     {
       "kind": "craft_shapeless",
@@ -129,7 +132,7 @@
     {
       "kind": "process",
       "title": "Cornish Pasty",
-      "note": "15 seconds,\nin the oven slot,\nor use a Baking Peel",
+      "note": "15 seconds\nin the oven",
       "inputs": [
         "morefood:item_pasty_uncooked"
       ],

@@ -48,7 +48,7 @@
     {
       "kind": "process",
       "title": "Toast",
-      "note": "10 seconds,\nin the oven slot,\nor use a Baking Peel",
+      "note": "10 seconds\nin the oven",
       "inputs": [
         "morefood:item_bread_slice"
       ],
@@ -71,7 +71,7 @@
     {
       "kind": "sequence",
       "title": "Baked Beans in the Pot",
-      "text_first": true,
+      "text_first": false,
       "text": "Put these in the Pot on the Stove, in any order, 20 seconds (or over a campfire, slower). Scoop out each portion with a Bowl.",
       "cells": [
         "minecraft:water_bucket",
