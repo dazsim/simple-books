@@ -43,7 +43,7 @@
       "output": "morefood:item_sauce_tomato" },
     { "kind": "process", "title": "Cheese", "note": "20 seconds,\nor over a\ncampfire, slower",
       "inputs": ["minecraft:milk_bucket"], "appliance": "morefood:item_pot", "on": "morefood:block_stove",
-      "output": "morefood:item_cheese", "placeholder": "Picture: milk in the pot", "image_size": [104, 80] },
+      "output": "morefood:item_cheese", "image": "morefood:textures/simplebooks/cookbook/milk_in_pot.png" },
     { "kind": "page_break" },
     { "kind": "craft_shapeless", "title": "Cheese Slices", "note": "knife on top of the cheese",
       "inputs": ["morefood:item_knife", "morefood:item_cheese"],
@@ -80,7 +80,7 @@
         { "item": "morefood:block_stove", "name": "Stove oven", "note": "10 seconds" },
         { "item": "morefood:item_pizza_cooked", "note": "take it out" }
       ],
-      "placeholder": "Picture: the peel puts the pizza in the oven",
+      "image": "morefood:textures/simplebooks/cookbook/pizza_in_oven.png",
       "text": "Use the peel on the finished pizza and it slides into the oven. No stove beside the board? The peel holds it until you use it on one." }
   ]
 }
