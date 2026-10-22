@@ -124,6 +124,6 @@ Recipe (shaped): three wooden slabs on top, a stick in the middle, three planks 
 
 ## Development
 
-`dev/example-pack` is an example resource pack with the More Foods cookbook and a deliberately broken book (`simplebooks:broken_test`). Most cookbook pages are made by `dev/cookbook_gen.py` from the More Foods recipe files (`python3 dev/cookbook_gen.py <more foods repo> <vanilla en_us.json>`); `pizza.json` is written by hand. `runClient` copies it into the run folder and enables it; it is never packed into the jar. If `dev/morefood-fabric.jar` or `dev/morefood-neoforge.jar` exist (More Foods 2.0 alpha jars, not in git), they are put on the dev client's classpath so the cookbook shows real items.
+`dev/example-pack` is an example resource pack with a deliberately broken book (`simplebooks:broken_test`). The More Foods cookbook now ships inside More Foods; most of its pages are made by `dev/cookbook_gen.py` from the More Foods recipe files and written straight into that repo (`python3 dev/cookbook_gen.py <more foods repo> <vanilla en_us.json>`); `pizza.json` is written by hand. `runClient` copies it into the run folder and enables it; it is never packed into the jar. If `dev/morefood-fabric.jar` or `dev/morefood-neoforge.jar` exist (More Foods 2.0 alpha jars, not in git), they are put on the dev client's classpath so the cookbook shows real items.
 
 Not yet done: grant events, page-turn animation, Python preview renderer.

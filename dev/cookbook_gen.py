@@ -4,8 +4,8 @@ import json, os, sys, glob, re
 
 MF = sys.argv[1] if len(sys.argv) > 1 else '/workspace/mods/morefoods-261'
 VANILLA_LANG = sys.argv[2] if len(sys.argv) > 2 else '/tmp/vl/assets/minecraft/lang/en_us.json'
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'example-pack/assets/morefood/simplebooks/books/cookbook/pages')
 RES = MF + '/common/src/main/resources'
+OUT = RES + '/assets/morefood/simplebooks/books/cookbook/pages'
 IMG = 'morefood:textures/simplebooks/cookbook/'
 
 lang = json.load(open(VANILLA_LANG))
