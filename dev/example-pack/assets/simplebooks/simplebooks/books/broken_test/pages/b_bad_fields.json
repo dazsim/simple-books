@@ -1,0 +1,9 @@
+{
+  "template": "simplebooks:recipe",
+  "subtitle": "No title, a bad step kind and a dead link",
+  "ingredients": ["minecraft:wheat", "nosuchmod:thing"],
+  "steps": [
+    { "kind": "bake", "inputs": ["minecraft:wheat"] }
+  ],
+  "links": [ { "label": "Nowhere", "page": "missing_page" } ]
+}

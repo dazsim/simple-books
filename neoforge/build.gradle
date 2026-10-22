@@ -60,3 +60,20 @@ sourceSets.configureEach {
         }
     }
 }
+
+// dev only: example book as a resource pack in the client run dir
+def devBookPack = tasks.register('devBookPack') {
+    doLast {
+        def dir = file('runs/client')
+        copy {
+            from rootProject.file('dev/example-pack')
+            into new File(dir, 'resourcepacks/simplebooks-example')
+        }
+        def opts = new File(dir, 'options.txt')
+        def lines = opts.exists() ? opts.readLines() : []
+        lines.removeAll { it.startsWith('resourcePacks:') }
+        lines.add('resourcePacks:["vanilla","file/simplebooks-example"]')
+        opts.text = lines.join('\n') + '\n'
+    }
+}
+tasks.matching { it.name == 'runClient' }.configureEach { dependsOn devBookPack }

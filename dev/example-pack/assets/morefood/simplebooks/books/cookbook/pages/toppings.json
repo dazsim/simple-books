@@ -1,0 +1,11 @@
+{
+  "template": "simplebooks:text",
+  "sort": 21,
+  "title": "Toppings",
+  "icon": "morefood:item_bacon",
+  "subtitle": "Optional extras for pizza.",
+  "text": "Any three of these can go on a pizza after the cheese. Each one is made on its own: chop vegetables with the knife, cook meat on the stove. This page is a stub for the Simple Books link test.",
+  "steps": [
+    { "kind": "craft_shapeless", "title": "Chopped Tomato", "inputs": ["morefood:item_knife", "morefood:item_fruit_tomato"], "output": "morefood:item_tomato_chopped" }
+  ]
+}

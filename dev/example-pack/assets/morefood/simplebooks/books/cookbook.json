@@ -1,0 +1,5 @@
+{
+  "title": "book.morefood.cookbook.title",
+  "default_template": "simplebooks:recipe",
+  "style": { "ink": "#3f2a14", "head": "#802c16" }
+}

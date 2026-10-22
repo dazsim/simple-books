@@ -1,0 +1,9 @@
+{
+  "title": "Missing items still render",
+  "subtitle": "Unknown item ids draw a marker instead of crashing.",
+  "ingredients": ["nosuchmod:mystery_flour", "minecraft:wheat"],
+  "tools": ["nosuchmod:magic_pot"],
+  "steps": [
+    { "kind": "craft_shapeless", "inputs": ["nosuchmod:mystery_flour", "minecraft:wheat"], "output": "nosuchmod:mystery_bread" }
+  ]
+}
