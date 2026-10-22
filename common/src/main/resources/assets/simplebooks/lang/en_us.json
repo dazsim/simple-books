@@ -8,6 +8,7 @@
   "simplebooks.in": "in",
   "simplebooks.on": "on",
   "simplebooks.page": "Page %s",
+  "simplebooks.contents": "Contents",
   "simplebooks.error.title": "This spread has errors",
   "simplebooks.unknown_book": "Unknown book: %s"
 }

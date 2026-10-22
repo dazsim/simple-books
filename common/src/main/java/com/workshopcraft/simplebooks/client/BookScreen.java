@@ -22,7 +22,7 @@ public class BookScreen extends Screen {
     private static final Identifier FWD_HI = Identifier.withDefaultNamespace("widget/page_forward_highlighted");
     private static final Identifier BACK = Identifier.withDefaultNamespace("widget/page_backward");
     private static final Identifier BACK_HI = Identifier.withDefaultNamespace("widget/page_backward_highlighted");
-    private static final int BTN_W = 69, BTN_H = 39, BTN_Y = 916;
+    private static final int BTN_W = 69, BTN_H = 39, BTN_Y = 916, MARK_X = 1460, MARK_Y = 4, MARK_W = 34, MARK_H = 70;
 
     private final Identifier bookId;
     private int spread;
@@ -96,7 +96,19 @@ public class BookScreen extends Screen {
             boolean hi = in(mx, my, x, BTN_Y, BTN_W, BTN_H);
             g.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, hi ? FWD_HI : FWD, x, BTN_Y, BTN_W, BTN_H);
         }
+        boolean markHover = false;
+        if (b != null && b.contentsIndex() >= 0) {
+            markHover = in(mx, my, MARK_X, MARK_Y, MARK_W, MARK_H);
+            int c = markHover ? 0xFFA83A1E : 0xFF802C16;
+            g.fill(MARK_X, MARK_Y, MARK_X + MARK_W, MARK_Y + MARK_H - 10, c);
+            for (int i = 0; i < 10; i++) {
+                g.fill(MARK_X, MARK_Y + MARK_H - 10 + i, MARK_X + MARK_W / 2 - i * 17 / 10, MARK_Y + MARK_H - 9 + i, c);
+                g.fill(MARK_X + MARK_W / 2 + i * 17 / 10, MARK_Y + MARK_H - 10 + i, MARK_X + MARK_W, MARK_Y + MARK_H - 9 + i, c);
+            }
+            g.fill(MARK_X + 4, MARK_Y + 4, MARK_X + MARK_W - 4, MARK_Y + 6, 0xFFE0B080);
+        }
         g.pose().popMatrix();
+        if (markHover) g.setTooltipForNextFrame(font, Component.translatable("simplebooks.contents"), mouseX, mouseY);
         hits = s.hits;
         for (Spread.Hit h : hits) {
             if (!h.contains(mx, my)) continue;
@@ -121,6 +133,9 @@ public class BookScreen extends Screen {
         if (e.button() == 0) {
             if (spread > 0 && in(mx, my, Spread.L, BTN_Y, BTN_W, BTN_H)) return turn(spread - 1, false);
             if (spread < spreads() - 1 && in(mx, my, Spread.R + Spread.CW - BTN_W, BTN_Y, BTN_W, BTN_H)) return turn(spread + 1, false);
+            Book bk = book();
+            if (bk != null && bk.contentsIndex() >= 0 && in(mx, my, MARK_X, MARK_Y, MARK_W, MARK_H))
+                return spread == bk.contentsIndex() || turn(bk.contentsIndex(), true);
             for (Spread.Hit h : hits) {
                 if (h.contains(mx, my) && h.target() instanceof Identifier target) {
                     Book b = book();

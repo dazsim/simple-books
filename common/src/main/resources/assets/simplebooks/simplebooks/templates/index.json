@@ -1,3 +1,15 @@
 {
-  "extends": "simplebooks:text"
+  "extends": "simplebooks:recipe",
+  "slots": {
+    "left.subtitle": { "bind": "subtitle", "optional": true },
+    "left.need": null,
+    "left.steps": null,
+    "left.turn": null,
+    "left.contents": { "type": "contents", "box": [0, 100, 644, 770], "columns": 2 },
+    "right.title": { "bind": "title" },
+    "right.icon": null,
+    "right.steps": null,
+    "right.links": null,
+    "right.contents": { "type": "contents", "box": [0, 100, 644, 770], "columns": 2 }
+  }
 }

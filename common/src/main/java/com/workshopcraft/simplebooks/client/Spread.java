@@ -324,6 +324,7 @@ public class Spread {
             }
         }
         for (var c : cursors.entrySet()) {
+            if (c.getKey().startsWith("$")) continue;
             JsonElement list = bound(page.json(), c.getKey());
             int size = list != null && list.isJsonArray() ? list.getAsJsonArray().size() : 0;
             if (c.getValue() < size) runtimeErrors.add("/" + c.getKey() + ": " + (size - c.getValue()) + " item(s) did not fit on the spread");
@@ -384,6 +385,7 @@ public class Spread {
             case "item_icon" -> {
                 if (val != null) slotItem(ItemRef.parse(val), x, y, Math.min(w, h));
             }
+            case "contents" -> contents(x, y, w, h, (int) num(slot, "columns", 1));
             case "grid" -> {
                 if (val != null && val.isJsonObject()) grid(val.getAsJsonObject(), x, y);
             }
@@ -707,6 +709,59 @@ public class Spread {
             if (target != null && ref != null) hits.add(new Hit(lx, ly, lx + 36, ly + 36, target));
         }
         return rows * 42;
+    }
+
+    // ---------- contents ----------
+
+    private void contents(float x, float y, float w, float h, int cols) {
+        List<Object> rows = new ArrayList<>();
+        String last = null;
+        for (Book.Page p : book.pages()) {
+            String sec = p.json().has("section") ? p.json().get("section").getAsString() : "";
+            if (sec.equals("contents")) continue;
+            if (!sec.equals(last)) {
+                rows.add(sec);
+                last = sec;
+            }
+            rows.add(p);
+        }
+        int i = cursors.getOrDefault("$contents", 0);
+        float colW = w / cols;
+        for (int c = 0; c < cols && i < rows.size(); c++) {
+            float cx = x + c * colW, yy = y;
+            while (i < rows.size()) {
+                Object r = rows.get(i);
+                float rh = r instanceof String ? (yy == y ? 26 : 34) : 20;
+                if (yy + rh > y + h) break;
+                if (r instanceof String sec) {
+                    if (yy > y) yy += 8;
+                    String key = "book." + book.id().getNamespace() + "." + book.id().getPath().replace('/', '.') + ".section." + sec;
+                    Component label = net.minecraft.locale.Language.getInstance().has(key) ? Component.translatable(key)
+                            : Component.literal(sec.isEmpty() ? "Other" : Character.toUpperCase(sec.charAt(0)) + sec.substring(1).replace('_', ' '));
+                    text(label, cx, yy, 1, color("$head"));
+                    rule(cx, cx + colW - 16, yy + 19);
+                    yy += 26;
+                } else {
+                    Book.Page p = (Book.Page) r;
+                    String t = p.json().has("title") ? p.json().get("title").getAsString() : p.id().getPath();
+                    Component label = Texts.of(t);
+                    int idx = book.indexOf(p.id());
+                    Component num = Component.literal(String.valueOf(idx * 2 + 1));
+                    float nw = textW(num, 1), maxw = colW - 24 - nw;
+                    List<FormattedCharSequence> ls = wrap(label, maxw, 1);
+                    FormattedCharSequence first = ls.get(0);
+                    float tw = Math.min(textW(first, 1), maxw);
+                    int col = p.broken() ? color("$error") : color("$link");
+                    text(first, cx + 8, yy, 1, col);
+                    fill(cx + 8, yy + 16, cx + 8 + tw - 2, yy + 18, col);
+                    text(num, cx + colW - 16 - nw, yy, 1, color("$soft"));
+                    hits.add(new Hit(cx, yy - 2, cx + colW - 16, yy + 18, p.id()));
+                    yy += 20;
+                }
+                i++;
+            }
+        }
+        cursors.put("$contents", i);
     }
 
     // ---------- errors ----------

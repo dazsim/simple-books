@@ -18,6 +18,16 @@ public record Book(Identifier id, JsonObject json, Map<String, String> vars, Lis
         return -1;
     }
 
+    public int contentsIndex() {
+        return indexOf(Identifier.fromNamespaceAndPath(id.getNamespace(), id.getPath() + "/contents"));
+    }
+
+    public java.util.List<String> sections() {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        if (json.has("sections")) json.getAsJsonArray("sections").forEach(e -> out.add(e.getAsString()));
+        return out;
+    }
+
     public String title() {
         return json.has("title") ? json.get("title").getAsString() : id.toString();
     }

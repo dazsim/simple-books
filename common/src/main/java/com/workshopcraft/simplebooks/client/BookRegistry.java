@@ -129,7 +129,23 @@ public class BookRegistry extends SimplePreparableReloadListener<BookRegistry.Lo
                 }
                 pages.add(new Book.Page(pageId, file, pj, t, errors));
             }
-            pages.sort(Comparator.comparingInt((Book.Page p) -> p.json().has("sort") ? p.json().get("sort").getAsInt() : 0));
+            List<String> sections = new ArrayList<>();
+            if (json.has("sections")) json.getAsJsonArray("sections").forEach(e -> sections.add(e.getAsString()));
+            if (sections.contains("contents")) {
+                JsonObject cj = new JsonObject();
+                cj.addProperty("template", "simplebooks:index");
+                cj.addProperty("section", "contents");
+                cj.addProperty("title", json.has("contents_title") ? json.get("contents_title").getAsString() : "simplebooks.contents");
+                Template ct = templates.computeIfAbsent(SimpleBooks.id("index"), k -> safeResolve(k, rawTemplates));
+                pages.add(new Book.Page(Identifier.fromNamespaceAndPath(bookId.getNamespace(), bookId.getPath() + "/contents"),
+                        "(generated contents)", cj, ct, new ArrayList<>(ct.errors())));
+            }
+            pages.sort(Comparator.comparingInt((Book.Page p) -> {
+                        int i = sections.indexOf(p.json().has("section") ? p.json().get("section").getAsString() : "");
+                        return i < 0 ? sections.size() : i;
+                    })
+                    .thenComparingInt(p -> p.json().has("sort") ? p.json().get("sort").getAsInt() : 0)
+                    .thenComparing(p -> p.id().toString()));
             Book book = new Book(bookId, json, vars, pages, bErrors);
             for (Book.Page p : pages) if (!p.broken()) checkLinks(book, p);
             for (Book.Page p : pages) for (String err : p.errors()) SimpleBooks.LOG.error("{} {}", p.file(), err);

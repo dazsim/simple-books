@@ -1,4 +1,5 @@
 {
+  "section": "recipes",
   "template": "simplebooks:recipe",
   "sort": 20,
   "title": "Pizza",
