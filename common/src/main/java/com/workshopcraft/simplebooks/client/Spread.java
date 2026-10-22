@@ -669,8 +669,10 @@ public class Spread {
             slotItem(ref, cx, y, size);
             List<FormattedCharSequence> ls = wrap(ref.name(), Math.max(110, step - 20), 1);
             float ty = y + size + 4;
+            float left = cx < SPINE ? L : R;
             for (FormattedCharSequence ln : ls) {
-                text(ln, cx + size / 2 - textW(ln, 1) / 2, ty, 1, color("$ink"));
+                float lw = textW(ln, 1);
+                text(ln, Math.max(left, Math.min(left + CW - lw, cx + size / 2 - lw / 2)), ty, 1, color("$ink"));
                 ty += 17;
             }
             if (ref.note() != null) {
