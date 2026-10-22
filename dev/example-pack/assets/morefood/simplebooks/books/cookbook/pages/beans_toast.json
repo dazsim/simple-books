@@ -1,0 +1,111 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:recipe",
+  "sort": 1027,
+  "title": "Baked Beans on Toast",
+  "icon": "morefood:item_beans_toast",
+  "subtitle": "Built on the assembly board.",
+  "ingredients": [
+    "minecraft:bread",
+    {
+      "item": "morefood:item_haricot_beans",
+      "count": 3
+    },
+    "morefood:item_fruit_tomato",
+    {
+      "item": "minecraft:sugar",
+      "count": 2
+    },
+    "minecraft:glass_bottle",
+    "minecraft:water_bucket",
+    "minecraft:bowl"
+  ],
+  "tools": [
+    "minecraft:crafting_table",
+    "morefood:item_mincer",
+    "morefood:item_knife",
+    "morefood:item_pot",
+    "morefood:block_stove",
+    "morefood:block_assembly_board"
+  ],
+  "need_note": "Tools and Buckets are not consumed",
+  "steps": [
+    {
+      "kind": "craft_shaped",
+      "pattern": [
+        "A",
+        "B"
+      ],
+      "key": {
+        "A": "morefood:item_knife",
+        "B": "minecraft:bread"
+      },
+      "output": {
+        "item": "morefood:item_bread_slice",
+        "count": 8
+      }
+    },
+    {
+      "kind": "process",
+      "title": "Toast",
+      "note": "10 seconds,\nin the oven slot,\nor use a Baking Peel",
+      "inputs": [
+        "morefood:item_bread_slice"
+      ],
+      "appliance": {
+        "item": "morefood:block_stove",
+        "name": "Stove oven"
+      },
+      "output": "morefood:item_toast"
+    },
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_mincer",
+        "morefood:item_fruit_tomato",
+        "minecraft:sugar",
+        "minecraft:glass_bottle"
+      ],
+      "output": "morefood:item_sauce_tomato"
+    },
+    {
+      "kind": "sequence",
+      "title": "Baked Beans in the Pot",
+      "text_first": true,
+      "text": "Put these in the Pot on the Stove, in any order, 20 seconds (or over a campfire, slower). Scoop out each portion with a Bowl.",
+      "cells": [
+        "minecraft:water_bucket",
+        "morefood:item_haricot_beans",
+        "morefood:item_haricot_beans",
+        "morefood:item_haricot_beans",
+        "morefood:item_sauce_tomato",
+        "minecraft:sugar",
+        {
+          "item": "morefood:item_baked_beans",
+          "count": 3,
+          "note": "result"
+        }
+      ]
+    },
+    {
+      "kind": "assembly",
+      "title": "Build it on the Assembly Board",
+      "text": "Use each item on the Assembly Board in this order, then take it off with an empty hand:",
+      "image": "morefood:textures/simplebooks/cookbook/board.png",
+      "cells": [
+        {
+          "item": "morefood:item_toast",
+          "note": "first"
+        },
+        {
+          "item": "morefood:item_baked_beans",
+          "note": "second"
+        },
+        {
+          "item": "morefood:item_beans_toast",
+          "note": "done"
+        }
+      ]
+    }
+  ]
+}

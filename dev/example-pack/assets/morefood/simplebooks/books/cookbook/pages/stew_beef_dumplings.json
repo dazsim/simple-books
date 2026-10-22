@@ -1,0 +1,110 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:recipe",
+  "sort": 1005,
+  "title": "Beef Stew & Dumplings",
+  "icon": "morefood:item_stew_beef_dumplings",
+  "subtitle": "Put together at the crafting table.",
+  "ingredients": [
+    {
+      "items": [
+        "minecraft:bone",
+        "morefood:item_chicken_bone"
+      ],
+      "name": "Bone or Chicken Bone"
+    },
+    {
+      "items": [
+        "minecraft:carrot",
+        "morefood:item_onion",
+        "morefood:item_lettuce",
+        "minecraft:potato"
+      ],
+      "name": "Carrot or other"
+    },
+    "minecraft:water_bucket",
+    "minecraft:glass_bottle",
+    "minecraft:potato",
+    "minecraft:carrot",
+    "minecraft:cooked_beef",
+    "minecraft:bowl",
+    "morefood:item_dumpling_uncooked"
+  ],
+  "tools": [
+    "minecraft:crafting_table",
+    "morefood:item_knife",
+    "morefood:item_pot",
+    "morefood:block_stove"
+  ],
+  "need_note": "Tools and Buckets are not consumed",
+  "steps": [
+    {
+      "kind": "sequence",
+      "title": "Stock in the Pot",
+      "text_first": true,
+      "text": "Put these in the Pot on the Stove, in any order, 20 seconds (or over a campfire, slower). Scoop out each portion with a Glass Bottle.",
+      "cells": [
+        "minecraft:water_bucket",
+        {
+          "items": [
+            "minecraft:bone",
+            "morefood:item_chicken_bone"
+          ],
+          "name": "Bone or Chicken Bone"
+        },
+        {
+          "items": [
+            "minecraft:carrot",
+            "morefood:item_onion",
+            "morefood:item_lettuce",
+            "minecraft:potato"
+          ],
+          "name": "Carrot or other"
+        },
+        {
+          "item": "morefood:item_stock",
+          "count": 3,
+          "note": "result"
+        }
+      ]
+    },
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_knife",
+        "minecraft:potato"
+      ],
+      "output": "morefood:item_potato_peeled"
+    },
+    {
+      "kind": "process",
+      "title": "Boiled Potato",
+      "note": "15 seconds,\nor over a\ncampfire, slower",
+      "inputs": [
+        "minecraft:water_bucket",
+        "morefood:item_potato_peeled"
+      ],
+      "appliance": "morefood:item_pot",
+      "on": "morefood:block_stove",
+      "output": "morefood:item_potato_boiled"
+    },
+    {
+      "kind": "sequence",
+      "title": "Beef Stew & Dumplings",
+      "text_first": true,
+      "text": "Crafting Table (shapeless): put these in the grid in any order.",
+      "cells": [
+        "morefood:item_stock",
+        "morefood:item_potato_boiled",
+        "minecraft:carrot",
+        "minecraft:cooked_beef",
+        "minecraft:bowl",
+        "morefood:item_dumpling_uncooked",
+        {
+          "item": "morefood:item_stew_beef_dumplings",
+          "note": "result"
+        }
+      ]
+    }
+  ]
+}

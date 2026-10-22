@@ -1,0 +1,30 @@
+{
+  "section": "tools",
+  "template": "simplebooks:tool",
+  "sort": 206,
+  "title": "Mixing Bowl",
+  "icon": "morefood:item_mixing_bowl",
+  "subtitle": "Mixes dough and batter.",
+  "text": "Craft it together with the ingredients to mix doughs, batter and fillings. The Mixing Bowl comes back each time.",
+  "steps": [
+    {
+      "kind": "text",
+      "text": "How to make it:"
+    },
+    {
+      "kind": "craft_shaped",
+      "pattern": [
+        "ABA",
+        " A "
+      ],
+      "key": {
+        "A": {
+          "item": "#minecraft:planks",
+          "name": "Planks"
+        },
+        "B": "minecraft:stick"
+      },
+      "output": "morefood:item_mixing_bowl"
+    }
+  ]
+}

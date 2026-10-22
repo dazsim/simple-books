@@ -1,0 +1,59 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:recipe",
+  "sort": 1028,
+  "title": "Cooked French Toast",
+  "icon": "morefood:item_french_toast_cooked",
+  "subtitle": "Fried in the pan on the stove.",
+  "ingredients": [
+    "minecraft:egg",
+    "minecraft:bread"
+  ],
+  "tools": [
+    "minecraft:crafting_table",
+    "morefood:item_knife",
+    "morefood:item_frying_pan",
+    "morefood:block_stove"
+  ],
+  "need_note": "Tools and Buckets are not consumed",
+  "steps": [
+    {
+      "kind": "craft_shaped",
+      "pattern": [
+        "A",
+        "B"
+      ],
+      "key": {
+        "A": "morefood:item_knife",
+        "B": "minecraft:bread"
+      },
+      "output": {
+        "item": "morefood:item_bread_slice",
+        "count": 8
+      }
+    },
+    {
+      "kind": "craft_shaped",
+      "pattern": [
+        "A",
+        "B"
+      ],
+      "key": {
+        "A": "minecraft:egg",
+        "B": "morefood:item_bread_slice"
+      },
+      "output": "morefood:item_french_toast_uncooked"
+    },
+    {
+      "kind": "process",
+      "title": "Cooked French Toast",
+      "note": "5 seconds,\nfrom the stove\noutput slot",
+      "inputs": [
+        "morefood:item_french_toast_uncooked"
+      ],
+      "appliance": "morefood:item_frying_pan",
+      "on": "morefood:block_stove",
+      "output": "morefood:item_french_toast_cooked"
+    }
+  ]
+}

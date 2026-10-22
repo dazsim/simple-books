@@ -1,0 +1,40 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:recipe",
+  "sort": 1020,
+  "title": "Roast Potato",
+  "icon": "morefood:item_potato_roast",
+  "subtitle": "Baked in the stove oven.",
+  "ingredients": [
+    "minecraft:potato"
+  ],
+  "tools": [
+    "minecraft:crafting_table",
+    "morefood:item_knife",
+    "morefood:block_stove"
+  ],
+  "need_note": "Tools and Buckets are not consumed",
+  "steps": [
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_knife",
+        "minecraft:potato"
+      ],
+      "output": "morefood:item_potato_peeled"
+    },
+    {
+      "kind": "process",
+      "title": "Roast Potato",
+      "note": "10 seconds,\nin the oven slot,\nor use a Baking Peel",
+      "inputs": [
+        "morefood:item_potato_peeled"
+      ],
+      "appliance": {
+        "item": "morefood:block_stove",
+        "name": "Stove oven"
+      },
+      "output": "morefood:item_potato_roast"
+    }
+  ]
+}

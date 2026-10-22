@@ -1,0 +1,52 @@
+{
+  "section": "toppings",
+  "template": "simplebooks:recipe",
+  "sort": 103,
+  "title": "Bacon",
+  "icon": "morefood:item_bacon",
+  "subtitle": "A pizza topping. Fried in the pan on the stove.",
+  "ingredients": [
+    "morefood:item_joint_bacon"
+  ],
+  "tools": [
+    "minecraft:crafting_table",
+    "morefood:item_knife",
+    "morefood:item_frying_pan",
+    "morefood:block_stove"
+  ],
+  "need_note": "Tools and Buckets are not consumed",
+  "steps": [
+    {
+      "kind": "craft_shaped",
+      "pattern": [
+        "A",
+        "B"
+      ],
+      "key": {
+        "A": "morefood:item_knife",
+        "B": "morefood:item_joint_bacon"
+      },
+      "output": {
+        "item": "morefood:item_bacon_uncooked",
+        "count": 8
+      }
+    },
+    {
+      "kind": "process",
+      "title": "Bacon",
+      "note": "5 seconds,\nfrom the stove\noutput slot",
+      "inputs": [
+        "morefood:item_bacon_uncooked"
+      ],
+      "appliance": "morefood:item_frying_pan",
+      "on": "morefood:block_stove",
+      "output": "morefood:item_bacon"
+    }
+  ],
+  "links": [
+    {
+      "label": "Back to Pizza",
+      "page": "pizza"
+    }
+  ]
+}

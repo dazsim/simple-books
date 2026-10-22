@@ -1,0 +1,47 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:recipe",
+  "sort": 1032,
+  "title": "Toast",
+  "icon": "morefood:item_toast",
+  "subtitle": "Baked in the stove oven.",
+  "ingredients": [
+    "minecraft:bread"
+  ],
+  "tools": [
+    "minecraft:crafting_table",
+    "morefood:item_knife",
+    "morefood:block_stove"
+  ],
+  "need_note": "Tools and Buckets are not consumed",
+  "steps": [
+    {
+      "kind": "craft_shaped",
+      "pattern": [
+        "A",
+        "B"
+      ],
+      "key": {
+        "A": "morefood:item_knife",
+        "B": "minecraft:bread"
+      },
+      "output": {
+        "item": "morefood:item_bread_slice",
+        "count": 8
+      }
+    },
+    {
+      "kind": "process",
+      "title": "Toast",
+      "note": "10 seconds,\nin the oven slot,\nor use a Baking Peel",
+      "inputs": [
+        "morefood:item_bread_slice"
+      ],
+      "appliance": {
+        "item": "morefood:block_stove",
+        "name": "Stove oven"
+      },
+      "output": "morefood:item_toast"
+    }
+  ]
+}

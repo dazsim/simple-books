@@ -1,0 +1,101 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:recipe",
+  "sort": 1023,
+  "title": "Roast Vegetables",
+  "icon": "morefood:item_roast_vegetables",
+  "subtitle": "Baked in the stove oven.",
+  "ingredients": [
+    "morefood:item_parsnip",
+    {
+      "items": [
+        "morefood:item_turnip",
+        "morefood:item_swede"
+      ],
+      "name": "Turnip or Swede"
+    },
+    "minecraft:carrot",
+    "morefood:item_onion",
+    "minecraft:milk_bucket",
+    "minecraft:water_bucket"
+  ],
+  "tools": [
+    "minecraft:crafting_table",
+    "morefood:item_mixing_bowl",
+    "morefood:item_knife",
+    "morefood:item_pot",
+    "morefood:block_stove"
+  ],
+  "need_note": "Tools and Buckets are not consumed",
+  "steps": [
+    {
+      "kind": "craft_shaped",
+      "pattern": [
+        "A",
+        "B"
+      ],
+      "key": {
+        "A": "morefood:item_knife",
+        "B": "morefood:item_onion"
+      },
+      "output": {
+        "item": "morefood:item_onion_chopped",
+        "count": 4
+      }
+    },
+    {
+      "kind": "process",
+      "title": "Salt",
+      "note": "20 seconds,\nor over a\ncampfire, slower",
+      "inputs": [
+        "minecraft:water_bucket"
+      ],
+      "appliance": "morefood:item_pot",
+      "on": "morefood:block_stove",
+      "output": {
+        "item": "morefood:item_salt",
+        "count": 2
+      }
+    },
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_mixing_bowl",
+        "minecraft:milk_bucket",
+        "morefood:item_salt"
+      ],
+      "output": "morefood:item_butter"
+    },
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_parsnip",
+        {
+          "items": [
+            "morefood:item_turnip",
+            "morefood:item_swede"
+          ],
+          "name": "Turnip or Swede"
+        },
+        "minecraft:carrot",
+        "morefood:item_onion_chopped",
+        "morefood:item_butter"
+      ],
+      "output": "morefood:item_roast_veg_uncooked",
+      "label_width": 158
+    },
+    {
+      "kind": "process",
+      "title": "Roast Vegetables",
+      "note": "10 seconds,\nin the oven slot,\nor use a Baking Peel",
+      "inputs": [
+        "morefood:item_roast_veg_uncooked"
+      ],
+      "appliance": {
+        "item": "morefood:block_stove",
+        "name": "Stove oven"
+      },
+      "output": "morefood:item_roast_vegetables"
+    }
+  ]
+}

@@ -1,0 +1,189 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:recipe",
+  "sort": 1000,
+  "title": "Chicken and Leek Pie",
+  "icon": "morefood:item_pie_chicken_leek",
+  "subtitle": "Baked in the stove oven.",
+  "ingredients": [
+    "minecraft:wheat",
+    "minecraft:milk_bucket",
+    "minecraft:water_bucket",
+    "minecraft:cooked_chicken",
+    "morefood:item_leek",
+    {
+      "items": [
+        "minecraft:bone",
+        "morefood:item_chicken_bone"
+      ],
+      "name": "Bone or Chicken Bone"
+    },
+    {
+      "items": [
+        "minecraft:carrot",
+        "morefood:item_onion",
+        "morefood:item_lettuce",
+        "minecraft:potato"
+      ],
+      "name": "Carrot or other"
+    },
+    "minecraft:glass_bottle"
+  ],
+  "tools": [
+    "minecraft:crafting_table",
+    "morefood:item_pestle_mortar",
+    "morefood:item_mixing_bowl",
+    "morefood:item_knife",
+    "morefood:item_pot",
+    "morefood:block_stove",
+    "morefood:block_assembly_board"
+  ],
+  "need_note": "Tools and Buckets are not consumed",
+  "steps": [
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_pestle_mortar",
+        "minecraft:wheat"
+      ],
+      "output": "morefood:item_flour"
+    },
+    {
+      "kind": "process",
+      "title": "Salt",
+      "note": "20 seconds,\nor over a\ncampfire, slower",
+      "inputs": [
+        "minecraft:water_bucket"
+      ],
+      "appliance": "morefood:item_pot",
+      "on": "morefood:block_stove",
+      "output": {
+        "item": "morefood:item_salt",
+        "count": 2
+      }
+    },
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_mixing_bowl",
+        "minecraft:milk_bucket",
+        "morefood:item_salt"
+      ],
+      "output": "morefood:item_butter"
+    },
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_mixing_bowl",
+        "morefood:item_flour",
+        "morefood:item_flour",
+        "morefood:item_butter",
+        "minecraft:water_bucket"
+      ],
+      "output": {
+        "item": "morefood:item_pastry",
+        "count": 3
+      },
+      "label_width": 158
+    },
+    {
+      "kind": "craft_shaped",
+      "pattern": [
+        "A",
+        "B"
+      ],
+      "key": {
+        "A": "morefood:item_knife",
+        "B": "morefood:item_leek"
+      },
+      "output": {
+        "item": "morefood:item_leek_sliced",
+        "count": 3
+      }
+    },
+    {
+      "kind": "sequence",
+      "title": "Stock in the Pot",
+      "text_first": true,
+      "text": "Put these in the Pot on the Stove, in any order, 20 seconds (or over a campfire, slower). Scoop out each portion with a Glass Bottle.",
+      "cells": [
+        "minecraft:water_bucket",
+        {
+          "items": [
+            "minecraft:bone",
+            "morefood:item_chicken_bone"
+          ],
+          "name": "Bone or Chicken Bone"
+        },
+        {
+          "items": [
+            "minecraft:carrot",
+            "morefood:item_onion",
+            "morefood:item_lettuce",
+            "minecraft:potato"
+          ],
+          "name": "Carrot or other"
+        },
+        {
+          "item": "morefood:item_stock",
+          "count": 3,
+          "note": "result"
+        }
+      ]
+    },
+    {
+      "kind": "sequence",
+      "title": "Chicken and Leek Filling in the Pot",
+      "text_first": true,
+      "text": "Put these in the Pot on the Stove, in any order, 15 seconds (or over a campfire, slower).",
+      "cells": [
+        "minecraft:cooked_chicken",
+        "morefood:item_leek_sliced",
+        "morefood:item_leek_sliced",
+        "morefood:item_stock",
+        "morefood:item_flour",
+        {
+          "item": "morefood:item_filling_chicken_leek",
+          "note": "result"
+        }
+      ]
+    },
+    {
+      "kind": "assembly",
+      "title": "Build it on the Assembly Board",
+      "text": "Use each item on the Assembly Board in this order, then take it off with an empty hand:",
+      "image": "morefood:textures/simplebooks/cookbook/board.png",
+      "cells": [
+        {
+          "item": "morefood:item_pastry",
+          "note": "first"
+        },
+        {
+          "item": "morefood:item_filling_chicken_leek",
+          "note": "second"
+        },
+        {
+          "item": "morefood:item_pastry",
+          "note": "third"
+        },
+        {
+          "item": "morefood:item_pie_chicken_leek_uncooked",
+          "note": "done"
+        }
+      ]
+    },
+    {
+      "kind": "process",
+      "title": "Chicken and Leek Pie",
+      "note": "15 seconds,\nin the oven slot,\nor use a Baking Peel",
+      "inputs": [
+        "morefood:item_pie_chicken_leek_uncooked"
+      ],
+      "appliance": {
+        "item": "morefood:block_stove",
+        "name": "Stove oven"
+      },
+      "output": "morefood:item_pie_chicken_leek"
+    }
+  ]
+}

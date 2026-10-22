@@ -1,0 +1,45 @@
+{
+  "section": "crops",
+  "template": "simplebooks:crop",
+  "sort": 305,
+  "title": "Leek",
+  "icon": "morefood:item_leek",
+  "subtitle": "A crop. Seeds drop from grass.",
+  "text": "Break grass to find Leek Seeds. Plant them on farmland and harvest when fully grown; Bone Meal speeds it up. One Leek crafts back into seeds.",
+  "steps": [
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_leek"
+      ],
+      "output": "morefood:item_seed_leek"
+    },
+    {
+      "kind": "links",
+      "header": "Used in:",
+      "columns": 3,
+      "links": [
+        {
+          "item": "morefood:item_pie_chicken_leek",
+          "page": "pie_chicken_leek"
+        },
+        {
+          "item": "morefood:item_leeks_fried",
+          "page": "leeks_fried"
+        },
+        {
+          "item": "morefood:item_soup_leek_potato",
+          "page": "soup_leek_potato"
+        },
+        {
+          "item": "morefood:item_leek_sliced",
+          "page": "topping_leek_sliced"
+        },
+        {
+          "item": "morefood:item_stew_vegetable",
+          "page": "stew_vegetable"
+        }
+      ]
+    }
+  ]
+}

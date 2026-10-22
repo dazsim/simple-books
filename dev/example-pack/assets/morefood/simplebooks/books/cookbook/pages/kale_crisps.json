@@ -1,0 +1,30 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:recipe",
+  "sort": 1058,
+  "title": "Kale Crisps",
+  "icon": "morefood:item_kale_crisps",
+  "subtitle": "Baked in the stove oven.",
+  "ingredients": [
+    "morefood:item_kale"
+  ],
+  "tools": [
+    "morefood:block_stove"
+  ],
+  "need_note": "Tools and Buckets are not consumed",
+  "steps": [
+    {
+      "kind": "process",
+      "title": "Kale Crisps",
+      "note": "10 seconds,\nin the oven slot,\nor use a Baking Peel",
+      "inputs": [
+        "morefood:item_kale"
+      ],
+      "appliance": {
+        "item": "morefood:block_stove",
+        "name": "Stove oven"
+      },
+      "output": "morefood:item_kale_crisps"
+    }
+  ]
+}

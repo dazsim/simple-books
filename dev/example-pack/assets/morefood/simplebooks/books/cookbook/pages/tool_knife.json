@@ -1,0 +1,27 @@
+{
+  "section": "tools",
+  "template": "simplebooks:tool",
+  "sort": 203,
+  "title": "Knife",
+  "icon": "morefood:item_knife",
+  "subtitle": "Chops and slices.",
+  "text": "Craft it together with the food to chop or slice it. The Knife comes back each time.",
+  "steps": [
+    {
+      "kind": "text",
+      "text": "How to make it:"
+    },
+    {
+      "kind": "craft_shaped",
+      "pattern": [
+        "A",
+        "B"
+      ],
+      "key": {
+        "A": "minecraft:iron_ingot",
+        "B": "minecraft:stick"
+      },
+      "output": "morefood:item_knife"
+    }
+  ]
+}

@@ -1,0 +1,209 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:recipe",
+  "sort": 1003,
+  "title": "Shepherd's Pie",
+  "icon": "morefood:item_pie_shepherds",
+  "subtitle": "Baked in the stove oven.",
+  "ingredients": [
+    "minecraft:mutton",
+    "morefood:item_onion",
+    "morefood:item_peas",
+    {
+      "items": [
+        "minecraft:bone",
+        "morefood:item_chicken_bone"
+      ],
+      "name": "Bone or Chicken Bone"
+    },
+    {
+      "items": [
+        "minecraft:carrot",
+        "morefood:item_onion",
+        "morefood:item_lettuce",
+        "minecraft:potato"
+      ],
+      "name": "Carrot or other"
+    },
+    "minecraft:water_bucket",
+    {
+      "item": "minecraft:glass_bottle",
+      "count": 2
+    },
+    "morefood:item_suet",
+    "minecraft:wheat",
+    "minecraft:potato"
+  ],
+  "tools": [
+    "minecraft:crafting_table",
+    "morefood:item_pestle_mortar",
+    "morefood:item_mincer",
+    "morefood:item_knife",
+    "morefood:item_pot",
+    "morefood:item_frying_pan",
+    "morefood:block_stove",
+    "morefood:block_assembly_board"
+  ],
+  "need_note": "Tools and Buckets are not consumed",
+  "steps": [
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_mincer",
+        "minecraft:mutton"
+      ],
+      "output": "morefood:item_minced_lamb_uncooked"
+    },
+    {
+      "kind": "process",
+      "title": "Cooked Minced Lamb",
+      "note": "5 seconds,\nfrom the stove\noutput slot",
+      "inputs": [
+        "morefood:item_minced_lamb_uncooked"
+      ],
+      "appliance": "morefood:item_frying_pan",
+      "on": "morefood:block_stove",
+      "output": "morefood:item_minced_lamb_cooked"
+    },
+    {
+      "kind": "craft_shaped",
+      "pattern": [
+        "A",
+        "B"
+      ],
+      "key": {
+        "A": "morefood:item_knife",
+        "B": "morefood:item_onion"
+      },
+      "output": {
+        "item": "morefood:item_onion_chopped",
+        "count": 4
+      }
+    },
+    {
+      "kind": "sequence",
+      "title": "Stock in the Pot",
+      "text_first": true,
+      "text": "Put these in the Pot on the Stove, in any order, 20 seconds (or over a campfire, slower). Scoop out each portion with a Glass Bottle.",
+      "cells": [
+        "minecraft:water_bucket",
+        {
+          "items": [
+            "minecraft:bone",
+            "morefood:item_chicken_bone"
+          ],
+          "name": "Bone or Chicken Bone"
+        },
+        {
+          "items": [
+            "minecraft:carrot",
+            "morefood:item_onion",
+            "morefood:item_lettuce",
+            "minecraft:potato"
+          ],
+          "name": "Carrot or other"
+        },
+        {
+          "item": "morefood:item_stock",
+          "count": 3,
+          "note": "result"
+        }
+      ]
+    },
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_pestle_mortar",
+        "minecraft:wheat"
+      ],
+      "output": "morefood:item_flour"
+    },
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_stock",
+        "morefood:item_suet",
+        "morefood:item_flour",
+        "minecraft:glass_bottle"
+      ],
+      "output": "morefood:item_gravy"
+    },
+    {
+      "kind": "sequence",
+      "title": "Shepherd's Pie Filling in the Pot",
+      "text_first": true,
+      "text": "Put these in the Pot on the Stove, in any order, 15 seconds (or over a campfire, slower).",
+      "cells": [
+        "morefood:item_minced_lamb_cooked",
+        "morefood:item_onion_chopped",
+        "morefood:item_peas",
+        "morefood:item_gravy",
+        {
+          "item": "morefood:item_filling_shepherds",
+          "note": "result"
+        }
+      ]
+    },
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_knife",
+        "minecraft:potato"
+      ],
+      "output": "morefood:item_potato_peeled"
+    },
+    {
+      "kind": "process",
+      "title": "Boiled Potato",
+      "note": "15 seconds,\nor over a\ncampfire, slower",
+      "inputs": [
+        "minecraft:water_bucket",
+        "morefood:item_potato_peeled"
+      ],
+      "appliance": "morefood:item_pot",
+      "on": "morefood:block_stove",
+      "output": "morefood:item_potato_boiled"
+    },
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_mincer",
+        "morefood:item_potato_boiled"
+      ],
+      "output": "morefood:item_potato_mashed"
+    },
+    {
+      "kind": "assembly",
+      "title": "Build it on the Assembly Board",
+      "text": "Use each item on the Assembly Board in this order, then take it off with an empty hand:",
+      "image": "morefood:textures/simplebooks/cookbook/board.png",
+      "cells": [
+        {
+          "item": "morefood:item_filling_shepherds",
+          "note": "first"
+        },
+        {
+          "item": "morefood:item_potato_mashed",
+          "note": "second"
+        },
+        {
+          "item": "morefood:item_pie_shepherds_uncooked",
+          "note": "done"
+        }
+      ]
+    },
+    {
+      "kind": "process",
+      "title": "Shepherd's Pie",
+      "note": "15 seconds,\nin the oven slot,\nor use a Baking Peel",
+      "inputs": [
+        "morefood:item_pie_shepherds_uncooked"
+      ],
+      "appliance": {
+        "item": "morefood:block_stove",
+        "name": "Stove oven"
+      },
+      "output": "morefood:item_pie_shepherds"
+    }
+  ]
+}

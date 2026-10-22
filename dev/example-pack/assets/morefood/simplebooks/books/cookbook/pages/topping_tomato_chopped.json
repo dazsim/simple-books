@@ -1,0 +1,39 @@
+{
+  "section": "toppings",
+  "template": "simplebooks:recipe",
+  "sort": 100,
+  "title": "Chopped Tomato",
+  "icon": "morefood:item_tomato_chopped",
+  "subtitle": "A pizza topping. ",
+  "ingredients": [
+    "morefood:item_fruit_tomato"
+  ],
+  "tools": [
+    "minecraft:crafting_table",
+    "morefood:item_knife"
+  ],
+  "need_note": "Tools and Buckets are not consumed",
+  "steps": [
+    {
+      "kind": "craft_shaped",
+      "pattern": [
+        "A",
+        "B"
+      ],
+      "key": {
+        "A": "morefood:item_knife",
+        "B": "morefood:item_fruit_tomato"
+      },
+      "output": {
+        "item": "morefood:item_tomato_chopped",
+        "count": 4
+      }
+    }
+  ],
+  "links": [
+    {
+      "label": "Back to Pizza",
+      "page": "pizza"
+    }
+  ]
+}

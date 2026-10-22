@@ -1,0 +1,107 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:recipe",
+  "sort": 1014,
+  "title": "Tomato Soup",
+  "icon": "morefood:item_soup_tomato",
+  "subtitle": "Cooked in the pot on the stove.",
+  "ingredients": [
+    {
+      "item": "morefood:item_fruit_tomato",
+      "count": 3
+    },
+    "morefood:item_onion",
+    {
+      "items": [
+        "minecraft:bone",
+        "morefood:item_chicken_bone"
+      ],
+      "name": "Bone or Chicken Bone"
+    },
+    {
+      "items": [
+        "minecraft:carrot",
+        "morefood:item_onion",
+        "morefood:item_lettuce",
+        "minecraft:potato"
+      ],
+      "name": "Carrot or other"
+    },
+    "minecraft:water_bucket",
+    "minecraft:glass_bottle",
+    "minecraft:bowl"
+  ],
+  "tools": [
+    "minecraft:crafting_table",
+    "morefood:item_knife",
+    "morefood:item_pot",
+    "morefood:block_stove"
+  ],
+  "need_note": "Tools and Buckets are not consumed",
+  "steps": [
+    {
+      "kind": "craft_shaped",
+      "pattern": [
+        "A",
+        "B"
+      ],
+      "key": {
+        "A": "morefood:item_knife",
+        "B": "morefood:item_onion"
+      },
+      "output": {
+        "item": "morefood:item_onion_chopped",
+        "count": 4
+      }
+    },
+    {
+      "kind": "sequence",
+      "title": "Stock in the Pot",
+      "text_first": true,
+      "text": "Put these in the Pot on the Stove, in any order, 20 seconds (or over a campfire, slower). Scoop out each portion with a Glass Bottle.",
+      "cells": [
+        "minecraft:water_bucket",
+        {
+          "items": [
+            "minecraft:bone",
+            "morefood:item_chicken_bone"
+          ],
+          "name": "Bone or Chicken Bone"
+        },
+        {
+          "items": [
+            "minecraft:carrot",
+            "morefood:item_onion",
+            "morefood:item_lettuce",
+            "minecraft:potato"
+          ],
+          "name": "Carrot or other"
+        },
+        {
+          "item": "morefood:item_stock",
+          "count": 3,
+          "note": "result"
+        }
+      ]
+    },
+    {
+      "kind": "sequence",
+      "title": "Tomato Soup in the Pot",
+      "text_first": true,
+      "text": "Put these in the Pot on the Stove, in any order, 20 seconds (or over a campfire, slower). Scoop out each portion with a Bowl.",
+      "cells": [
+        "minecraft:water_bucket",
+        "morefood:item_fruit_tomato",
+        "morefood:item_fruit_tomato",
+        "morefood:item_fruit_tomato",
+        "morefood:item_onion_chopped",
+        "morefood:item_stock",
+        {
+          "item": "morefood:item_soup_tomato",
+          "count": 2,
+          "note": "result"
+        }
+      ]
+    }
+  ]
+}

@@ -1,12 +1,66 @@
 {
   "section": "toppings",
   "template": "simplebooks:text",
-  "sort": 21,
+  "sort": 99,
   "title": "Toppings",
   "icon": "morefood:item_bacon",
-  "subtitle": "Optional extras for pizza.",
-  "text": "Any three of these can go on a pizza after the cheese. Each one is made on its own: chop vegetables with the knife, cook meat on the stove. This page is a stub for the Simple Books link test.",
+  "subtitle": "Extras for a pizza, up to 3.",
+  "text": "Any three of these can go on a pizza after the cheese slices. Click one to see how to make it. Mushrooms are picked as they are.",
   "steps": [
-    { "kind": "craft_shapeless", "title": "Chopped Tomato", "inputs": ["morefood:item_knife", "morefood:item_fruit_tomato"], "output": "morefood:item_tomato_chopped" }
+    {
+      "kind": "links",
+      "header": "Toppings:",
+      "columns": 3,
+      "links": [
+        {
+          "item": "morefood:item_tomato_chopped",
+          "page": "topping_tomato_chopped"
+        },
+        {
+          "item": "morefood:item_onion_chopped",
+          "page": "topping_onion_chopped"
+        },
+        {
+          "item": "morefood:item_garlic_chopped",
+          "page": "topping_garlic_chopped"
+        },
+        {
+          "item": "minecraft:red_mushroom",
+          "page": "toppings"
+        },
+        {
+          "item": "minecraft:brown_mushroom",
+          "page": "toppings"
+        },
+        {
+          "item": "morefood:item_bacon",
+          "page": "topping_bacon"
+        },
+        {
+          "item": "morefood:item_minced_meat_cooked",
+          "page": "topping_minced_meat_cooked"
+        },
+        {
+          "item": "morefood:item_sausage",
+          "page": "topping_sausage"
+        },
+        {
+          "item": "morefood:item_spinach",
+          "page": "crop_spinach"
+        },
+        {
+          "item": "morefood:item_kale",
+          "page": "crop_kale"
+        },
+        {
+          "item": "morefood:item_peas",
+          "page": "crop_peas"
+        },
+        {
+          "item": "morefood:item_leek_sliced",
+          "page": "topping_leek_sliced"
+        }
+      ]
+    }
   ]
 }

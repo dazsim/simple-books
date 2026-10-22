@@ -1,0 +1,97 @@
+{
+  "section": "crops",
+  "template": "simplebooks:crop",
+  "sort": 307,
+  "title": "Onion",
+  "icon": "morefood:item_onion",
+  "subtitle": "A crop. Seeds drop from grass.",
+  "text": "Break grass to find Onion Seed. Plant them on farmland and harvest when fully grown; Bone Meal speeds it up. One Onion crafts back into seeds.",
+  "steps": [
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_onion"
+      ],
+      "output": "morefood:item_seed_onion"
+    },
+    {
+      "kind": "links",
+      "header": "Used in:",
+      "columns": 3,
+      "links": [
+        {
+          "item": "morefood:item_stew_beef_dumplings",
+          "page": "stew_beef_dumplings"
+        },
+        {
+          "item": "morefood:item_bubble_squeak",
+          "page": "bubble_squeak"
+        },
+        {
+          "item": "morefood:item_sandwich_cheese_coleslaw",
+          "page": "sandwich_cheese_coleslaw"
+        },
+        {
+          "item": "morefood:item_stew_chicken",
+          "page": "stew_chicken"
+        },
+        {
+          "item": "morefood:item_pie_chicken_leek",
+          "page": "pie_chicken_leek"
+        },
+        {
+          "item": "morefood:item_onion_chopped",
+          "page": "topping_onion_chopped"
+        },
+        {
+          "item": "morefood:item_pasty",
+          "page": "pasty"
+        },
+        {
+          "item": "morefood:item_pie_cottage",
+          "page": "pie_cottage"
+        },
+        {
+          "item": "morefood:item_salad_garden",
+          "page": "salad_garden"
+        },
+        {
+          "item": "morefood:item_gravy",
+          "page": "gravy"
+        },
+        {
+          "item": "morefood:item_soup_kale_potato",
+          "page": "soup_kale_potato"
+        },
+        {
+          "item": "morefood:item_soup_leek_potato",
+          "page": "soup_leek_potato"
+        },
+        {
+          "item": "morefood:item_stew_mutton",
+          "page": "stew_mutton"
+        },
+        {
+          "item": "morefood:item_soup_parsnip",
+          "page": "soup_parsnip"
+        },
+        {
+          "item": "morefood:item_soup_pea_ham",
+          "page": "soup_pea_ham"
+        },
+        {
+          "item": "morefood:item_stew_pork",
+          "page": "stew_pork"
+        },
+        {
+          "item": "morefood:item_roast_beef_dinner",
+          "page": "roast_beef_dinner"
+        },
+        {
+          "item": "morefood:item_roast_chicken_dinner",
+          "page": "roast_chicken_dinner"
+        }
+      ]
+    }
+  ]
+}

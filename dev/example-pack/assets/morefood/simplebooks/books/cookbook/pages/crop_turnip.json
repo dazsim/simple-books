@@ -1,0 +1,37 @@
+{
+  "section": "crops",
+  "template": "simplebooks:crop",
+  "sort": 312,
+  "title": "Turnip",
+  "icon": "morefood:item_turnip",
+  "subtitle": "A crop. Seeds drop from grass.",
+  "text": "Break grass to find Turnip Seeds. Plant them on farmland and harvest when fully grown; Bone Meal speeds it up. One Turnip crafts back into seeds.",
+  "steps": [
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_turnip"
+      ],
+      "output": "morefood:item_seed_turnip"
+    },
+    {
+      "kind": "links",
+      "header": "Used in:",
+      "columns": 3,
+      "links": [
+        {
+          "item": "morefood:item_turnip_roast",
+          "page": "turnip_roast"
+        },
+        {
+          "item": "morefood:item_roast_vegetables",
+          "page": "roast_vegetables"
+        },
+        {
+          "item": "morefood:item_stew_vegetable",
+          "page": "stew_vegetable"
+        }
+      ]
+    }
+  ]
+}

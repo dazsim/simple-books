@@ -1,0 +1,90 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:recipe",
+  "sort": 1057,
+  "title": "Gravy",
+  "icon": "morefood:item_gravy",
+  "subtitle": "Put together at the crafting table.",
+  "ingredients": [
+    {
+      "items": [
+        "minecraft:bone",
+        "morefood:item_chicken_bone"
+      ],
+      "name": "Bone or Chicken Bone"
+    },
+    {
+      "items": [
+        "minecraft:carrot",
+        "morefood:item_onion",
+        "morefood:item_lettuce",
+        "minecraft:potato"
+      ],
+      "name": "Carrot or other"
+    },
+    "minecraft:water_bucket",
+    {
+      "item": "minecraft:glass_bottle",
+      "count": 2
+    },
+    "morefood:item_suet",
+    "minecraft:wheat"
+  ],
+  "tools": [
+    "minecraft:crafting_table",
+    "morefood:item_pestle_mortar",
+    "morefood:item_pot",
+    "morefood:block_stove"
+  ],
+  "need_note": "Tools and Buckets are not consumed",
+  "steps": [
+    {
+      "kind": "sequence",
+      "title": "Stock in the Pot",
+      "text_first": true,
+      "text": "Put these in the Pot on the Stove, in any order, 20 seconds (or over a campfire, slower). Scoop out each portion with a Glass Bottle.",
+      "cells": [
+        "minecraft:water_bucket",
+        {
+          "items": [
+            "minecraft:bone",
+            "morefood:item_chicken_bone"
+          ],
+          "name": "Bone or Chicken Bone"
+        },
+        {
+          "items": [
+            "minecraft:carrot",
+            "morefood:item_onion",
+            "morefood:item_lettuce",
+            "minecraft:potato"
+          ],
+          "name": "Carrot or other"
+        },
+        {
+          "item": "morefood:item_stock",
+          "count": 3,
+          "note": "result"
+        }
+      ]
+    },
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_pestle_mortar",
+        "minecraft:wheat"
+      ],
+      "output": "morefood:item_flour"
+    },
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_stock",
+        "morefood:item_suet",
+        "morefood:item_flour",
+        "minecraft:glass_bottle"
+      ],
+      "output": "morefood:item_gravy"
+    }
+  ]
+}

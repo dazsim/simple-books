@@ -1,0 +1,98 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:recipe",
+  "sort": 1053,
+  "title": "Fish and Chips",
+  "icon": "morefood:item_fish_and_chips",
+  "subtitle": "Put together at the crafting table.",
+  "ingredients": [
+    "minecraft:wheat",
+    "minecraft:egg",
+    "minecraft:milk_bucket",
+    "minecraft:cod",
+    "minecraft:potato"
+  ],
+  "tools": [
+    "minecraft:crafting_table",
+    "morefood:item_pestle_mortar",
+    "morefood:item_knife",
+    "morefood:item_pot",
+    "morefood:item_frying_pan",
+    "morefood:block_stove"
+  ],
+  "need_note": "Tools and Buckets are not consumed",
+  "steps": [
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_pestle_mortar",
+        "minecraft:wheat"
+      ],
+      "output": "morefood:item_flour"
+    },
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_pot",
+        "morefood:item_flour",
+        "minecraft:egg",
+        "minecraft:milk_bucket"
+      ],
+      "output": "morefood:item_batter"
+    },
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_batter",
+        "minecraft:cod"
+      ],
+      "output": "morefood:item_fish_battered_uncooked"
+    },
+    {
+      "kind": "process",
+      "title": "Battered Fish",
+      "note": "5 seconds,\nfrom the stove\noutput slot",
+      "inputs": [
+        "morefood:item_fish_battered_uncooked"
+      ],
+      "appliance": "morefood:item_frying_pan",
+      "on": "morefood:block_stove",
+      "output": "morefood:item_fish_battered"
+    },
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_knife",
+        "minecraft:potato"
+      ],
+      "output": "morefood:item_potato_peeled"
+    },
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_knife",
+        "morefood:item_potato_peeled"
+      ],
+      "output": "morefood:item_potato_peeled_chipped"
+    },
+    {
+      "kind": "process",
+      "title": "Chips",
+      "note": "5 seconds,\nfrom the stove\noutput slot",
+      "inputs": [
+        "morefood:item_potato_peeled_chipped"
+      ],
+      "appliance": "morefood:item_frying_pan",
+      "on": "morefood:block_stove",
+      "output": "morefood:item_chips"
+    },
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_fish_battered",
+        "morefood:item_chips"
+      ],
+      "output": "morefood:item_fish_and_chips"
+    }
+  ]
+}

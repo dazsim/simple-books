@@ -1,0 +1,31 @@
+{
+  "section": "tools",
+  "template": "simplebooks:tool",
+  "sort": 209,
+  "title": "Baking Peel",
+  "icon": "morefood:item_baking_peel",
+  "subtitle": "Carries food to the oven.",
+  "text": "Use it on a finished pizza or pie on the Assembly Board to pick it up, then use it on a Stove to slide it into the oven. Sneak and use it to tip the food back into your inventory.",
+  "steps": [
+    {
+      "kind": "text",
+      "text": "How to make it:"
+    },
+    {
+      "kind": "craft_shaped",
+      "pattern": [
+        "P",
+        "P",
+        "S"
+      ],
+      "key": {
+        "P": {
+          "item": "#minecraft:planks",
+          "name": "Planks"
+        },
+        "S": "minecraft:stick"
+      },
+      "output": "morefood:item_baking_peel"
+    }
+  ]
+}

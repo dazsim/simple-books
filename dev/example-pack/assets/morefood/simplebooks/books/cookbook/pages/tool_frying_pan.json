@@ -1,0 +1,15 @@
+{
+  "section": "tools",
+  "template": "simplebooks:tool",
+  "sort": 202,
+  "title": "Frying Pan",
+  "icon": "morefood:item_frying_pan",
+  "subtitle": "Fries on the stove.",
+  "text": "Set it on a Stove ring and use the food on it. It sizzles while it cooks and the cooked food goes to the stove output slots.",
+  "steps": [
+    {
+      "kind": "text",
+      "text": "How to make it:"
+    }
+  ]
+}

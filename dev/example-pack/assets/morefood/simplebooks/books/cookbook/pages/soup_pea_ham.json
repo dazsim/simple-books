@@ -1,0 +1,119 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:recipe",
+  "sort": 1011,
+  "title": "Pea and Ham Soup",
+  "icon": "morefood:item_soup_pea_ham",
+  "subtitle": "Cooked in the pot on the stove.",
+  "ingredients": [
+    {
+      "item": "morefood:item_peas",
+      "count": 3
+    },
+    {
+      "items": [
+        "minecraft:bone",
+        "morefood:item_chicken_bone"
+      ],
+      "name": "Bone or Chicken Bone"
+    },
+    {
+      "items": [
+        "minecraft:carrot",
+        "morefood:item_onion",
+        "morefood:item_lettuce",
+        "minecraft:potato"
+      ],
+      "name": "Carrot or other"
+    },
+    "minecraft:water_bucket",
+    "minecraft:glass_bottle",
+    "morefood:item_joint_bacon",
+    "minecraft:bowl"
+  ],
+  "tools": [
+    "minecraft:crafting_table",
+    "morefood:item_knife",
+    "morefood:item_pot",
+    "morefood:item_frying_pan",
+    "morefood:block_stove"
+  ],
+  "need_note": "Tools and Buckets are not consumed",
+  "steps": [
+    {
+      "kind": "sequence",
+      "title": "Stock in the Pot",
+      "text_first": true,
+      "text": "Put these in the Pot on the Stove, in any order, 20 seconds (or over a campfire, slower). Scoop out each portion with a Glass Bottle.",
+      "cells": [
+        "minecraft:water_bucket",
+        {
+          "items": [
+            "minecraft:bone",
+            "morefood:item_chicken_bone"
+          ],
+          "name": "Bone or Chicken Bone"
+        },
+        {
+          "items": [
+            "minecraft:carrot",
+            "morefood:item_onion",
+            "morefood:item_lettuce",
+            "minecraft:potato"
+          ],
+          "name": "Carrot or other"
+        },
+        {
+          "item": "morefood:item_stock",
+          "count": 3,
+          "note": "result"
+        }
+      ]
+    },
+    {
+      "kind": "craft_shaped",
+      "pattern": [
+        "A",
+        "B"
+      ],
+      "key": {
+        "A": "morefood:item_knife",
+        "B": "morefood:item_joint_bacon"
+      },
+      "output": {
+        "item": "morefood:item_bacon_uncooked",
+        "count": 8
+      }
+    },
+    {
+      "kind": "process",
+      "title": "Bacon",
+      "note": "5 seconds,\nfrom the stove\noutput slot",
+      "inputs": [
+        "morefood:item_bacon_uncooked"
+      ],
+      "appliance": "morefood:item_frying_pan",
+      "on": "morefood:block_stove",
+      "output": "morefood:item_bacon"
+    },
+    {
+      "kind": "sequence",
+      "title": "Pea and Ham Soup in the Pot",
+      "text_first": true,
+      "text": "Put these in the Pot on the Stove, in any order, 20 seconds (or over a campfire, slower). Scoop out each portion with a Bowl.",
+      "cells": [
+        "minecraft:water_bucket",
+        "morefood:item_peas",
+        "morefood:item_peas",
+        "morefood:item_peas",
+        "morefood:item_stock",
+        "morefood:item_bacon",
+        {
+          "item": "morefood:item_soup_pea_ham",
+          "count": 2,
+          "note": "result"
+        }
+      ]
+    }
+  ]
+}

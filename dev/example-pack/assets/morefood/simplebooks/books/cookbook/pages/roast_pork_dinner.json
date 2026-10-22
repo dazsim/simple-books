@@ -1,0 +1,146 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:recipe",
+  "sort": 1019,
+  "title": "Roast Pork Dinner",
+  "icon": "morefood:item_roast_pork_dinner",
+  "subtitle": "Put together at the crafting table.",
+  "ingredients": [
+    "minecraft:potato",
+    "minecraft:cooked_porkchop",
+    {
+      "item": "#morefood:roast_veg",
+      "name": "Roast Veg"
+    },
+    {
+      "items": [
+        "minecraft:bone",
+        "morefood:item_chicken_bone"
+      ],
+      "name": "Bone or Chicken Bone"
+    },
+    {
+      "items": [
+        "minecraft:carrot",
+        "morefood:item_onion",
+        "morefood:item_lettuce",
+        "minecraft:potato"
+      ],
+      "name": "Carrot or other"
+    },
+    "minecraft:water_bucket",
+    {
+      "item": "minecraft:glass_bottle",
+      "count": 3
+    },
+    "morefood:item_suet",
+    "minecraft:wheat",
+    "minecraft:apple",
+    "minecraft:sugar"
+  ],
+  "tools": [
+    "minecraft:crafting_table",
+    "morefood:item_pestle_mortar",
+    "morefood:item_mincer",
+    "morefood:item_knife",
+    "morefood:item_pot",
+    "morefood:block_stove"
+  ],
+  "need_note": "Tools and Buckets are not consumed",
+  "steps": [
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_knife",
+        "minecraft:potato"
+      ],
+      "output": "morefood:item_potato_peeled"
+    },
+    {
+      "kind": "process",
+      "title": "Roast Potato",
+      "note": "10 seconds,\nin the oven slot,\nor use a Baking Peel",
+      "inputs": [
+        "morefood:item_potato_peeled"
+      ],
+      "appliance": {
+        "item": "morefood:block_stove",
+        "name": "Stove oven"
+      },
+      "output": "morefood:item_potato_roast"
+    },
+    {
+      "kind": "sequence",
+      "title": "Stock in the Pot",
+      "text_first": true,
+      "text": "Put these in the Pot on the Stove, in any order, 20 seconds (or over a campfire, slower). Scoop out each portion with a Glass Bottle.",
+      "cells": [
+        "minecraft:water_bucket",
+        {
+          "items": [
+            "minecraft:bone",
+            "morefood:item_chicken_bone"
+          ],
+          "name": "Bone or Chicken Bone"
+        },
+        {
+          "items": [
+            "minecraft:carrot",
+            "morefood:item_onion",
+            "morefood:item_lettuce",
+            "minecraft:potato"
+          ],
+          "name": "Carrot or other"
+        },
+        {
+          "item": "morefood:item_stock",
+          "count": 3,
+          "note": "result"
+        }
+      ]
+    },
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_pestle_mortar",
+        "minecraft:wheat"
+      ],
+      "output": "morefood:item_flour"
+    },
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_stock",
+        "morefood:item_suet",
+        "morefood:item_flour",
+        "minecraft:glass_bottle"
+      ],
+      "output": "morefood:item_gravy"
+    },
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_mincer",
+        "minecraft:apple",
+        "minecraft:sugar",
+        "minecraft:glass_bottle"
+      ],
+      "output": "morefood:item_sauce_apple"
+    },
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_potato_roast",
+        "minecraft:cooked_porkchop",
+        {
+          "item": "#morefood:roast_veg",
+          "name": "Roast Veg"
+        },
+        "morefood:item_gravy",
+        "morefood:item_sauce_apple"
+      ],
+      "output": "morefood:item_roast_pork_dinner",
+      "label_width": 158
+    }
+  ]
+}

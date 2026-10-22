@@ -1,0 +1,32 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:recipe",
+  "sort": 1062,
+  "title": "Slice of Bread",
+  "icon": "morefood:item_bread_slice",
+  "ingredients": [
+    "minecraft:bread"
+  ],
+  "tools": [
+    "minecraft:crafting_table",
+    "morefood:item_knife"
+  ],
+  "need_note": "Tools and Buckets are not consumed",
+  "steps": [
+    {
+      "kind": "craft_shaped",
+      "pattern": [
+        "A",
+        "B"
+      ],
+      "key": {
+        "A": "morefood:item_knife",
+        "B": "minecraft:bread"
+      },
+      "output": {
+        "item": "morefood:item_bread_slice",
+        "count": 8
+      }
+    }
+  ]
+}

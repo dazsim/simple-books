@@ -1,0 +1,144 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:recipe",
+  "sort": 1041,
+  "title": "Chicken Wrap",
+  "icon": "morefood:item_wrap_chicken",
+  "subtitle": "Built on the assembly board.",
+  "ingredients": [
+    "minecraft:wheat",
+    "minecraft:water_bucket",
+    "minecraft:cooked_chicken",
+    "morefood:item_lettuce",
+    "morefood:item_fruit_tomato"
+  ],
+  "tools": [
+    "minecraft:crafting_table",
+    "morefood:item_pestle_mortar",
+    "morefood:item_mixing_bowl",
+    "morefood:item_knife",
+    "morefood:item_pot",
+    "morefood:item_frying_pan",
+    "morefood:block_stove",
+    "morefood:block_assembly_board"
+  ],
+  "need_note": "Tools and Buckets are not consumed",
+  "steps": [
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_pestle_mortar",
+        "minecraft:wheat"
+      ],
+      "output": "morefood:item_flour"
+    },
+    {
+      "kind": "process",
+      "title": "Salt",
+      "note": "20 seconds,\nor over a\ncampfire, slower",
+      "inputs": [
+        "minecraft:water_bucket"
+      ],
+      "appliance": "morefood:item_pot",
+      "on": "morefood:block_stove",
+      "output": {
+        "item": "morefood:item_salt",
+        "count": 2
+      }
+    },
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_mixing_bowl",
+        "morefood:item_flour",
+        "morefood:item_salt",
+        "minecraft:water_bucket"
+      ],
+      "output": "morefood:item_dough"
+    },
+    {
+      "kind": "craft_shaped",
+      "pattern": [
+        "A",
+        "B"
+      ],
+      "key": {
+        "A": "morefood:item_knife",
+        "B": "morefood:item_dough"
+      },
+      "output": {
+        "item": "morefood:item_dough_medium",
+        "count": 2
+      }
+    },
+    {
+      "kind": "craft_shaped",
+      "pattern": [
+        "A",
+        "B"
+      ],
+      "key": {
+        "A": "morefood:item_knife",
+        "B": "morefood:item_dough_medium"
+      },
+      "output": {
+        "item": "morefood:item_dough_small",
+        "count": 2
+      }
+    },
+    {
+      "kind": "process",
+      "title": "Flatbread",
+      "note": "5 seconds,\nfrom the stove\noutput slot",
+      "inputs": [
+        "morefood:item_dough_small"
+      ],
+      "appliance": "morefood:item_frying_pan",
+      "on": "morefood:block_stove",
+      "output": "morefood:item_flatbread"
+    },
+    {
+      "kind": "craft_shaped",
+      "pattern": [
+        "A",
+        "B"
+      ],
+      "key": {
+        "A": "morefood:item_knife",
+        "B": "morefood:item_fruit_tomato"
+      },
+      "output": {
+        "item": "morefood:item_tomato_chopped",
+        "count": 4
+      }
+    },
+    {
+      "kind": "assembly",
+      "title": "Build it on the Assembly Board",
+      "text": "Use each item on the Assembly Board in this order, then take it off with an empty hand:",
+      "image": "morefood:textures/simplebooks/cookbook/board.png",
+      "cells": [
+        {
+          "item": "morefood:item_flatbread",
+          "note": "first"
+        },
+        {
+          "item": "minecraft:cooked_chicken",
+          "note": "second"
+        },
+        {
+          "item": "morefood:item_lettuce",
+          "note": "third"
+        },
+        {
+          "item": "morefood:item_tomato_chopped",
+          "note": "fourth"
+        },
+        {
+          "item": "morefood:item_wrap_chicken",
+          "note": "done"
+        }
+      ]
+    }
+  ]
+}

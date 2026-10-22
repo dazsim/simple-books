@@ -1,0 +1,66 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:recipe",
+  "sort": 1061,
+  "title": "Neeps",
+  "icon": "morefood:item_neeps",
+  "subtitle": "Cooked in the pot on the stove.",
+  "ingredients": [
+    {
+      "item": "morefood:item_swede",
+      "count": 2
+    },
+    "minecraft:milk_bucket",
+    "minecraft:water_bucket",
+    "minecraft:bowl"
+  ],
+  "tools": [
+    "minecraft:crafting_table",
+    "morefood:item_mixing_bowl",
+    "morefood:item_pot",
+    "morefood:block_stove"
+  ],
+  "need_note": "Tools and Buckets are not consumed",
+  "steps": [
+    {
+      "kind": "process",
+      "title": "Salt",
+      "note": "20 seconds,\nor over a\ncampfire, slower",
+      "inputs": [
+        "minecraft:water_bucket"
+      ],
+      "appliance": "morefood:item_pot",
+      "on": "morefood:block_stove",
+      "output": {
+        "item": "morefood:item_salt",
+        "count": 2
+      }
+    },
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_mixing_bowl",
+        "minecraft:milk_bucket",
+        "morefood:item_salt"
+      ],
+      "output": "morefood:item_butter"
+    },
+    {
+      "kind": "sequence",
+      "title": "Neeps in the Pot",
+      "text_first": true,
+      "text": "Put these in the Pot on the Stove, in any order, 20 seconds (or over a campfire, slower). Scoop out each portion with a Bowl.",
+      "cells": [
+        "minecraft:water_bucket",
+        "morefood:item_swede",
+        "morefood:item_swede",
+        "morefood:item_butter",
+        {
+          "item": "morefood:item_neeps",
+          "count": 2,
+          "note": "result"
+        }
+      ]
+    }
+  ]
+}

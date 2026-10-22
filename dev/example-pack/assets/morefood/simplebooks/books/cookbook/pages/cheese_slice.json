@@ -1,0 +1,45 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:recipe",
+  "sort": 1050,
+  "title": "Cheese Slice",
+  "icon": "morefood:item_cheese_slice",
+  "ingredients": [
+    "minecraft:milk_bucket"
+  ],
+  "tools": [
+    "minecraft:crafting_table",
+    "morefood:item_knife",
+    "morefood:item_pot",
+    "morefood:block_stove"
+  ],
+  "need_note": "Tools and Buckets are not consumed",
+  "steps": [
+    {
+      "kind": "process",
+      "title": "Cheese",
+      "note": "20 seconds,\nor over a\ncampfire, slower",
+      "inputs": [
+        "minecraft:milk_bucket"
+      ],
+      "appliance": "morefood:item_pot",
+      "on": "morefood:block_stove",
+      "output": "morefood:item_cheese"
+    },
+    {
+      "kind": "craft_shaped",
+      "pattern": [
+        "A",
+        "B"
+      ],
+      "key": {
+        "A": "morefood:item_knife",
+        "B": "morefood:item_cheese"
+      },
+      "output": {
+        "item": "morefood:item_cheese_slice",
+        "count": 8
+      }
+    }
+  ]
+}

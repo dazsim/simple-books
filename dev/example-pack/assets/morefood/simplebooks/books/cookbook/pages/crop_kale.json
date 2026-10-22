@@ -1,0 +1,37 @@
+{
+  "section": "crops",
+  "template": "simplebooks:crop",
+  "sort": 304,
+  "title": "Kale",
+  "icon": "morefood:item_kale",
+  "subtitle": "A crop. Seeds drop from grass.",
+  "text": "Break grass to find Kale Seeds. Plant them on farmland and harvest when fully grown; Bone Meal speeds it up. One Kale crafts back into seeds.",
+  "steps": [
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_kale"
+      ],
+      "output": "morefood:item_seed_kale"
+    },
+    {
+      "kind": "links",
+      "header": "Used in:",
+      "columns": 3,
+      "links": [
+        {
+          "item": "morefood:item_kale_crisps",
+          "page": "kale_crisps"
+        },
+        {
+          "item": "morefood:item_soup_kale_potato",
+          "page": "soup_kale_potato"
+        },
+        {
+          "item": "morefood:item_stew_sausage_kale",
+          "page": "stew_sausage_kale"
+        }
+      ]
+    }
+  ]
+}

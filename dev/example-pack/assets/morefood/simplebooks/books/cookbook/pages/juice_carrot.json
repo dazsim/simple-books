@@ -1,0 +1,28 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:recipe",
+  "sort": 1065,
+  "title": "Carrot Juice",
+  "icon": "morefood:item_juice_carrot",
+  "subtitle": "Put together at the crafting table.",
+  "ingredients": [
+    "minecraft:carrot",
+    "minecraft:glass_bottle"
+  ],
+  "tools": [
+    "minecraft:crafting_table",
+    "morefood:item_juicer"
+  ],
+  "need_note": "Tools and Buckets are not consumed",
+  "steps": [
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_juicer",
+        "minecraft:carrot",
+        "minecraft:glass_bottle"
+      ],
+      "output": "morefood:item_juice_carrot"
+    }
+  ]
+}

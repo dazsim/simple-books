@@ -1,0 +1,30 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:recipe",
+  "sort": 1022,
+  "title": "Roast Turnip",
+  "icon": "morefood:item_turnip_roast",
+  "subtitle": "Baked in the stove oven.",
+  "ingredients": [
+    "morefood:item_turnip"
+  ],
+  "tools": [
+    "morefood:block_stove"
+  ],
+  "need_note": "Tools and Buckets are not consumed",
+  "steps": [
+    {
+      "kind": "process",
+      "title": "Roast Turnip",
+      "note": "10 seconds,\nin the oven slot,\nor use a Baking Peel",
+      "inputs": [
+        "morefood:item_turnip"
+      ],
+      "appliance": {
+        "item": "morefood:block_stove",
+        "name": "Stove oven"
+      },
+      "output": "morefood:item_turnip_roast"
+    }
+  ]
+}

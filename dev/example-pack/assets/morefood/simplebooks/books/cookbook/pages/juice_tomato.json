@@ -1,0 +1,28 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:recipe",
+  "sort": 1066,
+  "title": "Tomato Juice",
+  "icon": "morefood:item_juice_tomato",
+  "subtitle": "Put together at the crafting table.",
+  "ingredients": [
+    "morefood:item_fruit_tomato",
+    "minecraft:glass_bottle"
+  ],
+  "tools": [
+    "minecraft:crafting_table",
+    "morefood:item_juicer"
+  ],
+  "need_note": "Tools and Buckets are not consumed",
+  "steps": [
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "morefood:item_juicer",
+        "morefood:item_fruit_tomato",
+        "minecraft:glass_bottle"
+      ],
+      "output": "morefood:item_juice_tomato"
+    }
+  ]
+}
