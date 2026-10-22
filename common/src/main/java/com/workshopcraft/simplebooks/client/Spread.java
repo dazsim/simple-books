@@ -142,11 +142,11 @@ public class Spread {
                 String t = cur.isEmpty() ? w : cur + " " + w;
                 if (font.width(t) - 1 <= max || cur.isEmpty()) cur = t;
                 else {
-                    out.add(Component.literal(cur).getVisualOrderText());
+                    addLine(out, cur, max);
                     cur = w;
                 }
             }
-            out.add(Component.literal(cur).getVisualOrderText());
+            addLine(out, cur, max);
         }
         return out;
     }
@@ -163,6 +163,11 @@ public class Spread {
             text(lines.get(i), lx, y + i * lh, sc, col);
         }
         return lines.size() * lh;
+    }
+
+    private void addLine(List<FormattedCharSequence> out, String line, int max) {
+        if (font.width(line) - 1 <= max) out.add(Component.literal(line).getVisualOrderText());
+        else out.addAll(font.split(Component.literal(line), max));
     }
 
     void rule(float x0, float x1, float y) {
