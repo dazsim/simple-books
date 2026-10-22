@@ -316,6 +316,7 @@ public class Spread {
             return;
         }
         Template t = page.template();
+        stepNo = (int) num(page.json(), "first_step", 1) - 1;
         for (var e : t.slots().entrySet()) {
             try {
                 slot(e.getKey(), e.getValue());
@@ -719,6 +720,7 @@ public class Spread {
         for (Book.Page p : book.pages()) {
             String sec = p.json().has("section") ? p.json().get("section").getAsString() : "";
             if (sec.equals("contents")) continue;
+            if (p.json().has("contents") && !p.json().get("contents").getAsBoolean()) continue;
             if (!sec.equals(last)) {
                 rows.add(sec);
                 last = sec;

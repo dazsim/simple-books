@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1029,
+  "sort": 1058,
   "title": "Fried Egg",
   "icon": "morefood:item_fried_egg",
   "subtitle": "Fried in the pan on the stove.",

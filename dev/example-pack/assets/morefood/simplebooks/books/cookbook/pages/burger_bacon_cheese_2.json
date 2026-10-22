@@ -1,0 +1,84 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:steps",
+  "sort": 1051,
+  "contents": false,
+  "title": "Bacon Cheeseburger, continued",
+  "icon": "morefood:item_burger_bacon_cheese",
+  "first_step": 11,
+  "steps": [
+    {
+      "kind": "craft_shaped",
+      "pattern": [
+        "A",
+        "B"
+      ],
+      "key": {
+        "A": "morefood:item_knife",
+        "B": "morefood:item_cheese"
+      },
+      "output": {
+        "item": "morefood:item_cheese_slice",
+        "count": 8
+      }
+    },
+    {
+      "kind": "craft_shaped",
+      "pattern": [
+        "A",
+        "B"
+      ],
+      "key": {
+        "A": "morefood:item_knife",
+        "B": "morefood:item_joint_bacon"
+      },
+      "output": {
+        "item": "morefood:item_bacon_uncooked",
+        "count": 8
+      }
+    },
+    {
+      "kind": "process",
+      "title": "Bacon",
+      "note": "5 seconds,\nfrom the stove\noutput slot",
+      "inputs": [
+        "morefood:item_bacon_uncooked"
+      ],
+      "appliance": "morefood:item_frying_pan",
+      "on": "morefood:block_stove",
+      "output": "morefood:item_bacon"
+    },
+    {
+      "kind": "assembly",
+      "title": "Build it on the Assembly Board",
+      "text": "Use each item on the Assembly Board in this order, then take it off with an empty hand:",
+      "image": "morefood:textures/simplebooks/cookbook/board.png",
+      "cells": [
+        {
+          "item": "morefood:item_bun",
+          "note": "first"
+        },
+        {
+          "item": "morefood:item_beef_patty_cooked",
+          "note": "second"
+        },
+        {
+          "item": "morefood:item_cheese_slice",
+          "note": "third"
+        },
+        {
+          "item": "morefood:item_bacon",
+          "note": "fourth"
+        },
+        {
+          "item": "morefood:item_bun",
+          "note": "fifth"
+        },
+        {
+          "item": "morefood:item_burger_bacon_cheese",
+          "note": "done"
+        }
+      ]
+    }
+  ]
+}

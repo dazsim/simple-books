@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1032,
+  "sort": 1064,
   "title": "Toast",
   "icon": "morefood:item_toast",
   "subtitle": "Baked in the stove oven.",

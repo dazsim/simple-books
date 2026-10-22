@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1002,
+  "sort": 1004,
   "title": "Cottage Pie",
   "icon": "morefood:item_pie_cottage",
   "subtitle": "Baked in the stove oven.",
@@ -143,67 +143,12 @@
           "note": "result"
         }
       ]
-    },
+    }
+  ],
+  "links": [
     {
-      "kind": "craft_shapeless",
-      "inputs": [
-        "morefood:item_knife",
-        "minecraft:potato"
-      ],
-      "output": "morefood:item_potato_peeled"
-    },
-    {
-      "kind": "process",
-      "title": "Boiled Potato",
-      "note": "15 seconds,\nor over a\ncampfire, slower",
-      "inputs": [
-        "minecraft:water_bucket",
-        "morefood:item_potato_peeled"
-      ],
-      "appliance": "morefood:item_pot",
-      "on": "morefood:block_stove",
-      "output": "morefood:item_potato_boiled"
-    },
-    {
-      "kind": "craft_shapeless",
-      "inputs": [
-        "morefood:item_mincer",
-        "morefood:item_potato_boiled"
-      ],
-      "output": "morefood:item_potato_mashed"
-    },
-    {
-      "kind": "assembly",
-      "title": "Build it on the Assembly Board",
-      "text": "Use each item on the Assembly Board in this order, then take it off with an empty hand:",
-      "image": "morefood:textures/simplebooks/cookbook/board.png",
-      "cells": [
-        {
-          "item": "morefood:item_filling_cottage",
-          "note": "first"
-        },
-        {
-          "item": "morefood:item_potato_mashed",
-          "note": "second"
-        },
-        {
-          "item": "morefood:item_pie_cottage_uncooked",
-          "note": "done"
-        }
-      ]
-    },
-    {
-      "kind": "process",
-      "title": "Cottage Pie",
-      "note": "15 seconds,\nin the oven slot,\nor use a Baking Peel",
-      "inputs": [
-        "morefood:item_pie_cottage_uncooked"
-      ],
-      "appliance": {
-        "item": "morefood:block_stove",
-        "name": "Stove oven"
-      },
-      "output": "morefood:item_pie_cottage"
+      "label": "Continued on the next page",
+      "page": "pie_cottage_2"
     }
   ]
 }

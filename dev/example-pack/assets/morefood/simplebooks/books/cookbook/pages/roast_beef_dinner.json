@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1016,
+  "sort": 1032,
   "title": "Roast Beef Dinner",
   "icon": "morefood:item_roast_beef_dinner",
   "subtitle": "Put together at the crafting table.",

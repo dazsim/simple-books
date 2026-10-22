@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1042,
+  "sort": 1084,
   "title": "Footlong",
   "icon": "morefood:item_footlong",
   "subtitle": "Put together at the crafting table.",

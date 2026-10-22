@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1044,
+  "sort": 1088,
   "title": "Salad Burger",
   "icon": "morefood:item_burger_salad",
   "subtitle": "Built on the assembly board.",
@@ -145,57 +145,12 @@
         "item": "morefood:item_tomato_chopped",
         "count": 4
       }
-    },
+    }
+  ],
+  "links": [
     {
-      "kind": "craft_shaped",
-      "pattern": [
-        "A",
-        "B"
-      ],
-      "key": {
-        "A": "morefood:item_knife",
-        "B": "morefood:item_onion"
-      },
-      "output": {
-        "item": "morefood:item_onion_chopped",
-        "count": 4
-      }
-    },
-    {
-      "kind": "assembly",
-      "title": "Build it on the Assembly Board",
-      "text": "Use each item on the Assembly Board in this order, then take it off with an empty hand:",
-      "image": "morefood:textures/simplebooks/cookbook/board.png",
-      "cells": [
-        {
-          "item": "morefood:item_bun",
-          "note": "first"
-        },
-        {
-          "item": "morefood:item_beef_patty_cooked",
-          "note": "second"
-        },
-        {
-          "item": "morefood:item_lettuce",
-          "note": "third"
-        },
-        {
-          "item": "morefood:item_tomato_chopped",
-          "note": "fourth"
-        },
-        {
-          "item": "morefood:item_onion_chopped",
-          "note": "fifth"
-        },
-        {
-          "item": "morefood:item_bun",
-          "note": "sixth"
-        },
-        {
-          "item": "morefood:item_burger_salad",
-          "note": "done"
-        }
-      ]
+      "label": "Continued on the next page",
+      "page": "burger_salad_2"
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1010,
+  "sort": 1020,
   "title": "Parsnip Soup",
   "icon": "morefood:item_soup_parsnip",
   "subtitle": "Cooked in the pot on the stove.",

@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1022,
+  "sort": 1044,
   "title": "Roast Turnip",
   "icon": "morefood:item_turnip_roast",
   "subtitle": "Baked in the stove oven.",

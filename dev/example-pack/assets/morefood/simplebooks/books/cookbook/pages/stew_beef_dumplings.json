@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1005,
+  "sort": 1010,
   "title": "Beef Stew & Dumplings",
   "icon": "morefood:item_stew_beef_dumplings",
   "subtitle": "Put together at the crafting table.",

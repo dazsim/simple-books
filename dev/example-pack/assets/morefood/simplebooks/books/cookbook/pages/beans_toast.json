@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1027,
+  "sort": 1054,
   "title": "Baked Beans on Toast",
   "icon": "morefood:item_beans_toast",
   "subtitle": "Built on the assembly board.",

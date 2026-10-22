@@ -1,0 +1,65 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:steps",
+  "sort": 1001,
+  "contents": false,
+  "title": "Chicken and Leek Pie, continued",
+  "icon": "morefood:item_pie_chicken_leek",
+  "first_step": 7,
+  "steps": [
+    {
+      "kind": "sequence",
+      "title": "Chicken and Leek Filling in the Pot",
+      "text_first": true,
+      "text": "Put these in the Pot on the Stove, in any order, 15 seconds (or over a campfire, slower).",
+      "cells": [
+        "minecraft:cooked_chicken",
+        "morefood:item_leek_sliced",
+        "morefood:item_leek_sliced",
+        "morefood:item_stock",
+        "morefood:item_flour",
+        {
+          "item": "morefood:item_filling_chicken_leek",
+          "note": "result"
+        }
+      ]
+    },
+    {
+      "kind": "assembly",
+      "title": "Build it on the Assembly Board",
+      "text": "Use each item on the Assembly Board in this order, then take it off with an empty hand:",
+      "image": "morefood:textures/simplebooks/cookbook/board.png",
+      "cells": [
+        {
+          "item": "morefood:item_pastry",
+          "note": "first"
+        },
+        {
+          "item": "morefood:item_filling_chicken_leek",
+          "note": "second"
+        },
+        {
+          "item": "morefood:item_pastry",
+          "note": "third"
+        },
+        {
+          "item": "morefood:item_pie_chicken_leek_uncooked",
+          "note": "done"
+        }
+      ]
+    },
+    {
+      "kind": "process",
+      "title": "Chicken and Leek Pie",
+      "note": "15 seconds,\nin the oven slot,\nor use a Baking Peel",
+      "inputs": [
+        "morefood:item_pie_chicken_leek_uncooked"
+      ],
+      "appliance": {
+        "item": "morefood:block_stove",
+        "name": "Stove oven"
+      },
+      "output": "morefood:item_pie_chicken_leek"
+    }
+  ]
+}

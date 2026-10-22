@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1023,
+  "sort": 1046,
   "title": "Roast Vegetables",
   "icon": "morefood:item_roast_vegetables",
   "subtitle": "Baked in the stove oven.",

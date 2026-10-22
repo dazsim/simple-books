@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1035,
+  "sort": 1070,
   "title": "Beef Sandwich",
   "icon": "morefood:item_sandwich_beef",
   "subtitle": "Built on the assembly board.",

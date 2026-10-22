@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1045,
+  "sort": 1090,
   "title": "Spinach and Cheese Wrap",
   "icon": "morefood:item_wrap_spinach_cheese",
   "subtitle": "Built on the assembly board.",
@@ -122,49 +122,12 @@
       "appliance": "morefood:item_pot",
       "on": "morefood:block_stove",
       "output": "morefood:item_cheese"
-    },
+    }
+  ],
+  "links": [
     {
-      "kind": "craft_shaped",
-      "pattern": [
-        "A",
-        "B"
-      ],
-      "key": {
-        "A": "morefood:item_knife",
-        "B": "morefood:item_cheese"
-      },
-      "output": {
-        "item": "morefood:item_cheese_slice",
-        "count": 8
-      }
-    },
-    {
-      "kind": "assembly",
-      "title": "Build it on the Assembly Board",
-      "text": "Use each item on the Assembly Board in this order, then take it off with an empty hand:",
-      "image": "morefood:textures/simplebooks/cookbook/board.png",
-      "cells": [
-        {
-          "item": "morefood:item_flatbread",
-          "note": "first"
-        },
-        {
-          "item": "morefood:item_spinach",
-          "note": "second"
-        },
-        {
-          "item": "morefood:item_tomato_chopped",
-          "note": "third"
-        },
-        {
-          "item": "morefood:item_cheese_slice",
-          "note": "fourth"
-        },
-        {
-          "item": "morefood:item_wrap_spinach_cheese",
-          "note": "done"
-        }
-      ]
+      "label": "Continued on the next page",
+      "page": "wrap_spinach_cheese_2"
     }
   ]
 }

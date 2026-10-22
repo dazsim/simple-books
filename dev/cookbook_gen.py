@@ -268,6 +268,23 @@ for n, t in enumerate(TOOL_TEXT):
         'section': 'tools', 'template': 'simplebooks:tool', 'sort': 200 + n, 'title': name(t), 'icon': t,
         'subtitle': sub, 'text': txt, 'steps': [{'kind': 'text', 'text': 'How to make it:'}] + p.steps}
 
+# pages too long for one spread go on over a second one; numbers are how many steps did not fit
+OVER = {'pie_chicken_leek': 2, 'pie_cottage': 4, 'pie_shepherds': 4, 'pie_vegetable': 1, 'burger_bacon_cheese': 3,
+        'breakfast_full': 5, 'cheese_burger': 1, 'burger_salad': 1, 'wrap_spinach_cheese': 1}
+NUMBERED = {'craft_shapeless', 'craft_shaped', 'process', 'assembly', 'sequence'}
+
+def split(pid):
+    if pid not in OVER:
+        return
+    j = pages[pid]
+    cut = len(j['steps']) - OVER[pid] - 1
+    first, rest = j['steps'][:cut], j['steps'][cut:]
+    j['steps'] = first
+    j['links'] = [{'label': 'Continued on the next page', 'page': pid + '_2'}]
+    pages[pid + '_2'] = {'section': j['section'], 'template': 'simplebooks:steps', 'sort': j['sort'] + 1, 'contents': False,
+                         'title': j['title'] + ', continued', 'icon': j['icon'],
+                         'first_step': 1 + sum(1 for st in first if st['kind'] in NUMBERED), 'steps': rest}
+
 # recipes
 used = {}
 for k, rs in recipes.items():
@@ -296,7 +313,9 @@ def group(k):
 
 FINAL.sort(key=lambda k: (ORDER.index(group(k)), name(k)))
 for n, k in enumerate(FINAL):
-    pages[k.split(':')[1].replace('item_', '')] = recipe_page(k, 'recipes', 1000 + n, SUB.get(last_kind(k)))
+    pid = k.split(':')[1].replace('item_', '')
+    pages[pid] = recipe_page(k, 'recipes', 1000 + 2 * n, SUB.get(last_kind(k)))
+    split(pid)
 
 # crops
 for n, c in enumerate(CROPS):

@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1009,
+  "sort": 1018,
   "title": "Mutton Stew",
   "icon": "morefood:item_stew_mutton",
   "subtitle": "Put together at the crafting table.",

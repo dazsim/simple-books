@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1031,
+  "sort": 1062,
   "title": "Sausage",
   "icon": "morefood:item_sausage",
   "subtitle": "Fried in the pan on the stove.",

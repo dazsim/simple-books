@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1043,
+  "sort": 1086,
   "title": "Ham Sandwich",
   "icon": "morefood:item_sandwich_ham",
   "subtitle": "Built on the assembly board.",

@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1024,
+  "sort": 1048,
   "title": "Bacon",
   "icon": "morefood:item_bacon",
   "subtitle": "Fried in the pan on the stove.",

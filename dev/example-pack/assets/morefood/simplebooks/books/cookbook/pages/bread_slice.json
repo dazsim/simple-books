@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1062,
+  "sort": 1124,
   "title": "Slice of Bread",
   "icon": "morefood:item_bread_slice",
   "ingredients": [

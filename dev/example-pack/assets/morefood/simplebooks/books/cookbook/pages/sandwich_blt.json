@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1033,
+  "sort": 1066,
   "title": "BLT Sandwich",
   "icon": "morefood:item_sandwich_blt",
   "subtitle": "Built on the assembly board.",

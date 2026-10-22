@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1018,
+  "sort": 1036,
   "title": "Roast Mutton Dinner",
   "icon": "morefood:item_roast_mutton_dinner",
   "subtitle": "Put together at the crafting table.",

@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1008,
+  "sort": 1016,
   "title": "Leek and Potato Soup",
   "icon": "morefood:item_soup_leek_potato",
   "subtitle": "Cooked in the pot on the stove.",

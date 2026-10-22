@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1006,
+  "sort": 1012,
   "title": "Chicken Stew",
   "icon": "morefood:item_stew_chicken",
   "subtitle": "Put together at the crafting table.",

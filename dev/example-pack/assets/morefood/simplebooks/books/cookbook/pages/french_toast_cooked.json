@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1028,
+  "sort": 1056,
   "title": "Cooked French Toast",
   "icon": "morefood:item_french_toast_cooked",
   "subtitle": "Fried in the pan on the stove.",

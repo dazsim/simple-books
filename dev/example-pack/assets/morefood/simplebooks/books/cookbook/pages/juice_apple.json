@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1064,
+  "sort": 1128,
   "title": "Apple Juice",
   "icon": "morefood:item_juice_apple",
   "subtitle": "Put together at the crafting table.",

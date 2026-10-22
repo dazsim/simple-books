@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1038,
+  "sort": 1076,
   "title": "Cheese Sandwich",
   "icon": "morefood:item_sandwich_cheese",
   "subtitle": "Built on the assembly board.",

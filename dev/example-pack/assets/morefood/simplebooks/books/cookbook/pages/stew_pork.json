@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1012,
+  "sort": 1024,
   "title": "Pork Stew",
   "icon": "morefood:item_stew_pork",
   "subtitle": "Put together at the crafting table.",

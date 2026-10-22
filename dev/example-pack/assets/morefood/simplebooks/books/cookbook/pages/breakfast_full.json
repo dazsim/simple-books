@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1030,
+  "sort": 1060,
   "title": "Full English Breakfast",
   "icon": "morefood:item_breakfast_full",
   "subtitle": "Put together at the crafting table.",
@@ -174,80 +174,12 @@
         "morefood:item_potato_boiled"
       ],
       "output": "morefood:item_potato_mashed"
-    },
+    }
+  ],
+  "links": [
     {
-      "kind": "craft_shapeless",
-      "inputs": [
-        "morefood:item_knife",
-        "morefood:item_potato_mashed"
-      ],
-      "output": "morefood:item_hashbrown_uncooked"
-    },
-    {
-      "kind": "process",
-      "title": "Hashbrown",
-      "note": "5 seconds,\nfrom the stove\noutput slot",
-      "inputs": [
-        "morefood:item_hashbrown_uncooked"
-      ],
-      "appliance": "morefood:item_frying_pan",
-      "on": "morefood:block_stove",
-      "output": "morefood:item_hashbrown"
-    },
-    {
-      "kind": "sequence",
-      "title": "Cooked Breakfast",
-      "text_first": true,
-      "text": "Crafting Table (shapeless): put these in the grid in any order.",
-      "cells": [
-        "morefood:item_mushroom_fried",
-        "morefood:item_fried_egg",
-        "morefood:item_bacon",
-        "morefood:item_sausage",
-        "morefood:item_toast",
-        "morefood:item_hashbrown",
-        {
-          "item": "morefood:item_breakfast_cooked",
-          "note": "result"
-        }
-      ]
-    },
-    {
-      "kind": "craft_shapeless",
-      "inputs": [
-        "morefood:item_mincer",
-        "morefood:item_fruit_tomato",
-        "minecraft:sugar",
-        "minecraft:glass_bottle"
-      ],
-      "output": "morefood:item_sauce_tomato"
-    },
-    {
-      "kind": "sequence",
-      "title": "Baked Beans in the Pot",
-      "text_first": true,
-      "text": "Put these in the Pot on the Stove, in any order, 20 seconds (or over a campfire, slower). Scoop out each portion with a Bowl.",
-      "cells": [
-        "minecraft:water_bucket",
-        "morefood:item_haricot_beans",
-        "morefood:item_haricot_beans",
-        "morefood:item_haricot_beans",
-        "morefood:item_sauce_tomato",
-        "minecraft:sugar",
-        {
-          "item": "morefood:item_baked_beans",
-          "count": 3,
-          "note": "result"
-        }
-      ]
-    },
-    {
-      "kind": "craft_shapeless",
-      "inputs": [
-        "morefood:item_breakfast_cooked",
-        "morefood:item_baked_beans"
-      ],
-      "output": "morefood:item_breakfast_full"
+      "label": "Continued on the next page",
+      "page": "breakfast_full_2"
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1040,
+  "sort": 1080,
   "title": "Chicken Sandwich",
   "icon": "morefood:item_sandwich_chicken",
   "subtitle": "Built on the assembly board.",

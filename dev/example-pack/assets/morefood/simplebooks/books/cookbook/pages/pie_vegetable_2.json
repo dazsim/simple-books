@@ -1,0 +1,48 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:steps",
+  "sort": 1009,
+  "contents": false,
+  "title": "Vegetable Pie, continued",
+  "icon": "morefood:item_pie_vegetable",
+  "first_step": 8,
+  "steps": [
+    {
+      "kind": "assembly",
+      "title": "Build it on the Assembly Board",
+      "text": "Use each item on the Assembly Board in this order, then take it off with an empty hand:",
+      "image": "morefood:textures/simplebooks/cookbook/board.png",
+      "cells": [
+        {
+          "item": "morefood:item_pastry",
+          "note": "first"
+        },
+        {
+          "item": "morefood:item_filling_vegetable",
+          "note": "second"
+        },
+        {
+          "item": "morefood:item_pastry",
+          "note": "third"
+        },
+        {
+          "item": "morefood:item_pie_vegetable_uncooked",
+          "note": "done"
+        }
+      ]
+    },
+    {
+      "kind": "process",
+      "title": "Vegetable Pie",
+      "note": "15 seconds,\nin the oven slot,\nor use a Baking Peel",
+      "inputs": [
+        "morefood:item_pie_vegetable_uncooked"
+      ],
+      "appliance": {
+        "item": "morefood:block_stove",
+        "name": "Stove oven"
+      },
+      "output": "morefood:item_pie_vegetable"
+    }
+  ]
+}

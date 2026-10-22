@@ -1,0 +1,54 @@
+{
+  "section": "recipes",
+  "template": "simplebooks:steps",
+  "sort": 1091,
+  "contents": false,
+  "title": "Spinach and Cheese Wrap, continued",
+  "icon": "morefood:item_wrap_spinach_cheese",
+  "first_step": 9,
+  "steps": [
+    {
+      "kind": "craft_shaped",
+      "pattern": [
+        "A",
+        "B"
+      ],
+      "key": {
+        "A": "morefood:item_knife",
+        "B": "morefood:item_cheese"
+      },
+      "output": {
+        "item": "morefood:item_cheese_slice",
+        "count": 8
+      }
+    },
+    {
+      "kind": "assembly",
+      "title": "Build it on the Assembly Board",
+      "text": "Use each item on the Assembly Board in this order, then take it off with an empty hand:",
+      "image": "morefood:textures/simplebooks/cookbook/board.png",
+      "cells": [
+        {
+          "item": "morefood:item_flatbread",
+          "note": "first"
+        },
+        {
+          "item": "morefood:item_spinach",
+          "note": "second"
+        },
+        {
+          "item": "morefood:item_tomato_chopped",
+          "note": "third"
+        },
+        {
+          "item": "morefood:item_cheese_slice",
+          "note": "fourth"
+        },
+        {
+          "item": "morefood:item_wrap_spinach_cheese",
+          "note": "done"
+        }
+      ]
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1015,
+  "sort": 1030,
   "title": "Vegetable Stew",
   "icon": "morefood:item_stew_vegetable",
   "subtitle": "Cooked in the pot on the stove.",

@@ -1,7 +1,7 @@
 {
   "section": "recipes",
   "template": "simplebooks:recipe",
-  "sort": 1001,
+  "sort": 1002,
   "title": "Cornish Pasty",
   "icon": "morefood:item_pasty",
   "subtitle": "Baked in the stove oven.",
