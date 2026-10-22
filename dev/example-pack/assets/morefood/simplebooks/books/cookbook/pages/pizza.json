@@ -30,7 +30,7 @@
   "need_note": "Tools and Buckets are not consumed",
   "steps": [
     { "kind": "craft_shapeless", "inputs": ["morefood:item_pestle_mortar", "minecraft:wheat"], "output": "morefood:item_flour" },
-    { "kind": "process", "title": "Salt", "note": "20 seconds, or over a campfire, slower",
+    { "kind": "process", "title": "Salt", "note": "20 seconds,\nor over a\ncampfire, slower",
       "inputs": ["minecraft:water_bucket"], "appliance": "morefood:item_pot", "on": "morefood:block_stove",
       "output": { "item": "morefood:item_salt", "count": 2 },
       "image": "morefood:textures/simplebooks/cookbook/pot_on_stove.png" },
@@ -40,7 +40,7 @@
     { "kind": "craft_shapeless",
       "inputs": ["morefood:item_mincer", "morefood:item_fruit_tomato", "minecraft:sugar", "minecraft:glass_bottle"],
       "output": "morefood:item_sauce_tomato" },
-    { "kind": "process", "title": "Cheese", "note": "20 seconds, or over a campfire, slower",
+    { "kind": "process", "title": "Cheese", "note": "20 seconds,\nor over a\ncampfire, slower",
       "inputs": ["minecraft:milk_bucket"], "appliance": "morefood:item_pot", "on": "morefood:block_stove",
       "output": "morefood:item_cheese", "placeholder": "Picture: milk in the pot", "image_size": [104, 80] },
     { "kind": "page_break" },

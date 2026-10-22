@@ -132,8 +132,23 @@ public class Spread {
         text(c, cx - textW(c, sc) / 2, y, sc, col);
     }
 
+    /** Word wrap that never splits a word, like the mockup renderer. */
     List<FormattedCharSequence> wrap(Component c, float maxw, float sc) {
-        return font.split(c, Math.max(1, (int) (maxw / (2 * sc))));
+        int max = Math.max(1, (int) (maxw / (2 * sc)));
+        List<FormattedCharSequence> out = new ArrayList<>();
+        for (String para : c.getString().split("\n")) {
+            String cur = "";
+            for (String w : para.split(" ")) {
+                String t = cur.isEmpty() ? w : cur + " " + w;
+                if (font.width(t) - 1 <= max || cur.isEmpty()) cur = t;
+                else {
+                    out.add(Component.literal(cur).getVisualOrderText());
+                    cur = w;
+                }
+            }
+            out.add(Component.literal(cur).getVisualOrderText());
+        }
+        return out;
     }
 
     /** Wrapped paragraph; returns the height used. */
@@ -197,6 +212,7 @@ public class Spread {
             g.pose().translate(x, y);
             g.pose().scale(size / 16f, size / 16f);
             g.item(stack, 0, 0);
+            if (ref.count() > 1) g.itemDecorations(font, stack, 0, 0, String.valueOf(ref.count()));
             g.pose().popMatrix();
         }
         hits.add(new Hit(x, y, x + size, y + size, stack));
@@ -206,12 +222,6 @@ public class Spread {
         slot(x, y, s);
         float isz = s <= 36 ? s - 4 : s - 12;
         item(ref, x + (s - isz) / 2, y + (s - isz) / 2, isz);
-        if (ref.count() > 1 && draw) {
-            Component n = Component.literal(String.valueOf(ref.count()));
-            float cw = textW(n, 1);
-            text(n, x + s - cw - 1, y + s - 17, 1, rgb(63, 63, 63));
-            text(n, x + s - cw - 2, y + s - 18, 1, 0xFFFFFFFF);
-        }
     }
 
     void badge(float x, float y, int n) {
@@ -521,7 +531,7 @@ public class Spread {
         String note = str(el, "note", noteKey);
         float label = num(el, "label_width", 209);
         float bottom = y + 26;
-        if (note != null) bottom = Math.max(bottom, y + 30 + para(Texts.of(note), x + 34, y + 30, label - 59, 1, color("$soft"), 17, "left"));
+        if (note != null) bottom = Math.max(bottom, y + 30 + para(Texts.of(note), x + 34, y + 30, label - 34, 1, color("$soft"), 17, "left"));
         float iw = 0;
         if (el.has("image") || el.has("placeholder")) {
             float[] sz = size(el, 104, 76);

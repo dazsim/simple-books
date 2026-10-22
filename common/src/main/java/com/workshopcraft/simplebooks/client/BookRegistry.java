@@ -122,7 +122,11 @@ public class BookRegistry extends SimplePreparableReloadListener<BookRegistry.Lo
                         errors.addAll(t.errors());
                     }
                 }
-                if (t != null && errors.isEmpty()) checkPage(pj, t, errors, manager, images);
+                try {
+                    if (t != null && errors.isEmpty()) checkPage(pj, t, errors, manager, images);
+                } catch (Exception ex) {
+                    errors.add("bad page: " + ex.getMessage());
+                }
                 pages.add(new Book.Page(pageId, file, pj, t, errors));
             }
             pages.sort(Comparator.comparingInt((Book.Page p) -> p.json().has("sort") ? p.json().get("sort").getAsInt() : 0));
@@ -154,7 +158,7 @@ public class BookRegistry extends SimplePreparableReloadListener<BookRegistry.Lo
             if (!slot.has("bind") || !slot.get("bind").isJsonPrimitive()) continue;
             boolean optional = slot.has("optional") && slot.get("optional").getAsBoolean();
             if (!optional && Spread.bound(page, slot.get("bind").getAsString()) == null)
-                errors.add("/" + slot.get("bind").getAsString().split("\\|")[0] + ": missing, needed by slot " + e.getKey());
+                errors.add("/" + slot.get("bind").getAsString().replace("|", " or /") + ": missing, needed by slot " + e.getKey());
         }
         walk(page, "", errors, manager, images);
     }
