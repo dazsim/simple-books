@@ -192,7 +192,7 @@ public class BookRegistry extends SimplePreparableReloadListener<BookRegistry.Lo
         for (var e : o.entrySet()) {
             String p = ptr + "/" + e.getKey();
             if (ITEM_KEYS.contains(e.getKey())) items(e.getValue(), p);
-            if (e.getKey().equals("image") && e.getValue().isJsonPrimitive()) {
+            if ((e.getKey().equals("image") || e.getKey().endsWith("_image")) && e.getValue().isJsonPrimitive()) {
                 Identifier tex = Identifier.tryParse(e.getValue().getAsString());
                 if (tex == null) errors.add(p + ": bad texture id");
                 else if (!images.containsKey(tex)) {

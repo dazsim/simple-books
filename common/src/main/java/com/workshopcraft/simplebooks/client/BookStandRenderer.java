@@ -32,13 +32,14 @@ import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-/** The open book on a stand: parchment pages with each page's title and the spread's item icons. */
+/** The open book on a stand: parchment pages with each page's title and the spread's item icons, or the book's own stand pictures. */
 public class BookStandRenderer implements BlockEntityRenderer<BookStandBlockEntity, BookStandRenderer.State> {
     private static final Identifier PAGE = SimpleBooks.id("textures/block/book_page.png");
     private static final Identifier COVER = SimpleBooks.id("textures/block/book_cover.png");
 
     public static class State extends BlockEntityRenderState {
         boolean book;
+        Identifier cover = COVER, leftPage = PAGE, rightPage = PAGE;
         Direction facing = Direction.NORTH;
         @Nullable FormattedCharSequence leftTitle, rightTitle;
         final List<ItemStackRenderState> left = new ArrayList<>(), right = new ArrayList<>();
@@ -63,6 +64,8 @@ public class BookStandRenderer implements BlockEntityRenderer<BookStandBlockEnti
         s.facing = be.getBlockState().getValue(BookStandBlock.FACING);
         s.book = !be.book().isEmpty();
         s.leftTitle = s.rightTitle = null;
+        s.cover = COVER;
+        s.leftPage = s.rightPage = PAGE;
         s.left.clear();
         s.right.clear();
         if (!s.book) return;
@@ -71,6 +74,11 @@ public class BookStandRenderer implements BlockEntityRenderer<BookStandBlockEnti
         if (book == null || book.pages().isEmpty()) return;
         Book.Page page = book.pages().get(Math.min(be.spread(), book.pages().size() - 1));
         JsonObject j = page.json();
+        s.cover = texture(book.json(), "stand_cover", COVER);
+        Identifier paper = texture(book.json(), "stand_page", PAGE);
+        s.leftPage = texture(j, "stand_left", paper);
+        s.rightPage = texture(j, "stand_right", paper);
+        if (j.has("stand_left") || j.has("stand_right")) return;
         s.leftTitle = title(Spread.bound(j, "title"));
         s.rightTitle = title(Spread.bound(j, "right_title|title"));
         icons(Spread.bound(j, "ingredients"), s.left, be, 10);
@@ -81,6 +89,12 @@ public class BookStandRenderer implements BlockEntityRenderer<BookStandBlockEnti
                 if (st.isJsonObject() && st.getAsJsonObject().has("output")) icons(st.getAsJsonObject().get("output"), s.right, be, 15);
             }
         }
+    }
+
+    private static Identifier texture(JsonObject o, String key, Identifier def) {
+        if (!o.has(key)) return def;
+        Identifier id = Identifier.tryParse(o.get(key).getAsString());
+        return id == null ? def : id.withPath(p -> (p.startsWith("textures/") ? p : "textures/" + p) + (p.endsWith(".png") ? "" : ".png"));
     }
 
     private @Nullable FormattedCharSequence title(@Nullable JsonElement e) {
@@ -111,11 +125,9 @@ public class BookStandRenderer implements BlockEntityRenderer<BookStandBlockEnti
         pose.translate(0.5, 15.2 / 16, 0.5);
         pose.mulPose(Axis.YP.rotationDegrees(-s.facing.toYRot()));
         pose.mulPose(Axis.XP.rotationDegrees(22.5F));
-        collector.submitCustomGeometry(pose, RenderTypes.entityCutout(COVER), (p, b) -> quad(p, b, -7.5F, -5.5F, 7.5F, 5.5F, 0, light));
-        collector.submitCustomGeometry(pose, RenderTypes.entityCutout(PAGE), (p, b) -> {
-            quad(p, b, -7F, -5F, -0.15F, 5F, 0.35F, light);
-            quad(p, b, 0.15F, -5F, 7F, 5F, 0.35F, light);
-        });
+        collector.submitCustomGeometry(pose, RenderTypes.entityCutout(s.cover), (p, b) -> quad(p, b, -7.5F, -5.5F, 7.5F, 5.5F, 0, light));
+        collector.submitCustomGeometry(pose, RenderTypes.entityCutout(s.leftPage), (p, b) -> quad(p, b, -7F, -5F, -0.15F, 5F, 0.35F, light));
+        collector.submitCustomGeometry(pose, RenderTypes.entityCutout(s.rightPage), (p, b) -> quad(p, b, 0.15F, -5F, 7F, 5F, 0.35F, light));
         side(s.leftTitle, s.left, -3.6F, pose, collector, light);
         side(s.rightTitle, s.right, 3.6F, pose, collector, light);
         pose.popPose();

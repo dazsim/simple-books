@@ -24,8 +24,10 @@ public class Spread {
     public static final int W = 1600, H = 1000;
     static final int PX0 = 58, PX1 = 1542, PT = 40, PBOT = 960, SPINE = 800, FADE = 34, M = 32;
     public static final int L = PX0 + M, R = SPINE + FADE + M, CW = SPINE - FADE - M - L;
-    private static final Map<String, String> DEFAULT_VARS = Map.of("ink", "#3f2a14", "soft", "#785c3c", "head", "#802c16",
-            "link", "#284896", "rule", "#c4ac82", "page", "#f1e4c2", "arrow", "#5c3e22", "cover", "#60361a", "error", "#b01818");
+    private static final Map<String, String> DEFAULT_VARS = Map.ofEntries(Map.entry("ink", "#3f2a14"), Map.entry("soft", "#785c3c"),
+            Map.entry("head", "#802c16"), Map.entry("link", "#284896"), Map.entry("rule", "#c4ac82"), Map.entry("page", "#f1e4c2"),
+            Map.entry("arrow", "#5c3e22"), Map.entry("cover", "#60361a"), Map.entry("error", "#b01818"),
+            Map.entry("edge", "#aa8c60"), Map.entry("cover_edge", "#3a200e"));
 
     public record Hit(float x0, float y0, float x1, float y1, Object target) {
         boolean contains(double x, double y) {
@@ -82,6 +84,10 @@ public class Spread {
 
     private static String str(JsonObject o, String k, String def) {
         return o.has(k) && o.get(k).isJsonPrimitive() ? o.get(k).getAsString() : def;
+    }
+
+    private static boolean flag(JsonObject o, String k) {
+        return !o.has(k) || o.get(k).getAsBoolean();
     }
 
     private static float num(JsonObject o, String k, float def) {
@@ -240,13 +246,19 @@ public class Spread {
     }
 
     void image(@Nullable String tex, float x, float y, float w, float h, @Nullable String label) {
+        image(tex, x, y, w, h, label, true);
+    }
+
+    void image(@Nullable String tex, float x, float y, float w, float h, @Nullable String label, boolean frame) {
         int[] size = tex == null ? null : BookRegistry.imageSize(Identifier.parse(tex));
         if (size == null) {
             placeholder(x, y, w, h, Texts.of(label != null ? label : tex == null ? "?" : "Missing image: " + tex));
             return;
         }
-        fill(x - 4, y - 4, x + w + 4, y + h + 4, rgb(92, 64, 40));
-        fill(x - 2, y - 2, x + w + 2, y + h + 2, rgb(30, 22, 16));
+        if (frame) {
+            fill(x - 4, y - 4, x + w + 4, y + h + 4, rgb(92, 64, 40));
+            fill(x - 2, y - 2, x + w + 2, y + h + 2, rgb(30, 22, 16));
+        }
         float r = Math.max(w / size[0], h / size[1]);
         float uw = w / r / size[0], vh = h / r / size[1];
         float u0 = (1 - uw) / 2, v0 = (1 - vh) / 2;
@@ -280,7 +292,7 @@ public class Spread {
     // ---------- frame ----------
 
     public void frame() {
-        int cover = color("$cover"), edge = rgb(58, 32, 14), paper = color("$page");
+        int cover = color("$cover"), edge = color("$cover_edge"), paper = color("$page");
         roundRect(22, 18, W - 22, H - 18, 14, edge);
         roundRect(26, 22, W - 26, H - 22, 10, cover);
         fill(PX0, PT, PX1, PBOT, paper);
@@ -291,7 +303,7 @@ public class Spread {
             fill(SPINE - off, PT, SPINE - off + 1, PBOT, c);
             fill(SPINE + off, PT, SPINE + off + 1, PBOT, c);
         }
-        int line = rgb(170, 140, 96);
+        int line = color("$edge");
         fill(PX0, PT, PX1, PT + 2, line);
         fill(PX0, PBOT - 2, PX1, PBOT, line);
         fill(PX0, PT, PX0 + 2, PBOT, line);
@@ -381,7 +393,7 @@ public class Spread {
                 if (val != null) linkGrid(val.getAsJsonArray(), x, y, w, (int) num(slot, "columns", 4));
             }
             case "image_box" -> {
-                if (val != null) image(val.getAsString(), x, y, w, h, str(slot, "placeholder", null));
+                if (val != null) image(val.getAsString(), x, y, w, h, str(slot, "placeholder", null), flag(slot, "frame"));
             }
             case "item_icon" -> {
                 if (val != null) slotItem(ItemRef.parse(val), x, y, Math.min(w, h));
@@ -502,7 +514,7 @@ public class Spread {
             case "image" -> {
                 float iw = el.has("size") ? el.getAsJsonArray("size").get(0).getAsFloat() : w;
                 float ih = el.has("size") ? el.getAsJsonArray("size").get(1).getAsFloat() : w * 0.625f;
-                image(str(el, "image", null), x + (w - iw) / 2, y + 4, iw, ih, str(el, "placeholder", null));
+                image(str(el, "image", null), x + (w - iw) / 2, y + 4, iw, ih, str(el, "placeholder", null), flag(el, "frame"));
                 yield ih + 16;
             }
             case "arrow" -> {
@@ -524,7 +536,7 @@ public class Spread {
     }
 
     private void stepImage(JsonObject el, float x, float y, float w, float h) {
-        if (el.has("image")) image(el.get("image").getAsString(), x, y, w, h, str(el, "placeholder", null));
+        if (el.has("image")) image(el.get("image").getAsString(), x, y, w, h, str(el, "placeholder", null), flag(el, "frame"));
         else if (el.has("placeholder")) placeholder(x, y, w, h, Texts.of(el.get("placeholder").getAsString()));
     }
 

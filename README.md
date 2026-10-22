@@ -4,7 +4,7 @@ Guide books for Minecraft mods, written as JSON. Each mod ships its own pages; S
 
 Minecraft 26.1 to 26.1.x, NeoForge and Fabric (Fabric needs Fabric API). Client side rendering; the guide item is registered on both sides.
 
-Status: 0.1.0-alpha.3, milestone 2 (contents spread, remembered page, book stand).
+Status: 0.1.0-alpha.4, milestone 2 (contents spread, remembered page, book stand).
 
 ## Optional integration
 
@@ -79,7 +79,7 @@ Step kinds (numbered, joined by brown ink arrows):
 
 Other blocks: `text` (`"text"`, `"style"`), `links` (`"header"`, `"columns"`, `"links": [{ "item", "label", "page" }]`), `image`, `arrow` (a down arrow), `page_break` (move on to the next page).
 
-Any step can have `title` (defaults to the output's name), `note`, `image` (a texture id such as `morefood:textures/simplebooks/cookbook/pot_on_stove.png`), `image_size` `[w, h]`, or `placeholder` text for a picture still to come. Pictures are cropped to fill their box.
+Any step can have `title` (defaults to the output's name), `note`, `image` (a texture id such as `morefood:textures/simplebooks/cookbook/pot_on_stove.png`), `image_size` `[w, h]`, or `placeholder` text for a picture still to come. Pictures are cropped to fill their box and get a dark frame; `"frame": false` on the step or `image_box` slot leaves it off.
 
 Links take a page id, either relative to the book (`"toppings"`) or full (`"morefood:cookbook/toppings"`). Click to jump; right click or Backspace goes back. Links should only be used for optional content.
 
@@ -103,7 +103,8 @@ A template places slots on the left and right page. Coordinates are page units: 
 - `bind` names the page field a slot shows; `"right_title|title"` falls back left to right. A bound field is required unless the slot is `optional`.
 - Slot types: `title`, `subtitle`, `text`, `rule`, `need_list` (also `ingredient_list`, `tool_list`), `step_rows`, `image_box`, `link_list`, `item_icon`, `grid`, `page_number`, `arrow`, `contents` (`columns`).
 - Styles: `color` (`#rrggbb` or `$var`), `scale`, `align` (`left`, `center`, `right`), `line_height`.
-- Variables resolve from the book's `style`, then the template, then library defaults (`ink`, `soft`, `head`, `link`, `rule`, `page`, `arrow`, `cover`, `error`).
+- Variables resolve from the book's `style`, then the template, then library defaults (`ink`, `soft`, `head`, `link`, `rule`, `page`, `arrow`, `cover`, `error`, `edge` for the page border, `cover_edge`).
+- A page field named `image` or ending in `_image` is checked as a texture, so templates can bind several pictures per spread.
 - Built-in templates: `simplebooks:recipe` (the full recipe spread), `simplebooks:steps` (steps over both pages, for a recipe continued from the page before), `simplebooks:text` (title, text, optional steps), `simplebooks:index` (the contents spread). `tool` and `crop` are the same as `text` for now.
 
 ## Validation
@@ -113,6 +114,8 @@ Books are checked on every resource reload. Problems are logged with the file pa
 ## Book stand
 
 `simplebooks:book_stand` is a wooden lectern for guides. Use a guide on an empty stand to put it down; the book lies open on the stand at its saved spread. Use the stand with an empty hand to read it; turning pages also turns the book on the stand, for everyone. Sneak and use it with an empty hand to take the book back. Breaking the stand drops the book.
+
+A book can set `stand_cover` and `stand_page` textures for the stand, and a page can set `stand_left` and `stand_right` to show its own pictures there instead of titles and icons. These take a texture id, with or without the `textures/` folder and `.png`.
 
 Recipe (shaped): three wooden slabs on top, a stick in the middle, three planks at the bottom.
 
