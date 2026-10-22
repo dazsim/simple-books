@@ -166,7 +166,7 @@ public class Spread {
     }
 
     private void addLine(List<FormattedCharSequence> out, String line, int max) {
-        if (font.width(line) - 1 <= max) out.add(Component.literal(line).getVisualOrderText());
+        if (font.width(line) - 1 <= max + 12) out.add(Component.literal(line).getVisualOrderText());
         else out.addAll(font.split(Component.literal(line), max));
     }
 

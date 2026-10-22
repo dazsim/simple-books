@@ -108,7 +108,7 @@ public class BookRegistry extends SimplePreparableReloadListener<BookRegistry.Lo
                 try {
                     pj = read(pe.getValue()).getAsJsonObject();
                 } catch (Exception ex) {
-                    errors.add("bad JSON: " + ex.getMessage());
+                    errors.add("bad JSON: " + String.valueOf(ex.getMessage()).replaceAll("\\s*See https\\S*", "").replace("com.google.gson.stream.MalformedJsonException: ", ""));
                     pages.add(new Book.Page(pageId, file, new JsonObject(), null, errors));
                     continue;
                 }
