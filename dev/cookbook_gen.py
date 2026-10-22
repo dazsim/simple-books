@@ -276,7 +276,7 @@ for n, t in enumerate(TOOL_TEXT):
 
 # pages too long for one spread go on over a second one; numbers are how many steps did not fit
 OVER = {'pie_chicken_leek': 2, 'pie_cottage': 4, 'pie_shepherds': 4, 'pie_vegetable': 2, 'burger_bacon_cheese': 3,
-        'breakfast_full': 6, 'cheese_burger': 1, 'burger_salad': 1, 'wrap_spinach_cheese': 1}
+        'breakfast_full': 6, 'cheese_burger': 1, 'burger_salad': 1, 'wrap_spinach_cheese': 1, 'beef_burger': 1}
 NUMBERED = {'craft_shapeless', 'craft_shaped', 'process', 'assembly', 'sequence'}
 
 def split(pid):

@@ -65,7 +65,8 @@ sourceSets.configureEach {
 def devBookPack = tasks.register('devBookPack') {
     doLast {
         def dir = file('runs/client')
-        sync {
+        delete new File(dir, 'resourcepacks/simplebooks-example')
+        copy {
             from rootProject.file('dev/example-pack')
             into new File(dir, 'resourcepacks/simplebooks-example')
         }

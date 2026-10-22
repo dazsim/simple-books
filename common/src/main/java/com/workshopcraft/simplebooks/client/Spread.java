@@ -570,7 +570,8 @@ public class Spread {
             cells.add(">");
             cells.add(ItemRef.parse(el.get("output")));
         }
-        bottom = Math.max(bottom, chain(x + label, y + 2, cells, x + w - iw));
+        float cy = 34 + textW(stepTitle(el), 1) > label - 6 ? y + 24 : y + 2;
+        bottom = Math.max(bottom, chain(x + label, cy, cells, x + w - iw));
         return Math.max(rowH, bottom - y + 10);
     }
 
