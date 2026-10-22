@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    { "rolls": 1, "entries": [ { "type": "minecraft:item", "name": "simplebooks:book_stand" } ],
+      "conditions": [ { "condition": "minecraft:survives_explosion" } ] }
+  ],
+  "random_sequence": "simplebooks:blocks/book_stand"
+}

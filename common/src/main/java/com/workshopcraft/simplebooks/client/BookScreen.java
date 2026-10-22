@@ -25,22 +25,30 @@ public class BookScreen extends Screen {
     private static final int BTN_W = 69, BTN_H = 39, BTN_Y = 916, MARK_X = 1460, MARK_Y = 4, MARK_W = 34, MARK_H = 70;
 
     private final Identifier bookId;
+    private final int hand;
+    private final net.minecraft.core.@Nullable BlockPos stand;
     private int spread;
     private final Deque<Integer> history = new ArrayDeque<>();
     private List<Spread.Hit> hits = List.of();
     private float scale = 1, ox, oy;
 
-    public BookScreen(Identifier bookId, int spread) {
+    public BookScreen(Identifier bookId, int spread, int hand, net.minecraft.core.@Nullable BlockPos stand) {
         super(Component.literal(bookId.toString()));
         this.bookId = bookId;
         this.spread = spread;
+        this.hand = hand;
+        this.stand = stand;
     }
 
     public static void open(Identifier book, @Nullable Identifier page) {
         int idx = 0;
         Book b = BookRegistry.get(book);
         if (b != null && page != null) idx = Math.max(0, b.indexOf(page));
-        BookScreen screen = new BookScreen(book, idx);
+        open(book, idx, -2, null);
+    }
+
+    public static void open(Identifier book, int spread, int hand, net.minecraft.core.@Nullable BlockPos stand) {
+        BookScreen screen = new BookScreen(book, Math.max(0, spread), hand, stand);
         var mc = net.minecraft.client.Minecraft.getInstance();
         mc.schedule(() -> mc.setScreen(screen));
     }
@@ -168,8 +176,15 @@ public class BookScreen extends Screen {
     private boolean turn(int to, boolean remember) {
         if (remember) history.push(spread);
         spread = to;
+        if (stand != null) SimpleBooks.toServer.accept(new com.workshopcraft.simplebooks.PageTurn(-1, stand, spread));
         minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0F));
         return true;
+    }
+
+    @Override
+    public void removed() {
+        if (hand >= 0) SimpleBooks.toServer.accept(new com.workshopcraft.simplebooks.PageTurn(hand, net.minecraft.core.BlockPos.ZERO, spread));
+        super.removed();
     }
 
     @Override

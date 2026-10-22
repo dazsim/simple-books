@@ -1,0 +1,19 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "wood": "minecraft:block/spruce_planks",
+    "log": "minecraft:block/spruce_log",
+    "particle": "minecraft:block/spruce_planks"
+  },
+  "elements": [
+    { "from": [2, 0, 2], "to": [14, 2, 14],
+      "faces": { "down": {"texture": "#wood", "cullface": "down"}, "up": {"texture": "#wood"}, "north": {"texture": "#wood"},
+                 "south": {"texture": "#wood"}, "west": {"texture": "#wood"}, "east": {"texture": "#wood"} } },
+    { "from": [6, 2, 6], "to": [10, 13, 10],
+      "faces": { "north": {"texture": "#log"}, "south": {"texture": "#log"}, "west": {"texture": "#log"}, "east": {"texture": "#log"} } },
+    { "from": [0.5, 13, 2], "to": [15.5, 15, 14],
+      "rotation": { "angle": 22.5, "axis": "x", "origin": [8, 14, 8] },
+      "faces": { "down": {"texture": "#wood"}, "up": {"texture": "#wood"}, "north": {"texture": "#wood"},
+                 "south": {"texture": "#wood"}, "west": {"texture": "#wood"}, "east": {"texture": "#wood"} } }
+  ]
+}

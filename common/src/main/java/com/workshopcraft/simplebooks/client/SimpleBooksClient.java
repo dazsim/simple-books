@@ -15,7 +15,7 @@ public final class SimpleBooksClient {
     private SimpleBooksClient() {}
 
     public static void init() {
-        SimpleBooks.opener = id -> BookScreen.open(id, null);
+        SimpleBooks.opener = BookScreen::open;
     }
 
     /** /simplebooks open|validate|list, built for any client command source type. */

@@ -23,9 +23,11 @@ public class GuideItem extends Item {
 
     @Override
     public InteractionResult use(Level level, Player player, InteractionHand hand) {
-        Identifier book = player.getItemInHand(hand).get(SimpleBooksContent.BOOK);
+        ItemStack stack = player.getItemInHand(hand);
+        Identifier book = stack.get(SimpleBooksContent.BOOK);
         if (book == null) return InteractionResult.PASS;
-        if (level.isClientSide()) SimpleBooks.opener.accept(book);
+        if (level.isClientSide())
+            SimpleBooks.opener.open(book, stack.getOrDefault(SimpleBooksContent.SPREAD, 0), hand == InteractionHand.MAIN_HAND ? 0 : 1, null);
         return InteractionResult.SUCCESS;
     }
 

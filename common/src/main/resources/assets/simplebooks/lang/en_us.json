@@ -10,5 +10,6 @@
   "simplebooks.page": "Page %s",
   "simplebooks.contents": "Contents",
   "simplebooks.error.title": "This spread has errors",
-  "simplebooks.unknown_book": "Unknown book: %s"
+  "simplebooks.unknown_book": "Unknown book: %s",
+  "block.simplebooks.book_stand": "Book Stand"
 }

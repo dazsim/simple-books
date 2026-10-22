@@ -10,6 +10,7 @@
     "license": "${license}",
     "icon": "simplebooks_logo.png",
     "environment": "*",
+    "accessWidener": "simplebooks.accesswidener",
     "entrypoints": {
         "client": [
             "com.workshopcraft.simplebooks.fabric.SimpleBooksFabricClient"
