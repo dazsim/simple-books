@@ -47,6 +47,8 @@ recipes = {}
 for f in sorted(glob.glob(RES + '/data/morefood/recipe/**/*.json', recursive=True)):
     r = json.load(open(f))
     out = r['result']['id']
+    if not out.startswith(('morefood:', 'minecraft:')):
+        continue
     flat = json.dumps(r)
     if 'item_pot_' in flat or 'frying_pan"' in flat.replace('item_frying_pan"', '') or '_frying_pan' in out:
         continue
