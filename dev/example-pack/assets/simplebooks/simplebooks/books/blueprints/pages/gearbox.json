@@ -1,0 +1,21 @@
+{
+  "section": "machines",
+  "sort": 1,
+  "title": "Gearbox",
+  "subtitle": "Sheet 1 of 3",
+  "text": "A gearbox turns a fast, weak shaft into a slow, strong one. The large gear has twelve teeth and the small one nine.\n\nEvery sheet in this sample is drawn by the book's own style: blue paper with a grid, white ink, white line art and the uniform font.",
+  "drawing": "simplebooks:textures/simplebooks/blueprints/gearbox.png",
+  "caption": "Side view, not to scale",
+  "right_title": "Assembly",
+  "steps": [
+    { "kind": "craft_shaped", "pattern": ["IGI", "GSG", "IGI"], "key": { "I": "minecraft:iron_ingot", "G": "minecraft:gold_nugget", "S": "minecraft:stick" }, "output": "minecraft:piston", "title": "Gear train" },
+    { "kind": "assembly", "title": "Fit the housing", "text": "Slide both gears onto their shafts and close the case.", "inputs": ["minecraft:iron_ingot", "minecraft:piston"], "output": "minecraft:dispenser" },
+    { "kind": "text", "text": "With Simple Machines installed, a crank turns the input shaft.", "requires": ["simplemachines"] },
+    { "kind": "text", "text": "Next sheet: the drive shaft." }
+  ],
+  "links": [
+    { "item": "minecraft:stick", "label": "Drive shaft", "page": "shaft" },
+    { "item": "minecraft:gold_nugget", "label": "Gears", "page": "gears" },
+    { "item": "minecraft:redstone", "label": "Motor", "page": "motor" }
+  ]
+}

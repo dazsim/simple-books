@@ -1,0 +1,10 @@
+{
+  "section": "storage",
+  "title": "Crate",
+  "subtitle": "Shown only with Much More Storage",
+  "text": "This page is in the storage section, which requires the mod muchmorestorage. Without that mod the page, its tab and its contents line all disappear and the page numbers close up.",
+  "right_title": "Tools",
+  "steps": [
+    { "kind": "sequence", "title": "Screwdriver", "cells": ["muchmorestorage:screwdriver"], "text": "Used to build every crate." }
+  ]
+}
