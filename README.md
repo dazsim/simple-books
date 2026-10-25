@@ -4,7 +4,7 @@ Guide books for Minecraft mods, written as JSON. Each mod ships its own pages; S
 
 Minecraft 26.1 to 26.1.x, NeoForge and Fabric (Fabric needs Fabric API). Client side rendering; the guide item is registered on both sides.
 
-Status: 0.1.0-alpha.4, milestone 2 (contents spread, remembered page, book stand).
+Status: 0.1.0-alpha.5 (per-book styling, chapter tabs, optional pages, page-turn animation).
 
 ## Optional integration
 
@@ -103,8 +103,8 @@ A template places slots on the left and right page. Coordinates are page units: 
 - `bind` names the page field a slot shows; `"right_title|title"` falls back left to right. A bound field is required unless the slot is `optional`.
 - Slot types: `title`, `subtitle`, `text`, `rule`, `need_list` (also `ingredient_list`, `tool_list`), `step_rows`, `image_box`, `link_list`, `item_icon`, `grid`, `page_number`, `arrow`, `contents` (`columns`).
 - Styles: `color` (`#rrggbb` or `$var`), `scale`, `align` (`left`, `center`, `right`), `line_height`.
-- Variables resolve from the book's `style`, then the template, then library defaults (`ink`, `soft`, `head`, `link`, `rule`, `page`, `arrow`, `cover`, `error`, `edge` for the page border, `cover_edge`).
-- A page field named `image` or ending in `_image` is checked as a texture, so templates can bind several pictures per spread.
+- Variables resolve from the page's `style`, then the book's `style`, then the template, then library defaults; the full list is under [Styling](#5-styling).
+- A page field named `image`, ending in `_image`, or whose value ends in `.png` is checked as a texture, so templates can bind several pictures per spread.
 - Built-in templates: `simplebooks:recipe` (the full recipe spread), `simplebooks:steps` (steps over both pages, for a recipe continued from the page before), `simplebooks:text` (title, text, optional steps), `simplebooks:index` (the contents spread). `tool` and `crop` are the same as `text` for now.
 
 ## Validation
@@ -119,6 +119,175 @@ A book can set `stand_cover` and `stand_page` textures for the stand, and a page
 
 Recipe (shaped): three wooden slabs on top, a stick in the middle, three planks at the bottom.
 
+## Making your own book
+
+This walks through a book from nothing, using the blueprint sample in `dev/example-pack` (`simplebooks:blueprints`) as the example. Open it in a dev client with `/simplebooks open simplebooks:blueprints`.
+
+### 1. Files
+
+Pick your mod id as the namespace and a book name, then create:
+
+```
+assets/yourmod/simplebooks/books/manual.json                 the book
+assets/yourmod/simplebooks/books/manual/pages/intro.json     one file per spread
+assets/yourmod/simplebooks/books/manual/pages/parts/gear.json  subfolders are fine
+assets/yourmod/simplebooks/templates/sheet.json              your own templates (optional)
+assets/yourmod/textures/simplebooks/manual/*.png             pictures, paper and stand textures
+assets/yourmod/lang/en_us.json                               book.yourmod.manual.title and any lang keys you use
+```
+
+The book id is `yourmod:manual` and page ids are `yourmod:manual/intro`, `yourmod:manual/parts/gear`. Run `/simplebooks validate yourmod:manual` after every change (F3+T reloads).
+
+### 2. The book file
+
+```json
+{
+  "title": "book.yourmod.manual.title",
+  "default_template": "simplebooks:text",
+  "tabs": true,
+  "page_turn": true,
+  "style": { "page": "#1d4f8c", "ink": "#ffffff", "head": "#ffffff" },
+  "stand_cover": "yourmod:simplebooks/manual/stand_cover",
+  "stand_page": "yourmod:simplebooks/manual/stand_page",
+  "sections": [
+    "contents",
+    "machines",
+    { "id": "parts", "title": "Parts", "color": "#d6e6f6" },
+    { "id": "storage", "requires": ["muchmorestorage"], "icon": "muchmorestorage:screwdriver" }
+  ]
+}
+```
+
+| Key | Use |
+| --- | --- |
+| `title` | lang key or text for the book |
+| `default_template` | template for pages that do not name one (`simplebooks:recipe` if unset) |
+| `style` | styling variables, see below |
+| `sections` | page order; a section is a name or an object with `id`, and optionally `title`, `color` and `icon` (for its tab), `"tab": false` and `requires` |
+| `tabs` | `true` draws a chapter tab per section on the fore edge, except `contents` and empty or hidden sections. Click a tab to jump to the first page of that chapter. Default `false` |
+| `page_turn` | `false` turns off the page-turn animation. Default `true` |
+| `stand_cover`, `stand_page` | textures used when the book lies on a book stand |
+| `requires` | mod ids; the whole book is skipped unless all are loaded |
+| `contents_title` | lang key for the contents heading |
+
+### 3. Pages
+
+Each page names its `section`, optional `sort` and `template`, plus the fields its template binds. With `simplebooks:text`:
+
+```json
+{
+  "section": "machines",
+  "sort": 1,
+  "title": "Gearbox",
+  "subtitle": "Sheet 1 of 3",
+  "text": "A gearbox turns a fast, weak shaft into a slow, strong one.",
+  "right_title": "Assembly",
+  "steps": [
+    { "kind": "craft_shaped", "pattern": ["IGI", "GSG", "IGI"], "key": { "I": "minecraft:iron_ingot", "G": "minecraft:gold_nugget", "S": "minecraft:stick" }, "output": "minecraft:piston" },
+    { "kind": "text", "text": "With Simple Machines a crank turns the input shaft.", "requires": ["simplemachines"] }
+  ],
+  "links": [{ "item": "minecraft:stick", "label": "Drive shaft", "page": "shaft" }]
+}
+```
+
+The field list for each built-in template and all step kinds are under [Pages](#pages) above.
+
+### 4. Templates and inheritance
+
+A template is a set of slots, styles and variables. Start from a built-in one with `extends` and change only what you need; a child slot replaces the fields it names and `null` removes a slot. The sample's `simplebooks:blueprint_sheet` shortens the text box of `simplebooks:text` and adds a drawing and a caption:
+
+```json
+{
+  "extends": "simplebooks:text",
+  "vars": { "rule": "#9cc0e4" },
+  "slots": {
+    "left.body": { "box": [0, 100, 644, 300] },
+    "left.drawing": { "type": "image_box", "box": [42, 420, 560, 350], "bind": "drawing", "frame": false, "optional": true },
+    "left.caption": { "type": "subtitle", "box": [0, 790, 644, 18], "bind": "caption", "style": "subtitle", "optional": true }
+  }
+}
+```
+
+Templates can extend templates from any namespace, so a pack can extend your template too. See [Templates](#templates) for slot types and style fields.
+
+### 5. Styling
+
+Every colour, the paper and the font come from variables. They are looked up in this order: the page's own `style` object, the book's `style`, the template's `vars`, then the defaults below. A value can point at another variable with `$name`. Leave them all out and the book looks like the parchment cookbook.
+
+| Variable | Default | Used for |
+| --- | --- | --- |
+| `page` | `#f1e4c2` | paper colour |
+| `page_texture` | none | texture id drawn over the paper, for example `yourmod:textures/simplebooks/manual/grid.png` |
+| `page_tile` | none | tile width in page units; without it the texture is stretched over each page |
+| `font` | `minecraft:default` | font id for all book text, vanilla (`minecraft:uniform`, `minecraft:alt`) or one from a resource pack |
+| `ink` | `#3f2a14` | body text |
+| `soft` | `#785c3c` | subtitles, notes, item names |
+| `head` | `#802c16` | titles and headings |
+| `link` | `#284896` | link text |
+| `rule` | `#c4ac82` | ruled lines |
+| `arrow` | `#5c3e22` | arrows between steps |
+| `edge` | `#aa8c60` | border round the paper |
+| `cover`, `cover_edge` | `#60361a`, `#3a200e` | the cover behind the paper and its outline |
+| `badge`, `badge_edge`, `badge_text` | `$head`, `#c4785a`, `#faeed2` | step number badges |
+| `slot`, `slot_shadow`, `slot_light` | `#8b8b8b`, `#373737`, `#ffffff` | item slots |
+| `frame`, `frame_inner` | `#5c4028`, `#1e1610` | picture frames |
+| `placeholder`, `placeholder_hatch` | `#decea8`, `#d4c298` | boxes for pictures still to come |
+| `mark`, `mark_hover`, `mark_line` | `#802c16`, `#a83a1e`, `#e0b080` | the contents bookmark |
+| `tabs` | `#802c16,#2c5a80,#3c6a2c,#8a6a1c,#5a2c70` | tab colours, used in turn; a section's `color` wins |
+| `tab_text`, `tab_edge` | `$page`, `$cover_edge` | tab labels and outlines |
+| `button_tint` | `#ffffff` | tint for the page-turn buttons |
+| `stand_ink` | `#3f2a14` | title text on the book stand |
+| `error` | `#b01818` | error pages |
+
+A blueprint book with blue paper, a grid and white ink:
+
+```json
+"style": {
+  "page": "#1d4f8c",
+  "page_texture": "simplebooks:textures/simplebooks/blueprints/grid.png",
+  "page_tile": "128",
+  "font": "minecraft:uniform",
+  "ink": "#ffffff", "soft": "#c8dcf0", "head": "#ffffff", "link": "#ffe680", "rule": "#9cc0e4",
+  "edge": "#9cc0e4", "cover": "#16365e", "cover_edge": "#0c1e36",
+  "frame": "#ffffff", "frame_inner": "#1d4f8c",
+  "tabs": "#ffffff,#d6e6f6,#aecdec", "tab_text": "#1d4f8c",
+  "stand_ink": "#ffffff"
+}
+```
+
+Draw line art as white lines on a transparent PNG and set `"frame": false` so it sits straight on the paper. A single page can override anything, for example `"style": { "head": "#ffe680" }` in the page file.
+
+### 6. Optional content with `requires`
+
+`requires` is a mod id or a list of them. Anything that has it is only shown when every listed mod is loaded:
+
+- a book: the whole book is skipped
+- a section (object form): the section, its tab and all its pages
+- a page: the page
+- a step or other block in `steps`, or an entry in `links`
+
+Hidden pages are removed before the contents spread and page numbers are worked out, so numbering has no gaps, and links that point at a hidden page are dropped rather than reported. Another mod can add pages to your book the same way: it ships `assets/yourmod/simplebooks/books/manual/pages/othermod_crate.json` in its own jar with `"requires": ["othermod"]`, and the page appears only when both are installed.
+
+### 7. Book stand textures
+
+`stand_cover` and `stand_page` are 16 x 16 textures (any size works, they are stretched) given as texture ids, with or without `textures/` and `.png`. The cover shows round the edge of the open book, the page texture under the titles and icons. A page can set `stand_left` and `stand_right` to show a picture instead of its titles and icons. Long titles shrink a little, then wrap to two lines, and only past that are they cut short. Set `stand_ink` when your paper is dark.
+
+### 8. Shipping a book as an optional dependency
+
+Your book is plain resources, so a mod with a book needs no code changes and still runs without Simple Books (see [Optional integration](#optional-integration)). To hand players the book, add a recipe with a load condition so it only exists when Simple Books is installed:
+
+```json
+{
+  "fabric:load_conditions": [{ "condition": "fabric:all_mods_loaded", "values": ["simplebooks"] }],
+  "neoforge:conditions": [{ "type": "neoforge:mod_loaded", "modid": "simplebooks" }],
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": ["minecraft:book", "yourmod:gear"],
+  "result": { "id": "simplebooks:guide", "components": { "simplebooks:book": "yourmod:manual" } }
+}
+```
+
+Both condition keys can sit in the same file; each loader ignores the other's. Declare Simple Books as a suggested or optional dependency in `fabric.mod.json` (`"suggests"`) and `neoforge.mods.toml` (`type = "optional"`).
+
 ## Commands (client side)
 
 - `/simplebooks open <book> [page]`
@@ -127,6 +296,6 @@ Recipe (shaped): three wooden slabs on top, a stick in the middle, three planks 
 
 ## Development
 
-`dev/example-pack` is an example resource pack with a deliberately broken book (`simplebooks:broken_test`). The More Foods cookbook now ships inside More Foods; most of its pages are made by `dev/cookbook_gen.py` from the More Foods recipe files and written straight into that repo (`python3 dev/cookbook_gen.py <more foods repo> <vanilla en_us.json>`); `pizza.json` is written by hand. `runClient` copies it into the run folder and enables it; it is never packed into the jar. If `dev/morefood-fabric.jar` or `dev/morefood-neoforge.jar` exist (More Foods 2.0 alpha jars, not in git), they are put on the dev client's classpath so the cookbook shows real items.
+`dev/example-pack` is an example resource pack with a deliberately broken book (`simplebooks:broken_test`) and the blueprint sample (`simplebooks:blueprints`). The More Foods cookbook now ships inside More Foods; most of its pages are made by `dev/cookbook_gen.py` from the More Foods recipe files and written straight into that repo (`python3 dev/cookbook_gen.py <more foods repo> <vanilla en_us.json>`); `pizza.json` is written by hand. `runClient` copies it into the run folder and enables it; it is never packed into the jar. If `dev/morefood-fabric.jar` or `dev/morefood-neoforge.jar` exist (More Foods 2.0 alpha jars, not in git), they are put on the dev client's classpath so the cookbook shows real items.
 
-Not yet done: grant events, page-turn animation, Python preview renderer.
+Not yet done: grant events, Python preview renderer.
