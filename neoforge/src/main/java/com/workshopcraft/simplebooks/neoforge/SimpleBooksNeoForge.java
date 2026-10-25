@@ -14,6 +14,7 @@ import net.neoforged.neoforge.registries.RegisterEvent;
 @Mod(SimpleBooks.MOD_ID)
 public class SimpleBooksNeoForge {
     public SimpleBooksNeoForge(IEventBus modBus) {
+        SimpleBooks.modLoaded = net.neoforged.fml.ModList.get()::isLoaded;
         modBus.addListener((RegisterEvent e) -> {
             e.register(Registries.DATA_COMPONENT_TYPE, h -> SimpleBooksContent.registerComponents(h::register));
             e.register(Registries.BLOCK, h -> SimpleBooksContent.registerBlocks(h::register));

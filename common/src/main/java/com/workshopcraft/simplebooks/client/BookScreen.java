@@ -31,6 +31,9 @@ public class BookScreen extends Screen {
     private final Deque<Integer> history = new ArrayDeque<>();
     private List<Spread.Hit> hits = List.of();
     private float scale = 1, ox, oy;
+    private static final long TURN_NS = 220_000_000L;
+    private int turnFrom = -1;
+    private long turnStart;
 
     public BookScreen(Identifier bookId, int spread, int hand, net.minecraft.core.@Nullable BlockPos stand) {
         super(Component.literal(bookId.toString()));
@@ -64,7 +67,9 @@ public class BookScreen extends Screen {
 
     private void layout() {
         double gui = minecraft.getWindow().getGuiScale();
-        double fit = Math.min(width * gui / Spread.W, height * gui / Spread.H);
+        Book b = book();
+        int w = b != null && !b.tabs().isEmpty() ? Spread.W + 2 * Spread.TAB_MARGIN : Spread.W;
+        double fit = Math.min(width * gui / w, height * gui / Spread.H);
         double real = fit >= 1 ? Math.floor(fit * 2) / 2 : fit;
         scale = (float) (real / gui);
         ox = (width - Spread.W * scale) / 2;
@@ -90,36 +95,48 @@ public class BookScreen extends Screen {
         } else {
             Book.Page page = b.pages().isEmpty() ? null : b.pages().get(spread);
             s = new Spread(g, font, b, page, spread);
+            s.tabs(b.tabs(), mx, my);
+            float t = turnFrom < 0 ? 1 : (System.nanoTime() - turnStart) / (float) TURN_NS;
+            if (t >= 1 || turnFrom >= b.pages().size() || page == null || !b.errors().isEmpty()) turnFrom = -1;
             s.frame();
             if (!b.errors().isEmpty()) s.errorPage("book " + bookId, b.errors());
             else if (page == null) s.errorPage("book " + bookId, List.of("the book has no pages"));
-            else s.content();
+            else if (turnFrom < 0) s.content();
+            else {
+                turning(g, b, t);
+                s.edges();
+            }
         }
         if (spread > 0) {
             boolean hi = in(mx, my, Spread.L, BTN_Y, BTN_W, BTN_H);
-            g.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, hi ? BACK_HI : BACK, Spread.L, BTN_Y, BTN_W, BTN_H);
+            g.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, hi ? BACK_HI : BACK, Spread.L, BTN_Y, BTN_W, BTN_H, s.color("$button_tint"));
         }
         if (spread < spreads() - 1) {
             int x = Spread.R + Spread.CW - BTN_W;
             boolean hi = in(mx, my, x, BTN_Y, BTN_W, BTN_H);
-            g.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, hi ? FWD_HI : FWD, x, BTN_Y, BTN_W, BTN_H);
+            g.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, hi ? FWD_HI : FWD, x, BTN_Y, BTN_W, BTN_H, s.color("$button_tint"));
         }
         boolean markHover = false;
         if (b != null && b.contentsIndex() >= 0) {
             markHover = in(mx, my, MARK_X, MARK_Y, MARK_W, MARK_H);
-            int c = markHover ? 0xFFA83A1E : 0xFF802C16;
+            int c = s.color(markHover ? "$mark_hover" : "$mark");
             g.fill(MARK_X, MARK_Y, MARK_X + MARK_W, MARK_Y + MARK_H - 10, c);
             for (int i = 0; i < 10; i++) {
                 g.fill(MARK_X, MARK_Y + MARK_H - 10 + i, MARK_X + MARK_W / 2 - i * 17 / 10, MARK_Y + MARK_H - 9 + i, c);
                 g.fill(MARK_X + MARK_W / 2 + i * 17 / 10, MARK_Y + MARK_H - 10 + i, MARK_X + MARK_W, MARK_Y + MARK_H - 9 + i, c);
             }
-            g.fill(MARK_X + 4, MARK_Y + 4, MARK_X + MARK_W - 4, MARK_Y + 6, 0xFFE0B080);
+            g.fill(MARK_X + 4, MARK_Y + 4, MARK_X + MARK_W - 4, MARK_Y + 6, s.color("$mark_line"));
         }
         g.pose().popMatrix();
         if (markHover) g.setTooltipForNextFrame(font, Component.translatable("simplebooks.contents"), mouseX, mouseY);
-        hits = s.hits;
+        hits = turnFrom >= 0 ? List.of() : s.hits;
         for (Spread.Hit h : hits) {
             if (!h.contains(mx, my)) continue;
+            if (h.target() instanceof Spread.Jump j) {
+                g.setTooltipForNextFrame(font, j.label(), mouseX, mouseY);
+                g.requestCursor(com.mojang.blaze3d.platform.cursor.CursorTypes.POINTING_HAND);
+                break;
+            }
             if (h.target() instanceof ItemStack st) g.setTooltipForNextFrame(font, st, mouseX, mouseY);
             else if (h.target() instanceof Component c) g.setTooltipForNextFrame(font, c, mouseX, mouseY);
             else if (h.target() instanceof Identifier) g.requestCursor(com.mojang.blaze3d.platform.cursor.CursorTypes.POINTING_HAND);
@@ -127,8 +144,38 @@ public class BookScreen extends Screen {
         }
     }
 
+    /**
+     * Page turn: the old and new spreads each keep one still half, and the turning sheet folds
+     * towards the spine (old page) and then opens out on the other side (new page).
+     */
+    private void turning(GuiGraphicsExtractor g, Book b, float t) {
+        boolean fwd = spread > turnFrom;
+        Spread from = new Spread(g, font, b, b.pages().get(turnFrom), turnFrom);
+        Spread to = new Spread(g, font, b, b.pages().get(spread), spread);
+        half(g, fwd ? from : to, true, 1);
+        half(g, fwd ? to : from, false, 1);
+        float e = t * t * (3 - 2 * t), k = (float) Math.cos(Math.PI * e);
+        if (k > 0) half(g, from, !fwd, k);
+        else half(g, to, fwd, -k);
+    }
+
+    private void half(GuiGraphicsExtractor g, Spread s, boolean left, float k) {
+        if (k < 0.02f) return;
+        int x0 = left ? Spread.PX0 : Spread.SPINE, x1 = left ? Spread.SPINE : Spread.PX1;
+        g.pose().pushMatrix();
+        g.pose().translate(Spread.SPINE, 0);
+        g.pose().scale(k, 1);
+        g.pose().translate(-Spread.SPINE, 0);
+        g.enableScissor(x0, Spread.PT, x1, Spread.PBOT);
+        s.paperHalf(left);
+        s.content();
+        if (k < 1) g.fill(x0, Spread.PT, x1, Spread.PBOT, (int) ((1 - k) * 0.35f * 255) << 24);
+        g.disableScissor();
+        g.pose().popMatrix();
+    }
+
     private Book emptyBook() {
-        return new Book(bookId, new com.google.gson.JsonObject(), java.util.Map.of(), List.of(), List.of());
+        return new Book(bookId, new com.google.gson.JsonObject(), java.util.Map.of(), List.of(), List.of(), java.util.Set.of());
     }
 
     private static boolean in(float mx, float my, float x, float y, float w, float h) {
@@ -145,6 +192,7 @@ public class BookScreen extends Screen {
             if (bk != null && bk.contentsIndex() >= 0 && in(mx, my, MARK_X, MARK_Y, MARK_W, MARK_H))
                 return spread == bk.contentsIndex() || turn(bk.contentsIndex(), true);
             for (Spread.Hit h : hits) {
+                if (h.contains(mx, my) && h.target() instanceof Spread.Jump j) return j.spread() == spread || turn(j.spread(), true);
                 if (h.contains(mx, my) && h.target() instanceof Identifier target) {
                     Book b = book();
                     int idx = b == null ? -1 : b.indexOf(target);
@@ -175,6 +223,11 @@ public class BookScreen extends Screen {
 
     private boolean turn(int to, boolean remember) {
         if (remember) history.push(spread);
+        Book b = book();
+        if (to != spread && b != null && (!b.json().has("page_turn") || b.json().get("page_turn").getAsBoolean())) {
+            turnFrom = spread;
+            turnStart = System.nanoTime();
+        }
         spread = to;
         if (stand != null) SimpleBooks.toServer.accept(new com.workshopcraft.simplebooks.PageTurn(-1, stand, spread));
         minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0F));

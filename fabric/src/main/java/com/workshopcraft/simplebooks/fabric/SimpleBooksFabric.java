@@ -10,6 +10,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 public class SimpleBooksFabric implements ModInitializer {
     @Override
     public void onInitialize() {
+        com.workshopcraft.simplebooks.SimpleBooks.modLoaded = net.fabricmc.loader.api.FabricLoader.getInstance()::isModLoaded;
         SimpleBooksContent.registerAllDirect();
         PayloadTypeRegistry.serverboundPlay().register(PageTurn.TYPE, PageTurn.STREAM_CODEC);
         ServerPlayNetworking.registerGlobalReceiver(PageTurn.TYPE, (payload, ctx) -> payload.handle(ctx.player()));

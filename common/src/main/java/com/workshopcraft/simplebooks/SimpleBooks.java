@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public final class SimpleBooks {
     public static final String MOD_ID = "simplebooks";
@@ -21,6 +22,7 @@ public final class SimpleBooks {
     // set by the client entrypoint so common code never touches client classes
     public static Opener opener = (book, spread, hand, stand) -> {};
     public static Consumer<CustomPacketPayload> toServer = p -> {};
+    public static Predicate<String> modLoaded = id -> true;
 
     private SimpleBooks() {}
 

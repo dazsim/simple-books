@@ -92,12 +92,21 @@ public class BookRegistry extends SimplePreparableReloadListener<BookRegistry.Lo
         for (var be : bookJson.entrySet()) {
             Identifier bookId = be.getKey();
             JsonObject json = be.getValue();
+            if (!visible(json)) continue;
             List<String> bErrors = new ArrayList<>();
             if (bookErrors.containsKey(bookId)) bErrors.add(bookErrors.get(bookId));
             Map<String, String> vars = new HashMap<>();
             if (json.has("style") && json.get("style").isJsonObject())
                 for (var v : json.getAsJsonObject("style").entrySet()) if (v.getValue().isJsonPrimitive()) vars.put(v.getKey(), v.getValue().getAsString());
             String defTemplate = json.has("default_template") ? json.get("default_template").getAsString() : DEFAULT_TEMPLATE.toString();
+            texture(vars.get("page_texture"), "book " + bookId + " /style/page_texture", manager, images);
+            List<String> sections = new ArrayList<>();
+            Set<String> hiddenSections = new java.util.HashSet<>();
+            if (json.has("sections")) json.getAsJsonArray("sections").forEach(e -> {
+                sections.add(Book.sectionName(e));
+                if (!visible(e)) hiddenSections.add(Book.sectionName(e));
+            });
+            Set<Identifier> hidden = new java.util.HashSet<>();
 
             List<Book.Page> pages = new ArrayList<>();
             for (var pe : pageFiles.getOrDefault(bookId, Map.of()).entrySet()) {
@@ -112,6 +121,10 @@ public class BookRegistry extends SimplePreparableReloadListener<BookRegistry.Lo
                     pages.add(new Book.Page(pageId, file, new JsonObject(), null, errors));
                     continue;
                 }
+                if (!visible(pj) || hiddenSections.contains(pj.has("section") ? pj.get("section").getAsString() : "")) {
+                    hidden.add(pageId);
+                    continue;
+                }
                 Identifier tid = Identifier.tryParse(pj.has("template") ? pj.get("template").getAsString() : defTemplate);
                 Template t = null;
                 if (tid == null) errors.add("/template: bad id");
@@ -120,17 +133,18 @@ public class BookRegistry extends SimplePreparableReloadListener<BookRegistry.Lo
                     else {
                         t = templates.computeIfAbsent(tid, k -> safeResolve(k, rawTemplates));
                         errors.addAll(t.errors());
+                        texture(t.vars().get("page_texture"), "template " + tid + " /vars/page_texture", manager, images);
                     }
                 }
                 try {
                     if (t != null && errors.isEmpty()) checkPage(pj, t, errors, manager, images);
+                    if (pj.has("style") && pj.get("style").isJsonObject() && pj.getAsJsonObject("style").has("page_texture"))
+                        texture(pj.getAsJsonObject("style").get("page_texture").getAsString(), file + " /style/page_texture", manager, images);
                 } catch (Exception ex) {
                     errors.add("bad page: " + ex.getMessage());
                 }
                 pages.add(new Book.Page(pageId, file, pj, t, errors));
             }
-            List<String> sections = new ArrayList<>();
-            if (json.has("sections")) json.getAsJsonArray("sections").forEach(e -> sections.add(e.getAsString()));
             if (sections.contains("contents")) {
                 JsonObject cj = new JsonObject();
                 cj.addProperty("template", "simplebooks:index");
@@ -146,7 +160,7 @@ public class BookRegistry extends SimplePreparableReloadListener<BookRegistry.Lo
                     })
                     .thenComparingInt(p -> p.json().has("sort") ? p.json().get("sort").getAsInt() : 0)
                     .thenComparing(p -> p.id().toString()));
-            Book book = new Book(bookId, json, vars, pages, bErrors);
+            Book book = new Book(bookId, json, vars, pages, bErrors, hidden);
             for (Book.Page p : pages) if (!p.broken()) checkLinks(book, p);
             for (Book.Page p : pages) for (String err : p.errors()) SimpleBooks.LOG.error("{} {}", p.file(), err);
             books.put(bookId, book);
@@ -192,7 +206,8 @@ public class BookRegistry extends SimplePreparableReloadListener<BookRegistry.Lo
         for (var e : o.entrySet()) {
             String p = ptr + "/" + e.getKey();
             if (ITEM_KEYS.contains(e.getKey())) items(e.getValue(), p);
-            if ((e.getKey().equals("image") || e.getKey().endsWith("_image")) && e.getValue().isJsonPrimitive()) {
+            if (e.getValue().isJsonPrimitive() && (e.getKey().equals("image") || e.getKey().endsWith("_image")
+                    || e.getValue().getAsString().endsWith(".png"))) {
                 Identifier tex = Identifier.tryParse(e.getValue().getAsString());
                 if (tex == null) errors.add(p + ": bad texture id");
                 else if (!images.containsKey(tex)) {
@@ -213,6 +228,26 @@ public class BookRegistry extends SimplePreparableReloadListener<BookRegistry.Lo
         }
     }
 
+    /** True when every mod in the element's "requires" (a mod id or a list of them) is loaded. */
+    public static boolean visible(JsonElement el) {
+        if (!el.isJsonObject() || !el.getAsJsonObject().has("requires")) return true;
+        JsonElement r = el.getAsJsonObject().get("requires");
+        if (r.isJsonPrimitive()) return SimpleBooks.modLoaded.test(r.getAsString());
+        for (JsonElement m : r.getAsJsonArray()) if (!SimpleBooks.modLoaded.test(m.getAsString())) return false;
+        return true;
+    }
+
+    private static void texture(@Nullable String tex, String where, ResourceManager manager, Map<Identifier, int[]> images) {
+        if (tex == null) return;
+        Identifier id = Identifier.tryParse(tex);
+        if (id == null) warn(where + ": bad texture id " + tex);
+        else if (!images.containsKey(id)) {
+            int[] size = pngSize(manager, id);
+            if (size == null) warn(where + ": missing texture " + id);
+            else images.put(id, size);
+        }
+    }
+
     private static void checkLinks(Book book, Book.Page page) {
         List<String> missing = new ArrayList<>();
         collectLinks(page.json(), "", book, missing);
@@ -222,11 +257,11 @@ public class BookRegistry extends SimplePreparableReloadListener<BookRegistry.Lo
     private static void collectLinks(JsonElement el, String ptr, Book book, List<String> out) {
         if (el.isJsonArray()) {
             for (int i = 0; i < el.getAsJsonArray().size(); i++) collectLinks(el.getAsJsonArray().get(i), ptr + "/" + i, book, out);
-        } else if (el.isJsonObject()) {
+        } else if (el.isJsonObject() && visible(el)) {
             for (var e : el.getAsJsonObject().entrySet()) {
                 if (e.getKey().equals("page") && e.getValue().isJsonPrimitive()) {
                     Identifier target = resolveLink(book, e.getValue().getAsString());
-                    if (target == null || book.indexOf(target) < 0) out.add(ptr + "/page: link to missing page '" + e.getValue().getAsString() + "'");
+                    if (target == null || book.indexOf(target) < 0 && !book.hidden().contains(target)) out.add(ptr + "/page: link to missing page '" + e.getValue().getAsString() + "'");
                 } else collectLinks(e.getValue(), ptr + "/" + e.getKey(), book, out);
             }
         }

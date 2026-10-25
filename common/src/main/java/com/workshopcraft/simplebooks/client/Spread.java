@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FontDescription;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.item.ItemStack;
@@ -27,7 +28,17 @@ public class Spread {
     private static final Map<String, String> DEFAULT_VARS = Map.ofEntries(Map.entry("ink", "#3f2a14"), Map.entry("soft", "#785c3c"),
             Map.entry("head", "#802c16"), Map.entry("link", "#284896"), Map.entry("rule", "#c4ac82"), Map.entry("page", "#f1e4c2"),
             Map.entry("arrow", "#5c3e22"), Map.entry("cover", "#60361a"), Map.entry("error", "#b01818"),
-            Map.entry("edge", "#aa8c60"), Map.entry("cover_edge", "#3a200e"));
+            Map.entry("edge", "#aa8c60"), Map.entry("cover_edge", "#3a200e"), Map.entry("badge", "$head"),
+            Map.entry("badge_edge", "#c4785a"), Map.entry("badge_text", "#faeed2"), Map.entry("frame", "#5c4028"),
+            Map.entry("frame_inner", "#1e1610"), Map.entry("placeholder", "#decea8"), Map.entry("placeholder_hatch", "#d4c298"),
+            Map.entry("slot", "#8b8b8b"), Map.entry("slot_shadow", "#373737"), Map.entry("slot_light", "#ffffff"),
+            Map.entry("mark", "#802c16"), Map.entry("mark_hover", "#a83a1e"), Map.entry("mark_line", "#e0b080"),
+            Map.entry("tabs", "#802c16,#2c5a80,#3c6a2c,#8a6a1c,#5a2c70"), Map.entry("tab_text", "$page"), Map.entry("tab_edge", "$cover_edge"),
+            Map.entry("button_tint", "#ffffff"));
+    public static final int TAB_ROOT = 1556, TAB_OUT = 34, TAB_MARGIN = 48;
+
+    /** A click target that turns to a spread, with a label for its tooltip. */
+    public record Jump(int spread, Component label) {}
 
     public record Hit(float x0, float y0, float x1, float y1, Object target) {
         boolean contains(double x, double y) {
@@ -45,6 +56,7 @@ public class Spread {
     private int stepNo;
     private boolean draw = true;
     private final List<String> runtimeErrors = new ArrayList<>();
+    private final @Nullable FontDescription fontDesc;
 
     public Spread(@Nullable GuiGraphicsExtractor g, Font font, Book book, Book.@Nullable Page page, int spreadNo) {
         this.g = g;
@@ -52,18 +64,37 @@ public class Spread {
         this.book = book;
         this.page = page;
         this.spreadNo = spreadNo;
+        String f = var("font");
+        Identifier fid = f == null ? null : Identifier.tryParse(f);
+        this.fontDesc = fid == null || fid.equals(Identifier.withDefaultNamespace("default")) ? null : new FontDescription.Resource(fid);
+    }
+
+    /** A style value: the page's own style, then the book's, then the template's vars, then the defaults. */
+    public @Nullable String var(String k) {
+        if (page != null && page.json().has("style") && page.json().get("style").isJsonObject()) {
+            JsonElement v = page.json().getAsJsonObject("style").get(k);
+            if (v != null && v.isJsonPrimitive()) return v.getAsString();
+        }
+        String v = book.vars().get(k);
+        if (v == null && page != null && page.template() != null) v = page.template().vars().get(k);
+        return v != null ? v : DEFAULT_VARS.get(k);
+    }
+
+    Component styled(Component c) {
+        return fontDesc == null ? c : c.copy().withStyle(st -> st.withFont(fontDesc));
+    }
+
+    private int width(String s) {
+        return fontDesc == null ? font.width(s) : font.width(styled(Component.literal(s)));
     }
 
     // ---------- colours and styles ----------
 
     int color(@Nullable String spec) {
         if (spec == null) return 0xFF000000;
-        if (spec.startsWith("$")) {
-            String k = spec.substring(1);
-            String v = book.vars().get(k);
-            if (v == null && page != null && page.template() != null) v = page.template().vars().get(k);
-            if (v == null) v = DEFAULT_VARS.getOrDefault(k, "#000000");
-            spec = v;
+        for (int i = 0; i < 8 && spec.startsWith("$"); i++) {
+            String v = var(spec.substring(1));
+            spec = v == null ? "#000000" : v;
         }
         try {
             return 0xFF000000 | Integer.parseInt(spec.replace("#", ""), 16);
@@ -114,7 +145,7 @@ public class Spread {
     }
 
     float textW(Component c, float sc) {
-        return font.width(c) * 2 * sc;
+        return font.width(styled(c)) * 2 * sc;
     }
 
     float textW(FormattedCharSequence c, float sc) {
@@ -131,7 +162,7 @@ public class Spread {
     }
 
     void text(Component c, float x, float y, float sc, int col) {
-        text(c.getVisualOrderText(), x, y, sc, col);
+        text(styled(c).getVisualOrderText(), x, y, sc, col);
     }
 
     void ctext(Component c, float cx, float y, float sc, int col) {
@@ -146,7 +177,7 @@ public class Spread {
             String cur = "";
             for (String w : para.split(" ")) {
                 String t = cur.isEmpty() ? w : cur + " " + w;
-                if (font.width(t) - 1 <= max || cur.isEmpty()) cur = t;
+                if (width(t) - 1 <= max || cur.isEmpty()) cur = t;
                 else {
                     addLine(out, cur, max);
                     cur = w;
@@ -172,8 +203,8 @@ public class Spread {
     }
 
     private void addLine(List<FormattedCharSequence> out, String line, int max) {
-        if (font.width(line) - 1 <= max + 12) out.add(Component.literal(line).getVisualOrderText());
-        else out.addAll(font.split(Component.literal(line), max));
+        if (width(line) - 1 <= max + 12) out.add(styled(Component.literal(line)).getVisualOrderText());
+        else out.addAll(font.split(styled(Component.literal(line)), max));
     }
 
     void rule(float x0, float x1, float y) {
@@ -199,11 +230,12 @@ public class Spread {
 
     void slot(float x, float y, float s) {
         float k = Math.max(1, s / 18);
-        fill(x, y, x + s, y + s, rgb(139, 139, 139));
-        fill(x, y, x + s, y + k, rgb(55, 55, 55));
-        fill(x, y, x + k, y + s, rgb(55, 55, 55));
-        fill(x, y + s - k, x + s, y + s, rgb(255, 255, 255));
-        fill(x + s - k, y, x + s, y + s, rgb(255, 255, 255));
+        int dark = color("$slot_shadow"), light = color("$slot_light");
+        fill(x, y, x + s, y + s, color("$slot"));
+        fill(x, y, x + s, y + k, dark);
+        fill(x, y, x + k, y + s, dark);
+        fill(x, y + s - k, x + s, y + s, light);
+        fill(x + s - k, y, x + s, y + s, light);
     }
 
     void item(ItemRef ref, float x, float y, float size) {
@@ -236,13 +268,13 @@ public class Spread {
     }
 
     void badge(float x, float y, int n) {
-        fill(x, y, x + 26, y + 26, color("$head"));
-        int edge = rgb(196, 120, 90);
+        fill(x, y, x + 26, y + 26, color("$badge"));
+        int edge = color("$badge_edge");
         fill(x + 2, y + 2, x + 24, y + 3, edge);
         fill(x + 2, y + 23, x + 24, y + 24, edge);
         fill(x + 2, y + 2, x + 3, y + 24, edge);
         fill(x + 23, y + 2, x + 24, y + 24, edge);
-        ctext(Component.literal(String.valueOf(n)), x + 13, y + 5, 1, rgb(250, 238, 210));
+        ctext(Component.literal(String.valueOf(n)), x + 13, y + 5, 1, color("$badge_text"));
     }
 
     void image(@Nullable String tex, float x, float y, float w, float h, @Nullable String label) {
@@ -256,8 +288,8 @@ public class Spread {
             return;
         }
         if (frame) {
-            fill(x - 4, y - 4, x + w + 4, y + h + 4, rgb(92, 64, 40));
-            fill(x - 2, y - 2, x + w + 2, y + h + 2, rgb(30, 22, 16));
+            fill(x - 4, y - 4, x + w + 4, y + h + 4, color("$frame"));
+            fill(x - 2, y - 2, x + w + 2, y + h + 2, color("$frame_inner"));
         }
         float r = Math.max(w / size[0], h / size[1]);
         float uw = w / r / size[0], vh = h / r / size[1];
@@ -272,10 +304,10 @@ public class Spread {
     }
 
     void placeholder(float x, float y, float w, float h, Component label) {
-        int bg = rgb(222, 206, 168);
-        fill(x, y, x + w, y + h, rgb(92, 64, 40));
+        int bg = color("$placeholder");
+        fill(x, y, x + w, y + h, color("$frame"));
         fill(x + 3, y + 3, x + w - 3, y + h - 3, bg);
-        int hatch = rgb(212, 194, 152);
+        int hatch = color("$placeholder_hatch");
         for (float i = -h; i < w; i += 18)
             for (float t = Math.max(0, -i); t < Math.min(h, w - i); t += 2)
                 if (i + t > 3 && i + t < w - 5 && t > 3 && t < h - 5) fill(x + i + t, y + t, x + i + t + 2, y + t + 2, hatch);
@@ -292,22 +324,104 @@ public class Spread {
     // ---------- frame ----------
 
     public void frame() {
-        int cover = color("$cover"), edge = color("$cover_edge"), paper = color("$page");
+        int cover = color("$cover"), edge = color("$cover_edge");
         roundRect(22, 18, W - 22, H - 18, 14, edge);
         roundRect(26, 22, W - 26, H - 22, 10, cover);
-        fill(PX0, PT, PX1, PBOT, paper);
+        paperHalf(true);
+        paperHalf(false);
+        edges();
+    }
+
+    /** One page's paper: colour, optional texture, and the shading towards the spine. */
+    public void paperHalf(boolean left) {
+        int paper = color("$page");
+        int x0 = left ? PX0 : SPINE, x1 = left ? SPINE : PX1;
+        fill(x0, PT, x1, PBOT, paper);
+        String tex = var("page_texture");
+        Identifier texId = tex == null ? null : Identifier.tryParse(tex);
+        int[] size = texId == null ? null : BookRegistry.imageSize(texId);
+        if (size != null) {
+            String tile = var("page_tile");
+            paper(texId, x0, x1, tile == null ? 0 : Float.parseFloat(tile), size);
+        }
         int pr = paper >> 16 & 255, pg = paper >> 8 & 255, pb = paper & 255;
         for (int off = 0; off <= FADE; off++) {
             double k = Math.pow(1 - off / (double) FADE, 2.2) * 0.28;
-            int c = rgb((int) (pr - k * pr), (int) (pg - k * pg), (int) (pb - k * pb));
-            fill(SPINE - off, PT, SPINE - off + 1, PBOT, c);
-            fill(SPINE + off, PT, SPINE + off + 1, PBOT, c);
+            int c = size != null ? (int) (k * 255) << 24 : rgb((int) (pr - k * pr), (int) (pg - k * pg), (int) (pb - k * pb));
+            if (left) fill(SPINE - off, PT, SPINE - off + 1, PBOT, c);
+            else fill(SPINE + off, PT, SPINE + off + 1, PBOT, c);
         }
+    }
+
+    public void edges() {
         int line = color("$edge");
         fill(PX0, PT, PX1, PT + 2, line);
         fill(PX0, PBOT - 2, PX1, PBOT, line);
         fill(PX0, PT, PX0 + 2, PBOT, line);
         fill(PX1 - 2, PT, PX1, PBOT, line);
+    }
+
+    /** Page texture over one page, stretched, or tiled when tw (tile width in spread units) is set. */
+    private void paper(Identifier tex, int x0, int x1, float tw, int[] size) {
+        if (!draw || g == null) return;
+        if (tw <= 0) {
+            g.blit(tex, x0, PT, x1, PBOT, 0, 1, 0, 1);
+            return;
+        }
+        float th = tw * size[1] / size[0];
+        for (float y = PT; y < PBOT; y += th)
+            for (float x = x0; x < x1; x += tw) {
+                float w = Math.min(tw, x1 - x), h = Math.min(th, PBOT - y);
+                g.blit(tex, Math.round(x), Math.round(y), Math.round(x + w), Math.round(y + h), 0, w / tw, 0, h / th);
+            }
+    }
+
+    // ---------- chapter tabs ----------
+
+    /** Tabs on the fore edge, drawn before the frame so their roots sit under the cover. */
+    public void tabs(List<Book.Tab> tabs, float mx, float my) {
+        if (tabs.isEmpty()) return;
+        String[] palette = String.valueOf(var("tabs")).split(",");
+        int current = -1;
+        for (int i = 0; i < tabs.size(); i++) if (tabs.get(i).spread() <= spreadNo) current = i;
+        float top = PT + 20, avail = PBOT - 20 - top, gap = 8;
+        float h = Math.min(150, (avail - gap * (tabs.size() - 1)) / tabs.size());
+        int edge = color("$tab_edge"), ink = color("$tab_text");
+        for (int i = 0; i < tabs.size(); i++) {
+            Book.Tab t = tabs.get(i);
+            float y = top + i * (h + gap);
+            Component label = sectionLabel(book, t.section());
+            boolean hover = mx >= W - 22 && mx < W - 22 + TAB_OUT + 10 && my >= y && my < y + h;
+            float out = TAB_OUT + (i == current || hover ? 10 : 0), x1 = W - 22 + out;
+            int col = color(t.color() != null ? t.color() : palette[i % palette.length].trim());
+            fill(TAB_ROOT, y + 2, x1 - 2, y + h - 2, edge);
+            fill(TAB_ROOT, y, x1 - 4, y + 2, edge);
+            fill(TAB_ROOT, y + h - 2, x1 - 4, y + h, edge);
+            fill(x1 - 2, y + 4, x1, y + h - 4, edge);
+            fill(TAB_ROOT, y + 2, x1 - 4, y + h - 2, col);
+            fill(x1 - 4, y + 4, x1 - 2, y + h - 4, col);
+            float cx = W - 22 + out / 2;
+            if (t.icon() != null) item(ItemRef.parse(t.icon()), cx - 14, y + h / 2 - 14, 28);
+            else if (draw && g != null) {
+                String str = font.plainSubstrByWidth(label.getString(), (int) ((h - 16) / 2));
+                Component c = styled(Component.literal(str));
+                g.pose().pushMatrix();
+                g.pose().translate(cx + 8, y + (h - textW(c, 1)) / 2);
+                g.pose().rotate((float) (Math.PI / 2));
+                g.pose().scale(2, 2);
+                g.text(font, c, 0, 0, ink, false);
+                g.pose().popMatrix();
+            }
+            hits.add(0, new Hit(W - 22, y, x1, y + h, new Jump(t.spread(), label)));
+        }
+    }
+
+    static Component sectionLabel(Book book, String sec) {
+        JsonObject so = book.section(sec);
+        if (so.has("title")) return Texts.of(so.get("title").getAsString());
+        String key = "book." + book.id().getNamespace() + "." + book.id().getPath().replace('/', '.') + ".section." + sec;
+        return net.minecraft.locale.Language.getInstance().has(key) ? Component.translatable(key)
+                : Component.literal(sec.isEmpty() ? "Other" : Character.toUpperCase(sec.charAt(0)) + sec.substring(1).replace('_', ' '));
     }
 
     private void roundRect(float x0, float y0, float x1, float y1, float r, int col) {
@@ -467,6 +581,10 @@ public class Spread {
         boolean placed = false;
         while (i < a.size()) {
             JsonObject el = a.get(i).getAsJsonObject();
+            if (!BookRegistry.visible(el)) {
+                i++;
+                continue;
+            }
             String kind = str(el, "kind", "text");
             if (kind.equals("page_break")) {
                 i++;
@@ -700,7 +818,14 @@ public class Spread {
         return bottom;
     }
 
-    private float linkGrid(JsonArray links, float x, float y, float w, int cols) {
+    private float linkGrid(JsonArray all, float x, float y, float w, int cols) {
+        JsonArray links = new JsonArray();
+        for (JsonElement e : all) {
+            if (!BookRegistry.visible(e)) continue;
+            JsonObject l = e.getAsJsonObject();
+            Identifier to = l.has("page") ? BookRegistry.resolveLink(book, l.get("page").getAsString()) : null;
+            if (to == null || !book.hidden().contains(to)) links.add(e);
+        }
         float tc = w / cols;
         int rows = 0;
         for (int i = 0; i < links.size(); i++) {
@@ -753,9 +878,7 @@ public class Spread {
                 if (yy + rh > y + h) break;
                 if (r instanceof String sec) {
                     if (yy > y) yy += 8;
-                    String key = "book." + book.id().getNamespace() + "." + book.id().getPath().replace('/', '.') + ".section." + sec;
-                    Component label = net.minecraft.locale.Language.getInstance().has(key) ? Component.translatable(key)
-                            : Component.literal(sec.isEmpty() ? "Other" : Character.toUpperCase(sec.charAt(0)) + sec.substring(1).replace('_', ' '));
+                    Component label = sectionLabel(book, sec);
                     text(label, cx, yy, 1, color("$head"));
                     rule(cx, cx + colW - 16, yy + 19);
                     yy += 26;
