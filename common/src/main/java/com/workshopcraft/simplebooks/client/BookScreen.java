@@ -72,6 +72,7 @@ public class BookScreen extends Screen {
         double fit = Math.min(width * gui / w, height * gui / Spread.H);
         double real = fit >= 1 ? Math.floor(fit * 2) / 2 : fit;
         scale = (float) (real / gui);
+        Spread.renderScale = (float) real;
         ox = (width - Spread.W * scale) / 2;
         oy = (height - Spread.H * scale) / 2;
     }

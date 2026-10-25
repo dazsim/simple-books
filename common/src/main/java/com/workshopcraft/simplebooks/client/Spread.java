@@ -36,6 +36,8 @@ public class Spread {
             Map.entry("tabs", "#802c16,#2c5a80,#3c6a2c,#8a6a1c,#5a2c70"), Map.entry("tab_text", "$page"), Map.entry("tab_edge", "$cover_edge"),
             Map.entry("button_tint", "#ffffff"));
     public static final int TAB_ROOT = 1556, TAB_OUT = 34, TAB_MARGIN = 48;
+    /** Real pixels per spread unit on screen, set by the book screen. */
+    public static float renderScale = 1;
 
     /** A click target that turns to a spread, with a label for its tooltip. */
     public record Jump(int spread, Component label) {}
@@ -144,19 +146,28 @@ public class Spread {
         g.pose().popMatrix();
     }
 
+    /**
+     * Custom fonts like uniform have one glyph pixel per spread unit at scale 1, so a screen scale just
+     * under 1 drops whole glyph rows. Those sizes snap up to exactly one real pixel per glyph pixel.
+     */
+    float fs(float sc) {
+        float r = renderScale * sc;
+        return fontDesc != null && r >= 0.8f && r < 1 ? 1 / renderScale : sc;
+    }
+
     float textW(Component c, float sc) {
-        return font.width(styled(c)) * 2 * sc;
+        return font.width(styled(c)) * 2 * fs(sc);
     }
 
     float textW(FormattedCharSequence c, float sc) {
-        return font.width(c) * 2 * sc;
+        return font.width(c) * 2 * fs(sc);
     }
 
     void text(FormattedCharSequence s, float x, float y, float sc, int col) {
         if (!draw || g == null) return;
         g.pose().pushMatrix();
         g.pose().translate(x, y);
-        g.pose().scale(2 * sc, 2 * sc);
+        g.pose().scale(2 * fs(sc), 2 * fs(sc));
         g.text(font, s, 0, 0, col, false);
         g.pose().popMatrix();
     }
@@ -171,7 +182,7 @@ public class Spread {
 
     /** Word wrap that never splits a word, like the mockup renderer. */
     List<FormattedCharSequence> wrap(Component c, float maxw, float sc) {
-        int max = Math.max(1, (int) (maxw / (2 * sc)));
+        int max = Math.max(1, (int) (maxw / (2 * fs(sc))));
         List<FormattedCharSequence> out = new ArrayList<>();
         for (String para : c.getString().split("\n")) {
             String cur = "";
@@ -403,12 +414,12 @@ public class Spread {
             float cx = W - 22 + out / 2;
             if (t.icon() != null) item(ItemRef.parse(t.icon()), cx - 14, y + h / 2 - 14, 28);
             else if (draw && g != null) {
-                String str = font.plainSubstrByWidth(label.getString(), (int) ((h - 16) / 2));
+                String str = font.plainSubstrByWidth(label.getString(), (int) ((h - 16) / (2 * fs(1))));
                 Component c = styled(Component.literal(str));
                 g.pose().pushMatrix();
                 g.pose().translate(cx + 8, y + (h - textW(c, 1)) / 2);
                 g.pose().rotate((float) (Math.PI / 2));
-                g.pose().scale(2, 2);
+                g.pose().scale(2 * fs(1), 2 * fs(1));
                 g.text(font, c, 0, 0, ink, false);
                 g.pose().popMatrix();
             }

@@ -40,6 +40,11 @@ public final class SimpleBooksClient {
     private static int open(String arg) {
         String[] parts = arg.trim().split(" ");
         Identifier id = Identifier.tryParse(parts[0]);
+        if (parts.length == 1 && (id == null || BookRegistry.get(id) == null) && parts[0].lastIndexOf('/') > parts[0].indexOf(':')) {
+            int cut = parts[0].lastIndexOf('/');
+            parts = new String[] {parts[0].substring(0, cut), parts[0].substring(cut + 1)};
+            id = Identifier.tryParse(parts[0]);
+        }
         if (id == null || BookRegistry.get(id) == null) {
             say(Component.translatable("simplebooks.unknown_book", parts[0]).withStyle(ChatFormatting.RED));
             return 0;
