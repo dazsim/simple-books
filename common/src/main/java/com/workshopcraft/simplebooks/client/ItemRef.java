@@ -48,6 +48,12 @@ public record ItemRef(List<String> ids, @Nullable String label, int count, @Null
         return out;
     }
 
+    public java.util.Set<Item> items() {
+        java.util.Set<Item> out = new java.util.HashSet<>();
+        for (ItemStack s : stacks()) out.add(s.getItem());
+        return out;
+    }
+
     /** The stack to draw now (cycling through tags and lists), or empty when nothing resolves. */
     public ItemStack stack() {
         List<ItemStack> s = stacks();

@@ -70,6 +70,7 @@ public final class SimpleBooksClient {
                 Spread s = new Spread(null, Minecraft.getInstance().font, b, p, i);
                 s.content();
                 errs.addAll(s.runtimeErrors());
+                for (String a : s.arrows()) com.mojang.logging.LogUtils.getLogger().info("[simplebooks arrows] {} {}", p.file(), a);
             }
             for (String e : errs) {
                 say(Component.literal(p.file() + " " + e).withStyle(ChatFormatting.RED));

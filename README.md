@@ -69,13 +69,13 @@ One file is one spread. Any text can be a lang key or literal text. The fields a
 Item references are an id (`"minecraft:wheat"`), a tag (`"#minecraft:logs"`, icons cycle) or an object:
 `{ "item": "...", "name": "...", "count": 2, "note": "first" }`, or `"items": [...]` to cycle several icons. Names come from the game unless `name` is given. Unknown items draw a pink and black marker with the id as name; they never crash the book.
 
-Step kinds (numbered, joined by brown ink arrows):
+Step kinds (numbered). A brown ink arrow joins a step to the one above only when it uses what that step made. Set `"join": true` to force the arrow, or `"join": false` to start a new group under a thin rule.
 
 - `craft_shapeless`: `inputs` drawn as A + B + C, then an arrow and `output`. Labelled "Crafting Table (shapeless)" unless `note` is set.
 - `craft_shaped`: `pattern` (3 strings) and `key`, drawn as a grid, then `output`.
 - `process`: `inputs` in `appliance` on `on`, then `output`. Use `note` for times.
 - `assembly`: title, `text`, picture, then a row of big icons (`inputs` then `output`) with arrows and each item's `note` underneath.
-- `sequence`: a row of big icons from `cells`, then `text` underneath, picture beside.
+- `sequence`: a row of big icons from `cells` joined by arrows, then `text` underneath, picture beside. If the last cell has `"note": "result"`, the other cells are joined by `+` and only the result gets an arrow.
 
 Other blocks: `text` (`"text"`, `"style"`), `links` (`"header"`, `"columns"`, `"links": [{ "item", "label", "page" }]`), `image`, `arrow` (a down arrow), `page_break` (move on to the next page).
 
@@ -296,6 +296,6 @@ Both condition keys can sit in the same file; each loader ignores the other's. D
 
 ## Development
 
-`dev/example-pack` is an example resource pack with a deliberately broken book (`simplebooks:broken_test`) and the blueprint sample (`simplebooks:blueprints`). The More Foods cookbook now ships inside More Foods; most of its pages are made by `dev/cookbook_gen.py` from the More Foods recipe files and written straight into that repo (`python3 dev/cookbook_gen.py <more foods repo> <vanilla en_us.json>`); `pizza.json` is written by hand. `runClient` copies it into the run folder and enables it; it is never packed into the jar. If `dev/morefood-fabric.jar` or `dev/morefood-neoforge.jar` exist (More Foods 2.0 alpha jars, not in git), they are put on the dev client's classpath so the cookbook shows real items.
+`dev/example-pack` is an example resource pack with a deliberately broken book (`simplebooks:broken_test`) and the blueprint sample (`simplebooks:blueprints`). The More Foods cookbook now ships inside More Foods; most of its pages are made by `dev/cookbook_gen.py` from the More Foods recipe files and written straight into that repo (`python3 dev/cookbook_gen.py <more foods repo> <vanilla en_us.json>`); `pizza.json` and `pizza_2.json` are written by hand. `runClient` copies it into the run folder and enables it; it is never packed into the jar. If `dev/morefood-fabric.jar` or `dev/morefood-neoforge.jar` exist (More Foods 2.0 alpha jars, not in git), they are put on the dev client's classpath so the cookbook shows real items.
 
 Not yet done: grant events, Python preview renderer.

@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Draws one spread in spread units: 1600 x 1000 for the whole book, each page's content box 644 x 920.
@@ -58,6 +59,9 @@ public class Spread {
     private int stepNo;
     private boolean draw = true;
     private final List<String> runtimeErrors = new ArrayList<>();
+    private final List<String> arrows = new ArrayList<>();
+    private record Box(float x0, float y0, float x1, float y1, String what, boolean icon) {}
+    private final List<Box> boxes = new ArrayList<>();
     private final @Nullable FontDescription fontDesc;
 
     public Spread(@Nullable GuiGraphicsExtractor g, Font font, Book book, Book.@Nullable Page page, int spreadNo) {
@@ -164,6 +168,7 @@ public class Spread {
     }
 
     void text(FormattedCharSequence s, float x, float y, float sc, int col) {
+        if (draw && g == null) note(s, x, y, sc);
         if (!draw || g == null) return;
         g.pose().pushMatrix();
         g.pose().translate(x, y);
@@ -174,6 +179,47 @@ public class Spread {
 
     void text(Component c, float x, float y, float sc, int col) {
         text(styled(c).getVisualOrderText(), x, y, sc, col);
+    }
+
+    /** Validation only: remembers where text went so overlaps can be reported. */
+    private void note(FormattedCharSequence s, float x, float y, float sc) {
+        StringBuilder b = new StringBuilder();
+        s.accept((i, st, cp) -> {
+            b.appendCodePoint(cp);
+            return true;
+        });
+        String t = b.toString().strip();
+        if (t.isEmpty()) return;
+        if (t.matches("[a-z0-9_]+(\\.[a-z0-9_]+){2,}")) runtimeErrors.add("untranslated text '" + t + "'");
+        boxes.add(new Box(x, y, x + textW(s, sc), y + (font.lineHeight - 1) * 2 * fs(sc), t, false));
+    }
+
+    private void checkLayout() {
+        java.util.Set<String> out = new java.util.LinkedHashSet<>();
+        for (int i = 0; i < boxes.size(); i++) {
+            Box a = boxes.get(i);
+            if (!a.icon) {
+                float lo = a.x0 < SPINE ? L : R;
+                if (a.x0 < lo - 6 || a.x1 > lo + CW + 6) out.add("text '" + a.what + "' runs off the page");
+            }
+            for (int j = i + 1; j < boxes.size(); j++) {
+                Box b = boxes.get(j);
+                if (a.icon && b.icon) continue;
+                if (Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0) > 2 && Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0) > 2)
+                    out.add("'" + a.what + "' overlaps '" + b.what + "'");
+            }
+        }
+        runtimeErrors.addAll(out);
+    }
+
+    private float widest(List<FormattedCharSequence> ls, float sc) {
+        float m = 0;
+        for (FormattedCharSequence l : ls) m = Math.max(m, textW(l, sc));
+        return m;
+    }
+
+    private void cut(Component c, int lines, int max) {
+        if (draw && g == null && lines > max) runtimeErrors.add("'" + c.getString() + "' needs " + lines + " lines, only " + max + " shown");
     }
 
     void ctext(Component c, float cx, float y, float sc, int col) {
@@ -251,6 +297,10 @@ public class Spread {
 
     void item(ItemRef ref, float x, float y, float size) {
         ItemStack stack = ref.stack();
+        if (draw && g == null) {
+            if (stack.isEmpty()) runtimeErrors.add("nothing to show for " + String.join(" or ", ref.ids()));
+            else boxes.add(new Box(x, y, x + size, y + size, ref.name().getString(), true));
+        }
         if (stack.isEmpty()) {
             float h = size / 2;
             fill(x, y, x + h, y + h, rgb(248, 0, 248));
@@ -467,6 +517,7 @@ public class Spread {
             int size = list != null && list.isJsonArray() ? list.getAsJsonArray().size() : 0;
             if (c.getValue() < size) runtimeErrors.add("/" + c.getKey() + ": " + (size - c.getValue()) + " item(s) did not fit on the spread");
         }
+        if (g == null) checkLayout();
         if (!runtimeErrors.isEmpty()) {
             float y = PBOT - 40 - runtimeErrors.size() * 18;
             for (String err : runtimeErrors) {
@@ -474,6 +525,10 @@ public class Spread {
                 y += 18;
             }
         }
+    }
+
+    public List<String> arrows() {
+        return arrows;
     }
 
     public List<String> runtimeErrors() {
@@ -495,9 +550,11 @@ public class Spread {
             case "title" -> {
                 if (val == null) return;
                 Component c = Texts.of(val.getAsString());
-                float tw = textW(c, sc), cx = align.equals("center") ? x + w / 2 : x + tw / 2;
-                text(c, cx - tw / 2, y, sc, col);
                 JsonElement icon = slot.has("icon") ? bound(json, slot.get("icon").getAsString()) : null;
+                float room = w - (icon != null ? 2 * (num(slot, "icon_size", 40) + 10) : 0), sc0 = sc;
+                if (textW(c, sc) > room) sc = Math.max(sc * 0.6f, sc * room / textW(c, sc));
+                float tw = textW(c, sc), cx = align.equals("center") ? x + w / 2 : x + tw / 2;
+                text(c, cx - tw / 2, y + 9 * (sc0 - sc), sc, col);
                 if (icon != null) {
                     ItemRef ref = ItemRef.parse(icon);
                     float isz = num(slot, "icon_size", 40);
@@ -513,7 +570,16 @@ public class Spread {
             case "arrow" -> arrow(x, y, w > 0 ? w : h, w == 0, num(slot, "unit", 3), color("$arrow"));
             case "page_number" -> ctext(Component.translatable("simplebooks.page", spreadNo * 2 + (left ? 1 : 2)), x + w / 2, y, 1, color("$soft"));
             case "need_list", "ingredient_list", "tool_list" -> needList(slot, x, y, w, h);
-            case "step_rows" -> stepRows(slot, x, y, w, h);
+            case "step_rows" -> {
+                // stop above a link list on the same side when the page has links
+                for (var o : page.template().slots().entrySet()) {
+                    JsonObject os = o.getValue();
+                    if (!o.getKey().startsWith(left ? "left." : "right.") || !str(os, "type", "").equals("link_list")) continue;
+                    JsonElement lv = os.has("bind") ? bound(json, os.get("bind").getAsString()) : null;
+                    if (lv != null && lv.isJsonArray() && !lv.getAsJsonArray().isEmpty()) h = Math.min(h, PT + os.getAsJsonArray("box").get(1).getAsFloat() - 10 - y);
+                }
+                stepRows(slot, x, y, w, h);
+            }
             case "link_list" -> {
                 if (val != null) linkGrid(val.getAsJsonArray(), x, y, w, (int) num(slot, "columns", 4));
             }
@@ -574,9 +640,16 @@ public class Spread {
 
     private void tile(ItemRef ref, float x, float y, float nameW) {
         slotItem(ref, x, y, 36);
-        List<FormattedCharSequence> ls = wrap(ref.name(), Math.max(nameW, 40), 1);
-        float ty = ls.size() == 1 ? y + 10 : y + 1;
-        for (int j = 0; j < Math.min(2, ls.size()); j++) text(ls.get(j), x + 42, ty + j * 17, 1, color("$ink"));
+        float nw = Math.max(nameW, 40), sc = 1;
+        List<FormattedCharSequence> ls = wrap(ref.name(), nw, 1);
+        if (ls.size() > 2 || widest(ls, 1) > nw + 2) {
+            sc = 0.8f;
+            ls = wrap(ref.name(), nw, sc);
+        }
+        int max = sc < 1 ? 3 : 2, n = Math.min(max, ls.size());
+        cut(ref.name(), ls.size(), max);
+        float lh = 17 * sc, ty = y + 18 - n * lh / 2 + (n == 1 ? 1 : 0);
+        for (int j = 0; j < n; j++) text(ls.get(j), x + 42, ty + j * lh, sc, color("$ink"));
     }
 
     // ---------- steps ----------
@@ -589,6 +662,7 @@ public class Spread {
         int i = cursors.getOrDefault(bind, 0);
         float rowH = num(slot, "row_height", 92), yy = y, bottom = y + h;
         float prevBadge = -1;
+        JsonObject prev = null;
         boolean placed = false;
         while (i < a.size()) {
             JsonObject el = a.get(i).getAsJsonObject();
@@ -610,15 +684,52 @@ public class Spread {
             stepNo = saveNo;
             while (hits.size() > hitCount) hits.removeLast();
             draw = true;
-            if (placed && yy + eh > bottom + 8) break;
-            if (numbered && prevBadge >= 0) arrow(x + 13, prevBadge + 32, yy - prevBadge - 36, true, 2, color("$arrow"));
+            boolean apart = placed && el.has("join") && !el.get("join").getAsBoolean();
+            boolean joined = el.has("join") ? el.get("join").getAsBoolean() : follows(prev, el);
+            float gap = apart ? 16 : 0;
+            if (placed && yy + gap + eh > bottom + 8) break;
+            if (apart) {
+                rule(x + 40, x + w - 40, yy + 4);
+                yy += gap;
+                prevBadge = -1;
+            }
+            if (g == null && numbered && prevBadge >= 0) arrows.add((joined ? "kept " : "none ") + stepTitle(prev).getString() + " / " + stepTitle(el).getString());
+            if (numbered && prevBadge >= 0 && joined) arrow(x + 13, prevBadge + 32, yy - prevBadge - 36, true, 2, color("$arrow"));
             element(el, kind, x, yy, w, rowH);
             prevBadge = numbered ? yy : -1;
+            prev = numbered ? el : null;
             yy += eh;
             placed = true;
             i++;
         }
         cursors.put(bind, i);
+    }
+
+    /** A step only gets an arrow from the one above when it uses what that step made. */
+    private static boolean follows(@Nullable JsonObject prev, JsonObject el) {
+        if (prev == null) return false;
+        java.util.Set<net.minecraft.world.item.Item> made = new java.util.HashSet<>();
+        if (prev.has("output")) made.addAll(refItems(prev.get("output")));
+        else if (prev.has("cells") && !prev.getAsJsonArray("cells").isEmpty()) {
+            JsonArray c = prev.getAsJsonArray("cells");
+            made.addAll(refItems(c.get(c.size() - 1)));
+        }
+        if (made.isEmpty()) return false;
+        java.util.Set<net.minecraft.world.item.Item> used = new java.util.HashSet<>();
+        for (String k : new String[] {"inputs", "cells"})
+            if (el.has(k) && el.get(k).isJsonArray()) used.addAll(refItems(el.get(k)));
+        if (el.has("on")) used.addAll(refItems(el.get("on")));
+        if (el.has("key") && el.get("key").isJsonObject())
+            for (var e : el.getAsJsonObject("key").entrySet()) used.addAll(refItems(e.getValue()));
+        used.retainAll(made);
+        return !used.isEmpty();
+    }
+
+    private static java.util.Set<net.minecraft.world.item.Item> refItems(JsonElement e) {
+        java.util.Set<net.minecraft.world.item.Item> out = new java.util.HashSet<>();
+        if (e.isJsonArray()) e.getAsJsonArray().forEach(x -> out.addAll(refItems(x)));
+        else if (e.isJsonPrimitive() || e.isJsonObject()) out.addAll(ItemRef.parse(e).items());
+        return out;
     }
 
     private static boolean isStep(String kind) {
@@ -672,16 +783,17 @@ public class Spread {
     private float rowStep(JsonObject el, String kind, float x, float y, float w, float rowH) {
         int n = ++stepNo;
         badge(x, y, n);
-        text(stepTitle(el), x + 34, y + 5, 1, color("$head"));
+        float label = num(el, "label_width", 209);
+        List<FormattedCharSequence> title = wrap(stepTitle(el), label - 40, 1);
+        for (int j = 0; j < title.size(); j++) text(title.get(j), x + 34, y + 5 + j * 18, 1, color("$head"));
         String noteKey = switch (kind) {
             case "craft_shapeless" -> "simplebooks.shapeless";
             case "craft_shaped" -> "simplebooks.shaped";
             default -> null;
         };
         String note = str(el, "note", noteKey);
-        float label = num(el, "label_width", 209);
-        float bottom = y + 26;
-        if (note != null) bottom = Math.max(bottom, y + 30 + para(Texts.of(note), x + 34, y + 30, label - 34, 1, color("$soft"), 17, "left"));
+        float bottom = Math.max(y + 26, y + 8 + title.size() * 18), noteY = y + 12 + title.size() * 18;
+        if (note != null) bottom = Math.max(bottom, noteY + para(Texts.of(note), x + 34, noteY, label - 34, 1, color("$soft"), 17, "left"));
         float iw = 0;
         if (el.has("image") || el.has("placeholder")) {
             float[] sz = size(el, 104, 76);
@@ -711,8 +823,7 @@ public class Spread {
             cells.add(">");
             cells.add(ItemRef.parse(el.get("output")));
         }
-        float cy = 34 + textW(stepTitle(el), 1) > label - 6 ? y + 24 : y + 2;
-        bottom = Math.max(bottom, chain(x + label, cy, cells, x + w - iw));
+        bottom = Math.max(bottom, chain(x + label, y + 2, cells, x + w - iw));
         return Math.max(rowH, bottom - y + 10);
     }
 
@@ -722,35 +833,63 @@ public class Spread {
         return new float[]{a.get(0).getAsFloat(), a.get(1).getAsFloat()};
     }
 
-    /** Icons joined by symbols; returns the bottom edge. */
+    /** Icons joined by symbols, wrapping onto another row when the page is too narrow; returns the bottom edge. */
     private float chain(float x, float y, List<Object> cells, float maxX) {
-        final float cell = 96, size = 36;
-        float bottom = y + size;
-        for (Object c : cells) {
-            if (c == null) continue;
-            if (c instanceof String s && s.equals(">")) {
-                arrow(x, y + size / 2, 30, false, 2, color("$arrow"));
-                x += 34;
-            } else if (c instanceof String s) {
-                ctext(Component.literal(s), x + 14, y + size / 2 - 8, 1, color("$soft"));
-                x += 28;
-            } else if (c instanceof Component comp) {
-                float tw = textW(comp, 1);
-                text(comp, x + 4, y + size / 2 - 8, 1, color("$soft"));
-                x += tw + 10;
-            } else if (c instanceof JsonObject shaped) {
-                bottom = Math.max(bottom, grid(shaped, x, y));
-                x += 3 * size + 10;
-            } else if (c instanceof ItemRef ref) {
-                slotItem(ref, x + (cell - size) / 2 - 20, y, size);
-                float cx = x + cell / 2 - 20;
-                List<FormattedCharSequence> ls = wrap(ref.name(), cell - 6, 1);
-                for (int j = 0; j < ls.size(); j++) text(ls.get(j), cx - textW(ls.get(j), 1) / 2, y + size + 4 + j * 17, 1, color("$ink"));
-                bottom = Math.max(bottom, y + size + 4 + ls.size() * 17);
-                x += cell - 40;
+        final float size = 36, gap = 8;
+        List<Object> cs = new ArrayList<>();
+        for (Object c : cells) if (c != null) cs.add(c);
+        List<List<FormattedCharSequence>> labels = new ArrayList<>();
+        float[] widths = new float[cs.size()];
+        float word = 0;
+        for (Object c : cs) if (c instanceof ItemRef ref) for (String wd : ref.name().getString().split(" ")) word = Math.max(word, textW(Component.literal(wd), 1));
+        for (float lw0 : new float[]{100, 84, 68, 56, 84}) {
+            float lw = Math.max(lw0, word);
+            labels.clear();
+            float total = -gap;
+            for (int i = 0; i < cs.size(); i++) {
+                Object c = cs.get(i);
+                List<FormattedCharSequence> ls = c instanceof ItemRef ref ? wrap(ref.name(), lw, 1) : List.of();
+                labels.add(ls);
+                float cw = size;
+                for (FormattedCharSequence ln : ls) cw = Math.max(cw, textW(ln, 1) - 2);
+                if (c instanceof String s) cw = s.equals(">") ? 30 : Math.max(16, textW(Component.literal(s), 1));
+                else if (c instanceof Component comp) cw = textW(comp, 1);
+                else if (c instanceof JsonObject) cw = 3 * size;
+                widths[i] = cw;
+                total += cw + gap;
             }
+            if (x + total <= maxX) break;
         }
-        if (draw && x > maxX + 8) runtimeErrors.add("step " + stepNo + ": row is wider than the page");
+        float cx = x, rowY = y, bottom = y + size;
+        boolean wide = false;
+        for (int i = 0; i < cs.size(); i++) {
+            Object c = cs.get(i);
+            float need = widths[i];
+            if (!(c instanceof ItemRef) && !(c instanceof JsonObject) && i + 1 < cs.size()) need += gap + widths[i + 1];
+            if (cx > x && cx + need > maxX) {
+                cx = x;
+                rowY = bottom + 10;
+                bottom = rowY + size;
+            }
+            float cw = widths[i];
+            if (c instanceof String s && s.equals(">")) {
+                arrow(cx, rowY + size / 2, 30, false, 2, color("$arrow"));
+            } else if (c instanceof String s) {
+                ctext(Component.literal(s), cx + cw / 2, rowY + size / 2 - 8, 1, color("$soft"));
+            } else if (c instanceof Component comp) {
+                text(comp, cx, rowY + size / 2 - 8, 1, color("$soft"));
+            } else if (c instanceof JsonObject shaped) {
+                bottom = Math.max(bottom, grid(shaped, cx, rowY));
+            } else if (c instanceof ItemRef ref) {
+                slotItem(ref, cx + (cw - size) / 2, rowY, size);
+                List<FormattedCharSequence> ls = labels.get(i);
+                for (int j = 0; j < ls.size(); j++) text(ls.get(j), cx + cw / 2 - (textW(ls.get(j), 1) - 2) / 2, rowY + size + 4 + j * 17, 1, color("$ink"));
+                bottom = Math.max(bottom, rowY + size + 4 + ls.size() * 17);
+            }
+            cx += cw + gap;
+            wide |= cx - gap > maxX + 8;
+        }
+        if (draw && wide) runtimeErrors.add("step " + stepNo + ": row is wider than the page");
         return bottom;
     }
 
@@ -799,31 +938,50 @@ public class Spread {
         return yy - y;
     }
 
-    private float bigCells(List<ItemRef> cells, float x, float y, float avail) {
-        if (cells.isEmpty()) return y;
+    private float bigCells(List<ItemRef> in, float x, float y, float avail) {
+        if (in.isEmpty()) return y;
         final float size = 52;
+        boolean mix = "result".equals(in.getLast().note());
+        List<ItemRef> cells = new ArrayList<>();
+        for (ItemRef r : in) {
+            ItemRef p = cells.isEmpty() ? null : cells.getLast();
+            // the same ingredient twice in a mix shows once with a count
+            if (mix && p != null && p.note() == null && r.note() == null && p.ids().equals(r.ids()) && Objects.equals(p.label(), r.label()))
+                cells.set(cells.size() - 1, new ItemRef(p.ids(), p.label(), Math.max(1, p.count()) + Math.max(1, r.count()), null));
+            else cells.add(r);
+        }
         float step = cells.size() > 1 ? Math.min(avail - size, 148 * (cells.size() - 1)) / (cells.size() - 1) : 0;
-        float bottom = y + size;
+        float bottom = y + size, lw0 = cells.size() > 1 ? Math.max(52, Math.min(130, step - 16)) : 130, sc = 1;
+        float lastRight = -1e9f;
+        for (int i = 0; i < cells.size(); i++) {
+            float lw = widest(wrap(cells.get(i).name(), lw0, 1), 1), cx = x + i * step, left = cx < SPINE ? L : R;
+            float lx = Math.max(left, Math.min(left + CW - lw, cx + size / 2 - lw / 2));
+            if (lw > step - 8 || lx < lastRight + 6) sc = 0.8f;
+            lastRight = lx + lw;
+        }
         for (int i = 0; i < cells.size(); i++) {
             ItemRef ref = cells.get(i);
             float cx = x + i * step;
             slotItem(ref, cx, y, size);
-            List<FormattedCharSequence> ls = wrap(ref.name(), Math.max(110, step - 20), 1);
+            List<FormattedCharSequence> ls = wrap(ref.name(), lw0, sc);
             float ty = y + size + 4;
             float left = cx < SPINE ? L : R;
             for (FormattedCharSequence ln : ls) {
-                float lw = textW(ln, 1);
-                text(ln, Math.max(left, Math.min(left + CW - lw, cx + size / 2 - lw / 2)), ty, 1, color("$ink"));
-                ty += 17;
+                float lw = textW(ln, sc);
+                text(ln, Math.max(left, Math.min(left + CW - lw, cx + size / 2 - lw / 2)), ty, sc, color("$ink"));
+                ty += 17 * sc;
             }
             if (ref.note() != null) {
-                ctext(Texts.of(ref.note()), cx + size / 2, ty, 1, color("$soft"));
-                ty += 17;
+                Component nt = Texts.of(ref.note());
+                float nw = textW(nt, sc);
+                text(nt, Math.max(left, Math.min(left + CW - nw, cx + size / 2 - nw / 2)), ty, sc, color("$soft"));
+                ty += 17 * sc;
             }
             bottom = Math.max(bottom, ty);
             if (i < cells.size() - 1) {
                 float g0 = cx + size, g1 = cx + step, len = Math.min(42, g1 - g0 - 12);
-                arrow((g0 + g1) / 2 - len / 2, y + size / 2, len, false, 3, color("$arrow"));
+                if (mix && i < cells.size() - 2) ctext(Component.literal("+"), (g0 + g1) / 2, y + size / 2 - 8, 1, color("$soft"));
+                else arrow((g0 + g1) / 2 - len / 2, y + size / 2, len, false, 3, color("$arrow"));
             }
         }
         return bottom;
@@ -849,15 +1007,22 @@ public class Spread {
             if (ref != null) slotItem(ref, lx, ly, 36);
             Component label = l.has("label") ? Texts.of(l.get("label").getAsString()) : ref != null ? ref.name() : Component.literal("?");
             float tx = ref != null ? lx + 42 : lx;
-            List<FormattedCharSequence> ls = wrap(label, tc - (tx - lx) - 4, 1);
-            float yy = ls.size() == 1 ? ly + 10 : ly + 1;
+            float lw = tc - (tx - lx) - 4, sc = 1;
+            List<FormattedCharSequence> ls = wrap(label, lw, 1);
+            if (ls.size() > 2 || widest(ls, 1) > lw + 2) {
+                sc = 0.8f;
+                ls = wrap(label, lw, sc);
+            }
+            int max = sc < 1 ? 3 : 2, n = Math.min(max, ls.size());
+            cut(label, ls.size(), max);
+            float lh = 17 * sc, yy = ly + 18 - n * lh / 2 + 1;
             int col = color("$link");
             Identifier target = l.has("page") ? BookRegistry.resolveLink(book, l.get("page").getAsString()) : null;
-            for (int j = 0; j < Math.min(2, ls.size()); j++) {
-                float tw = textW(ls.get(j), 1);
-                text(ls.get(j), tx, yy + j * 17, 1, col);
-                fill(tx, yy + j * 17 + 16, tx + tw - 2, yy + j * 17 + 18, col);
-                if (target != null) hits.add(new Hit(tx, yy + j * 17 - 2, tx + tw, yy + j * 17 + 18, target));
+            for (int j = 0; j < n; j++) {
+                float tw = textW(ls.get(j), sc), ty = yy + j * lh;
+                text(ls.get(j), tx, ty, sc, col);
+                fill(tx, ty + 16 * sc, tx + tw - 2, ty + 16 * sc + 2 * sc, col);
+                if (target != null) hits.add(new Hit(tx, ty - 2, tx + tw, ty + 16 * sc + 2, target));
             }
             if (target != null && ref != null) hits.add(new Hit(lx, ly, lx + 36, ly + 36, target));
         }
@@ -865,6 +1030,12 @@ public class Spread {
     }
 
     // ---------- contents ----------
+
+    private int contentLines(Book.Page p, float colW) {
+        String t = p.json().has("title") ? p.json().get("title").getAsString() : p.id().getPath();
+        Component num = Component.literal(String.valueOf(book.indexOf(p.id()) * 2 + 1));
+        return Math.min(2, wrap(Texts.of(t), colW - 24 - textW(num, 1) - 12, 1).size());
+    }
 
     private void contents(float x, float y, float w, float h, int cols) {
         List<Object> rows = new ArrayList<>();
@@ -885,7 +1056,7 @@ public class Spread {
             float cx = x + c * colW, yy = y;
             while (i < rows.size()) {
                 Object r = rows.get(i);
-                float rh = r instanceof String ? (yy == y ? 26 : 34) : 20;
+                float rh = r instanceof String ? (yy == y ? 26 : 34) : 20 * contentLines((Book.Page) r, colW);
                 if (yy + rh > y + h) break;
                 if (r instanceof String sec) {
                     if (yy > y) yy += 8;
@@ -900,15 +1071,18 @@ public class Spread {
                     int idx = book.indexOf(p.id());
                     Component num = Component.literal(String.valueOf(idx * 2 + 1));
                     float nw = textW(num, 1), maxw = colW - 24 - nw;
-                    List<FormattedCharSequence> ls = wrap(label, maxw, 1);
-                    FormattedCharSequence first = ls.get(0);
-                    float tw = Math.min(textW(first, 1), maxw);
+                    List<FormattedCharSequence> ls = wrap(label, maxw - 12, 1);
+                    cut(label, ls.size(), 2);
                     int col = p.broken() ? color("$error") : color("$link");
-                    text(first, cx + 8, yy, 1, col);
-                    fill(cx + 8, yy + 16, cx + 8 + tw - 2, yy + 18, col);
-                    text(num, cx + colW - 16 - nw, yy, 1, color("$soft"));
-                    hits.add(new Hit(cx, yy - 2, cx + colW - 16, yy + 18, p.id()));
-                    yy += 20;
+                    int n = Math.min(2, ls.size());
+                    for (int j = 0; j < n; j++) {
+                        float tw = Math.min(textW(ls.get(j), 1), maxw);
+                        text(ls.get(j), cx + 8 + (j > 0 ? 12 : 0), yy + j * 20, 1, col);
+                        fill(cx + 8 + (j > 0 ? 12 : 0), yy + j * 20 + 16, cx + 8 + (j > 0 ? 12 : 0) + tw - 2, yy + j * 20 + 18, col);
+                    }
+                    text(num, cx + colW - 16 - nw, yy + (n - 1) * 20, 1, color("$soft"));
+                    hits.add(new Hit(cx, yy - 2, cx + colW - 16, yy + n * 20 - 2, p.id()));
+                    yy += 20 * n;
                 }
                 i++;
             }
