@@ -21,7 +21,11 @@ import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.Direction;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FontDescription;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.item.ItemDisplayContext;
@@ -41,10 +45,15 @@ public class BookStandRenderer implements BlockEntityRenderer<BookStandBlockEnti
         boolean book;
         Identifier cover = COVER, leftPage = PAGE, rightPage = PAGE;
         Direction facing = Direction.NORTH;
-        @Nullable FormattedCharSequence leftTitle, rightTitle;
+        @Nullable Title leftTitle, rightTitle;
+        int ink = 0xFF3F2A14;
         final List<ItemStackRenderState> left = new ArrayList<>(), right = new ArrayList<>();
     }
 
+    /** A title fitted to the page: one or two lines at a scale of 1 or less. */
+    record Title(List<FormattedCharSequence> lines, float scale) {}
+
+    private static final int TITLE_W = 90;
     private final Font font;
     private final ItemModelResolver items;
 
@@ -79,8 +88,13 @@ public class BookStandRenderer implements BlockEntityRenderer<BookStandBlockEnti
         s.leftPage = texture(j, "stand_left", paper);
         s.rightPage = texture(j, "stand_right", paper);
         if (j.has("stand_left") || j.has("stand_right")) return;
-        s.leftTitle = title(Spread.bound(j, "title"));
-        s.rightTitle = title(Spread.bound(j, "right_title|title"));
+        String ink = book.vars().get("stand_ink");
+        s.ink = parse(ink, 0xFF3F2A14);
+        String f = book.vars().get("font");
+        Identifier fid = f == null ? null : Identifier.tryParse(f);
+        Style style = fid == null ? Style.EMPTY : Style.EMPTY.withFont(new FontDescription.Resource(fid));
+        s.leftTitle = title(Spread.bound(j, "title"), style);
+        s.rightTitle = title(Spread.bound(j, "right_title|title"), style);
         icons(Spread.bound(j, "ingredients"), s.left, be, 10);
         icons(Spread.bound(j, "tools"), s.left, be, 15);
         JsonElement steps = j.get("steps");
@@ -97,9 +111,32 @@ public class BookStandRenderer implements BlockEntityRenderer<BookStandBlockEnti
         return id == null ? def : id.withPath(p -> (p.startsWith("textures/") ? p : "textures/" + p) + (p.endsWith(".png") ? "" : ".png"));
     }
 
-    private @Nullable FormattedCharSequence title(@Nullable JsonElement e) {
+    private static int parse(@Nullable String hex, int def) {
+        if (hex == null || hex.startsWith("$")) return def;
+        try {
+            return 0xFF000000 | Integer.parseInt(hex.replace("#", ""), 16);
+        } catch (NumberFormatException ex) {
+            return def;
+        }
+    }
+
+    /** Shrinks a long title a little, then wraps it to two lines, then shrinks again; only past that is it cut short. */
+    private @Nullable Title title(@Nullable JsonElement e, Style style) {
         if (e == null || !e.isJsonPrimitive()) return null;
-        return Component.literal(font.plainSubstrByWidth(Texts.of(e.getAsString()).getString(), 90)).getVisualOrderText();
+        Component c = Component.literal(Texts.of(e.getAsString()).getString()).withStyle(style);
+        int w = font.width(c);
+        if (w <= TITLE_W / 0.8F) return new Title(List.of(c.getVisualOrderText()), Math.min(1, TITLE_W / (float) w));
+        for (float k = 1; k >= 0.6F; k -= 0.1F) {
+            List<FormattedText> ls = font.getSplitter().splitLines(c, (int) (TITLE_W / k), style);
+            if (ls.size() <= 2) return new Title(ls.stream().map(Language.getInstance()::getVisualOrder).toList(), k);
+        }
+        int max = (int) (TITLE_W / 0.6F);
+        List<FormattedText> ls = font.getSplitter().splitLines(c, max, style);
+        StringBuilder rest = new StringBuilder();
+        for (int i = 1; i < ls.size(); i++) rest.append(i > 1 ? " " : "").append(ls.get(i).getString());
+        String second = font.plainSubstrByWidth(rest.toString(), max - font.width("...")).stripTrailing() + "...";
+        return new Title(List.of(Language.getInstance().getVisualOrder(ls.get(0)),
+                Component.literal(second).withStyle(style).getVisualOrderText()), 0.6F);
     }
 
     private void icons(@Nullable JsonElement e, List<ItemStackRenderState> out, BookStandBlockEntity be, int max) {
@@ -128,21 +165,25 @@ public class BookStandRenderer implements BlockEntityRenderer<BookStandBlockEnti
         collector.submitCustomGeometry(pose, RenderTypes.entityCutout(s.cover), (p, b) -> quad(p, b, -7.5F, -5.5F, 7.5F, 5.5F, 0, light));
         collector.submitCustomGeometry(pose, RenderTypes.entityCutout(s.leftPage), (p, b) -> quad(p, b, -7F, -5F, -0.15F, 5F, 0.35F, light));
         collector.submitCustomGeometry(pose, RenderTypes.entityCutout(s.rightPage), (p, b) -> quad(p, b, 0.15F, -5F, 7F, 5F, 0.35F, light));
-        side(s.leftTitle, s.left, -3.6F, pose, collector, light);
-        side(s.rightTitle, s.right, 3.6F, pose, collector, light);
+        side(s.leftTitle, s.left, -3.6F, pose, collector, light, s.ink);
+        side(s.rightTitle, s.right, 3.6F, pose, collector, light, s.ink);
         pose.popPose();
     }
 
-    private void side(@Nullable FormattedCharSequence title, List<ItemStackRenderState> icons, float cx, PoseStack pose,
-                      SubmitNodeCollector collector, int light) {
+    private void side(@Nullable Title title, List<ItemStackRenderState> icons, float cx, PoseStack pose,
+                      SubmitNodeCollector collector, int light, int ink) {
         if (title != null) {
-            pose.pushPose();
-            float sc = 0.6F / 16 / 8;
-            pose.translate(cx / 16 - font.width(title) * sc / 2, 0.4F / 16, -4.4F / 16);
-            pose.mulPose(Axis.XP.rotationDegrees(-90));
-            pose.scale(sc, -sc, sc);
-            collector.submitText(pose, 0, 0, title, false, Font.DisplayMode.POLYGON_OFFSET, light, 0xFF3F2A14, 0, 0);
-            pose.popPose();
+            float sc = 0.6F / 16 / 8 * title.scale(), lh = 9 * 0.6F / 8 * title.scale();
+            float z = title.lines().size() > 1 ? -4.6F : -4.4F + (1 - title.scale()) * 0.3F;
+            for (FormattedCharSequence line : title.lines()) {
+                pose.pushPose();
+                pose.translate(cx / 16 - font.width(line) * sc / 2, 0.4F / 16, z / 16);
+                pose.mulPose(Axis.XP.rotationDegrees(-90));
+                pose.scale(sc, -sc, sc);
+                collector.submitText(pose, 0, 0, line, false, Font.DisplayMode.POLYGON_OFFSET, light, ink, 0, 0);
+                pose.popPose();
+                z += lh;
+            }
         }
         int cols = 5;
         for (int i = 0; i < icons.size(); i++) {
