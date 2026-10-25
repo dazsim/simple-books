@@ -4,7 +4,7 @@ Guide books for Minecraft mods, written as JSON. Each mod ships its own pages; S
 
 Minecraft 26.1 to 26.1.x, NeoForge and Fabric (Fabric needs Fabric API). Client side rendering; the guide item is registered on both sides.
 
-Status: 0.1.0-alpha.5 (per-book styling, chapter tabs, optional pages, page-turn animation).
+Status: 1.0.0-release.1 (per-book styling, chapter tabs, optional pages, page-turn animation, layout checks).
 
 ## Optional integration
 
