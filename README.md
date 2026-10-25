@@ -83,6 +83,28 @@ Any step can have `title` (defaults to the output's name), `note`, `image` (a te
 
 Links take a page id, either relative to the book (`"toppings"`) or full (`"morefood:cookbook/toppings"`). Click to jump; right click or Backspace goes back. Links should only be used for optional content.
 
+### Recipes drawn in pictures
+
+A page whose picture shows a recipe as line art can add `drawn_recipes`, so readers can tell similar looking items apart. Each entry gets the item tooltip when the mouse is over a drawn cell or the result, and a title with a named list such as "8x Oak Planks, 1x Chest" at `text`.
+
+```json
+"drawn_recipes": [{
+  "side": "right",
+  "text": [40, 720, 560],
+  "grid": { "at": [50, 400], "cell": 70, "pattern": ["PPP", "PCP", "PPP"] },
+  "key": { "P": { "items": ["minecraft:oak_planks", "minecraft:spruce_planks"], "name": "mymod.planks_any" }, "C": "#c:chests/wooden" },
+  "result": { "item": "mymod:carcass", "count": 1, "box": [430, 450, 110, 110] }
+}]
+```
+
+- `side`: `left` or `right` (default). Boxes are page units from the top left of that page, the same as the picture when it fills the page.
+- `grid`: where the drawn grid sits, its cell size and the recipe pattern. Counts in the list come from the pattern.
+- `ingredients`: a list of item references with `count` instead of `grid`, for a recipe drawn some other way. Add `box` to one to give it a tooltip.
+- `result`: the output; its `box` gets a tooltip and a `count` above 1 adds "makes N" to the title.
+- `title`: defaults to the result's name. `hover`: extra `{ "box", "item" }` tooltip areas.
+
+Generate these from your recipe files when you can, so the list always matches the real recipe. `/simplebooks validate` reports pattern letters with no key, items that do not resolve, and text laid over a drawn cell or running off the page.
+
 ## Templates
 
 A template places slots on the left and right page. Coordinates are page units: each page's content area is 644 wide and 920 tall, with text scale 1 being the Minecraft font at 2 units per pixel. These are the same numbers as the 1600 x 1000 mockup, and the screen scales the whole spread to fit.

@@ -65,6 +65,10 @@ public record ItemRef(List<String> ids, @Nullable String label, int count, @Null
 
     public Component name() {
         if (label != null) return Texts.of(label);
+        if (ids.size() == 1 && ids.get(0).startsWith("#")) {
+            String key = "tag.item." + ids.get(0).substring(1).replace(':', '.').replace('/', '.');
+            if (net.minecraft.locale.Language.getInstance().has(key)) return Component.translatable(key);
+        }
         ItemStack s = stack();
         if (!s.isEmpty()) return s.getHoverName();
         String id = ids.isEmpty() ? "?" : ids.get(0);

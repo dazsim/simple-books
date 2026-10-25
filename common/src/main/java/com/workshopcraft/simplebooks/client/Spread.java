@@ -7,6 +7,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FontDescription;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.item.ItemStack;
@@ -297,7 +298,7 @@ public class Spread {
 
     void item(ItemRef ref, float x, float y, float size) {
         ItemStack stack = ref.stack();
-        if (draw && g == null) {
+        if (g == null) {
             if (stack.isEmpty()) runtimeErrors.add("nothing to show for " + String.join(" or ", ref.ids()));
             else boxes.add(new Box(x, y, x + size, y + size, ref.name().getString(), true));
         }
@@ -511,6 +512,11 @@ public class Spread {
                 runtimeErrors.add("slot " + e.getKey() + ": " + ex);
             }
         }
+        try {
+            drawnRecipes();
+        } catch (Exception ex) {
+            runtimeErrors.add("drawn_recipes: " + ex);
+        }
         for (var c : cursors.entrySet()) {
             if (c.getKey().startsWith("$")) continue;
             JsonElement list = bound(page.json(), c.getKey());
@@ -595,6 +601,86 @@ public class Spread {
             }
             default -> {}
         }
+    }
+
+    // ---------- recipes drawn into page pictures ----------
+
+    /**
+     * Recipes that are part of a page picture get hover tooltips over the drawn cells and result,
+     * and a title plus named ingredient list, because line art cannot tell similar items apart.
+     */
+    private void drawnRecipes() {
+        JsonElement all = page.json().get("drawn_recipes");
+        if (all == null || !all.isJsonArray()) return;
+        for (JsonElement re : all.getAsJsonArray()) {
+            JsonObject r = re.getAsJsonObject();
+            float ox = "left".equals(str(r, "side", "right")) ? L : R;
+            java.util.LinkedHashMap<String, Integer> counts = new java.util.LinkedHashMap<>();
+            Map<String, ItemRef> refs = new HashMap<>();
+            if (r.has("grid")) {
+                JsonObject gr = r.getAsJsonObject("grid");
+                JsonObject key = r.getAsJsonObject("key");
+                JsonArray at = gr.getAsJsonArray("at");
+                float cell = num(gr, "cell", 36), gx = ox + at.get(0).getAsFloat(), gy = PT + at.get(1).getAsFloat();
+                JsonArray pat = gr.getAsJsonArray("pattern");
+                for (int row = 0; row < pat.size(); row++) {
+                    String line = pat.get(row).getAsString();
+                    for (int col = 0; col < line.length(); col++) {
+                        String k = String.valueOf(line.charAt(col));
+                        if (k.isBlank()) continue;
+                        if (key == null || !key.has(k)) {
+                            runtimeErrors.add("drawn recipe: no key for '" + k + "'");
+                            continue;
+                        }
+                        ItemRef ref = refs.computeIfAbsent(k, kk -> ItemRef.parse(key.get(kk)));
+                        counts.merge(k, 1, Integer::sum);
+                        drawnHover(ref, gx + col * cell, gy + row * cell, cell, cell);
+                    }
+                }
+            }
+            if (r.has("ingredients")) {
+                JsonArray in = r.getAsJsonArray("ingredients");
+                for (int i = 0; i < in.size(); i++) {
+                    ItemRef ref = ItemRef.parse(in.get(i));
+                    refs.put("#" + i, ref);
+                    counts.merge("#" + i, Math.max(1, ref.count()), Integer::sum);
+                    if (in.get(i).isJsonObject() && in.get(i).getAsJsonObject().has("box")) drawnHover(ref, ox, in.get(i).getAsJsonObject().getAsJsonArray("box"));
+                }
+            }
+            ItemRef result = r.has("result") ? ItemRef.parse(r.get("result")) : null;
+            if (result != null && r.get("result").isJsonObject() && r.getAsJsonObject("result").has("box"))
+                drawnHover(result, ox, r.getAsJsonObject("result").getAsJsonArray("box"));
+            if (r.has("hover")) for (JsonElement he : r.getAsJsonArray("hover")) {
+                JsonObject h = he.getAsJsonObject();
+                drawnHover(ItemRef.parse(h.get("item")), ox, h.getAsJsonArray("box"));
+            }
+            JsonArray tb = r.getAsJsonArray("text");
+            if (tb == null) continue;
+            float tx = ox + tb.get(0).getAsFloat(), ty = PT + tb.get(1).getAsFloat(), tw = tb.size() > 2 ? tb.get(2).getAsFloat() : CW - tb.get(0).getAsFloat();
+            Component title = r.has("title") ? Texts.of(r.get("title").getAsString()) : result != null ? result.name() : null;
+            if (title != null && result != null && result.count() > 1) title = Component.translatable("simplebooks.makes", title, result.count());
+            if (title != null) ty += para(title, tx, ty, tw, 1, color("$ink"), 18, "left");
+            List<Component> parts = new ArrayList<>();
+            for (var e : counts.entrySet()) parts.add(Component.translatable("simplebooks.count", e.getValue(), refs.get(e.getKey()).name()));
+            if (parts.isEmpty()) continue;
+            MutableComponent list = Component.empty();
+            for (int i = 0; i < parts.size(); i++) list.append(i == 0 ? Component.empty() : Component.literal(", ")).append(parts.get(i));
+            para(list, tx, ty, tw, 1, color("$soft"), 18, "left");
+        }
+    }
+
+    private void drawnHover(ItemRef ref, float ox, JsonArray b) {
+        drawnHover(ref, ox + b.get(0).getAsFloat(), PT + b.get(1).getAsFloat(), b.get(2).getAsFloat(), b.get(3).getAsFloat());
+    }
+
+    /** A hover area over part of a picture; validation also treats it as taken so text can't be laid over it. */
+    private void drawnHover(ItemRef ref, float x, float y, float w, float h) {
+        ItemStack st = ref.stack();
+        if (g == null) {
+            if (st.isEmpty()) runtimeErrors.add("nothing to show for " + String.join(" or ", ref.ids()));
+            boxes.add(new Box(x, y, x + w, y + h, ref.name().getString(), true));
+        }
+        hits.add(new Hit(x, y, x + w, y + h, st.isEmpty() ? ref.name() : st));
     }
 
     // ---------- ingredient and tool lists ----------

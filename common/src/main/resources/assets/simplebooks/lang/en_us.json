@@ -9,6 +9,8 @@
   "simplebooks.on": "on",
   "simplebooks.page": "Page %s",
   "simplebooks.contents": "Contents",
+  "simplebooks.count": "%sx %s",
+  "simplebooks.makes": "%s, makes %s",
   "simplebooks.error.title": "This spread has errors",
   "simplebooks.unknown_book": "Unknown book: %s",
   "block.simplebooks.book_stand": "Book Stand"
