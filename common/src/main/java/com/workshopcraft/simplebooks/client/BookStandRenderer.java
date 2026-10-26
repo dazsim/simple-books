@@ -80,8 +80,8 @@ public class BookStandRenderer implements BlockEntityRenderer<BookStandBlockEnti
         if (!s.book) return;
         Identifier id = be.book().get(SimpleBooksContent.BOOK);
         Book book = id == null ? null : BookRegistry.get(id);
-        if (book == null || book.pages().isEmpty()) return;
-        Book.Page page = book.pages().get(Math.min(be.spread(), book.pages().size() - 1));
+        Book.Page page = book == null ? null : book.pageAt(be.spread());
+        if (page == null) return;
         JsonObject j = page.json();
         s.cover = texture(book.json(), "stand_cover", COVER);
         Identifier paper = texture(book.json(), "stand_page", PAGE);

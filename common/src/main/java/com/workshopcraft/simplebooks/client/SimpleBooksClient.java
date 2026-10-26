@@ -63,21 +63,42 @@ public final class SimpleBooksClient {
         }
         int bad = 0;
         for (String e : b.errors()) say(Component.literal(e).withStyle(ChatFormatting.RED));
+        var font = Minecraft.getInstance().font;
+        Flow f = b.errors().isEmpty() ? b.flow() : null;
+        int last = f != null ? f.pages() - 1 : b.pages().size() * 2 - 1;
+        java.util.Map<Book.Page, Float> room = new java.util.HashMap<>();
         for (int i = 0; i < b.pages().size(); i++) {
             Book.Page p = b.pages().get(i);
             List<String> errs = new ArrayList<>(p.errors());
             if (!p.broken() && b.errors().isEmpty()) {
-                Spread s = new Spread(null, Minecraft.getInstance().font, b, p, i);
-                s.content();
-                errs.addAll(s.runtimeErrors());
-                for (String a : s.arrows()) com.mojang.logging.LogUtils.getLogger().info("[simplebooks arrows] {} {}", p.file(), a);
+                List<Spread> parts = new ArrayList<>();
+                if (f == null) parts.add(new Spread(null, font, b, p, i));
+                else {
+                    errs.addAll(f.problems(p));
+                    for (int h = f.pageOf(p.id()); h >= 0 && f.half(h) != null && f.half(h).page() == p; h++)
+                        parts.add(new Spread(null, font, b, p, h / 2, f.half(h), h % 2 == 1, h + 1));
+                }
+                for (Spread s : parts) {
+                    s.content();
+                    errs.addAll(s.runtimeErrors());
+                    for (String c : s.pageChecks()) if (!c.startsWith("page " + (last + 1) + " ")) errs.add(c);
+                    for (String a : s.arrows()) com.mojang.logging.LogUtils.getLogger().info("[simplebooks arrows] {} {}", p.file(), a);
+                }
+                if (!parts.isEmpty()) room.put(p, parts.getLast().roomLeft());
+                // steps carried on in another file while this one's last page still had room for them
+                if (i > 0 && p.json().has("first_step") && room.containsKey(b.pages().get(i - 1))) {
+                    float first = new Spread(null, font, b, p, i).firstStepHeight();
+                    if (first > 0 && room.get(b.pages().get(i - 1)) >= first)
+                        errs.add("its first step would fit at the end of " + b.pages().get(i - 1).id().getPath());
+                }
             }
             for (String e : errs) {
                 say(Component.literal(p.file() + " " + e).withStyle(ChatFormatting.RED));
                 bad++;
             }
         }
-        say(Component.literal(b.pages().size() + " page(s), " + (bad + b.errors().size()) + " problem(s)"));
+        String count = f != null ? f.pages() + " page(s) on " + f.spreads() + " spread(s), " : b.pages().size() + " page(s), ";
+        say(Component.literal(count + (bad + b.errors().size()) + " problem(s)"));
         return 1;
     }
 

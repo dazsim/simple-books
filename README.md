@@ -77,6 +77,8 @@ Step kinds (numbered). A brown ink arrow joins a step to the one above only when
 - `assembly`: title, `text`, picture, then a row of big icons (`inputs` then `output`) with arrows and each item's `note` underneath.
 - `sequence`: a row of big icons from `cells` joined by arrows, then `text` underneath, picture beside. If the last cell has `"note": "result"`, the other cells are joined by `+` and only the result gets an arrow.
 
+Any numbered step can take `"number": false` to drop its badge and leave the count alone, for a list of things rather than steps in order.
+
 Other blocks: `text` (`"text"`, `"style"`), `links` (`"header"`, `"columns"`, `"links": [{ "item", "label", "page" }]`), `image`, `arrow` (a down arrow), `page_break` (move on to the next page).
 
 Any step can have `title` (defaults to the output's name), `note`, `image` (a texture id such as `morefood:textures/simplebooks/cookbook/pot_on_stove.png`), `image_size` `[w, h]`, or `placeholder` text for a picture still to come. Pictures are cropped to fill their box and get a dark frame; `"frame": false` on the step or `image_box` slot leaves it off.
@@ -127,11 +129,16 @@ A template places slots on the left and right page. Coordinates are page units: 
 - Styles: `color` (`#rrggbb` or `$var`), `scale`, `align` (`left`, `center`, `right`), `line_height`.
 - Variables resolve from the page's `style`, then the book's `style`, then the template, then library defaults; the full list is under [Styling](#5-styling).
 - A page field named `image`, ending in `_image`, or whose value ends in `.png` is checked as a texture, so templates can bind several pictures per spread.
+- `step_rows` can take `"below": "<slot>"` to start under whatever that slot drew (a need list of any length, a text or subtitle) plus `gap` (default 14), keeping the bottom of its box.
 - Built-in templates: `simplebooks:recipe` (the full recipe spread), `simplebooks:steps` (steps over both pages, for a recipe continued from the page before), `simplebooks:text` (title, text, optional steps), `simplebooks:index` (the contents spread). `tool` and `crop` are the same as `text` for now.
+
+### Flowing pages
+
+With `"flow": true` in the book file a page file no longer has to be one spread. Its content goes on the left slots first, then on as many single pages using the right slots as it needs, so a long recipe is one file and a short one takes one page. Links are drawn on the last page of the file. When a file of two or more pages would start on a right page, the next one page file of the same section moves up to fill the gap. Page numbers, the contents and tabs follow the real pages. In a flowing book a step label shrinks when that keeps its row of icons on one line. Books without `flow` are laid out as before.
 
 ## Validation
 
-Books are checked on every resource reload. Problems are logged with the file path and a JSON pointer, and a broken spread shows a red-bordered error page listing them while the rest of the book keeps working. Checked: JSON syntax, unknown template, template parent cycles, unknown slot types, boxes outside the page, missing required fields, unknown step kinds and links to missing pages. Unknown items and missing pictures are logged as warnings. Content that does not fit on the spread (steps, rows wider than the page, a need list taller than its box) is reported in red at the foot of the right page. `/simplebooks validate` lays out every spread and lists all of these too.
+Books are checked on every resource reload. Problems are logged with the file path and a JSON pointer, and a broken spread shows a red-bordered error page listing them while the rest of the book keeps working. Checked: JSON syntax, unknown template, template parent cycles, unknown slot types, boxes outside the page, missing required fields, unknown step kinds and links to missing pages. Unknown items and missing pictures are logged as warnings. Content that does not fit on the spread (steps, rows wider than the page, a need list taller than its box) is reported in red at the foot of the right page. `/simplebooks validate` lays out every spread and lists all of these too. It also reports pages that are blank or only hold links, steps sent to the next page while the list above left room for them, and a file whose first step would fit at the end of the file before.
 
 ## Book stand
 
@@ -191,6 +198,7 @@ The book id is `yourmod:manual` and page ids are `yourmod:manual/intro`, `yourmo
 | `stand_cover`, `stand_page` | textures used when the book lies on a book stand |
 | `requires` | mod ids; the whole book is skipped unless all are loaded |
 | `contents_title` | lang key for the contents heading |
+| `flow` | `true` lays the book out page by page instead of one file per spread, see [Flowing pages](#flowing-pages). Default `false` |
 
 ### 3. Pages
 

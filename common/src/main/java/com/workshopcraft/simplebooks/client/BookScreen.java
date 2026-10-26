@@ -62,7 +62,7 @@ public class BookScreen extends Screen {
 
     private int spreads() {
         Book b = book();
-        return b == null ? 1 : Math.max(1, b.pages().size());
+        return b == null ? 1 : Math.max(1, b.spreadCount());
     }
 
     private void layout() {
@@ -88,21 +88,23 @@ public class BookScreen extends Screen {
         g.pose().translate(ox, oy);
         g.pose().scale(scale, scale);
         Spread s;
+        List<Spread> parts = List.of();
         if (b == null) {
             s = new Spread(g, font, emptyBook(), null, 0);
             s.frame();
             s.errorPage("assets/" + bookId.getNamespace() + "/simplebooks/books/" + bookId.getPath() + ".json",
                     List.of("unknown book " + bookId));
         } else {
-            Book.Page page = b.pages().isEmpty() ? null : b.pages().get(spread);
-            s = new Spread(g, font, b, page, spread);
+            boolean empty = b.pages().isEmpty();
+            parts = Spread.sheet(g, font, b, spread);
+            s = parts.getFirst();
             s.tabs(b.tabs(), mx, my);
             float t = turnFrom < 0 ? 1 : (System.nanoTime() - turnStart) / (float) TURN_NS;
-            if (t >= 1 || turnFrom >= b.pages().size() || page == null || !b.errors().isEmpty()) turnFrom = -1;
+            if (t >= 1 || turnFrom >= spreads() || empty || !b.errors().isEmpty()) turnFrom = -1;
             s.frame();
             if (!b.errors().isEmpty()) s.errorPage("book " + bookId, b.errors());
-            else if (page == null) s.errorPage("book " + bookId, List.of("the book has no pages"));
-            else if (turnFrom < 0) s.content();
+            else if (empty) s.errorPage("book " + bookId, List.of("the book has no pages"));
+            else if (turnFrom < 0) for (Spread p : parts) p.content();
             else {
                 turning(g, b, t);
                 s.edges();
@@ -130,7 +132,11 @@ public class BookScreen extends Screen {
         }
         g.pose().popMatrix();
         if (markHover) g.setTooltipForNextFrame(font, Component.translatable("simplebooks.contents"), mouseX, mouseY);
-        hits = turnFrom >= 0 ? List.of() : s.hits;
+        if (turnFrom >= 0 || parts.size() < 2) hits = turnFrom >= 0 ? List.of() : s.hits;
+        else {
+            hits = new java.util.ArrayList<>();
+            for (Spread p : parts) hits.addAll(p.hits);
+        }
         for (Spread.Hit h : hits) {
             if (!h.contains(mx, my)) continue;
             if (h.target() instanceof Spread.Jump j) {
@@ -151,8 +157,8 @@ public class BookScreen extends Screen {
      */
     private void turning(GuiGraphicsExtractor g, Book b, float t) {
         boolean fwd = spread > turnFrom;
-        Spread from = new Spread(g, font, b, b.pages().get(turnFrom), turnFrom);
-        Spread to = new Spread(g, font, b, b.pages().get(spread), spread);
+        List<Spread> from = Spread.sheet(g, font, b, turnFrom);
+        List<Spread> to = Spread.sheet(g, font, b, spread);
         half(g, fwd ? from : to, true, 1);
         half(g, fwd ? to : from, false, 1);
         float e = t * t * (3 - 2 * t), k = (float) Math.cos(Math.PI * e);
@@ -160,7 +166,7 @@ public class BookScreen extends Screen {
         else half(g, to, fwd, -k);
     }
 
-    private void half(GuiGraphicsExtractor g, Spread s, boolean left, float k) {
+    private void half(GuiGraphicsExtractor g, List<Spread> sheet, boolean left, float k) {
         if (k < 0.02f) return;
         int x0 = left ? Spread.PX0 : Spread.SPINE, x1 = left ? Spread.SPINE : Spread.PX1;
         g.pose().pushMatrix();
@@ -168,8 +174,8 @@ public class BookScreen extends Screen {
         g.pose().scale(k, 1);
         g.pose().translate(-Spread.SPINE, 0);
         g.enableScissor(x0, Spread.PT, x1, Spread.PBOT);
-        s.paperHalf(left);
-        s.content();
+        sheet.getFirst().paperHalf(left);
+        for (Spread s : sheet) s.content();
         if (k < 1) g.fill(x0, Spread.PT, x1, Spread.PBOT, (int) ((1 - k) * 0.35f * 255) << 24);
         g.disableScissor();
         g.pose().popMatrix();

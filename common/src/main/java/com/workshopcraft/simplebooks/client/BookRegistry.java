@@ -261,7 +261,7 @@ public class BookRegistry extends SimplePreparableReloadListener<BookRegistry.Lo
             for (var e : el.getAsJsonObject().entrySet()) {
                 if (e.getKey().equals("page") && e.getValue().isJsonPrimitive()) {
                     Identifier target = resolveLink(book, e.getValue().getAsString());
-                    if (target == null || book.indexOf(target) < 0 && !book.hidden().contains(target)) out.add(ptr + "/page: link to missing page '" + e.getValue().getAsString() + "'");
+                    if (target == null || book.pageIndex(target) < 0 && !book.hidden().contains(target)) out.add(ptr + "/page: link to missing page '" + e.getValue().getAsString() + "'");
                 } else collectLinks(e.getValue(), ptr + "/" + e.getKey(), book, out);
             }
         }

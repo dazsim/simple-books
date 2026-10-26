@@ -11,7 +11,11 @@ import java.util.Set;
 
 /** A loaded book. {@code hidden} holds pages left out because a mod they require is missing. */
 public record Book(Identifier id, JsonObject json, Map<String, String> vars, List<Page> pages, List<String> errors,
-                   Set<Identifier> hidden) {
+                   Set<Identifier> hidden, Flow.Cache cache) {
+    public Book(Identifier id, JsonObject json, Map<String, String> vars, List<Page> pages, List<String> errors, Set<Identifier> hidden) {
+        this(id, json, vars, pages, errors, hidden, new Flow.Cache());
+    }
+
     public record Page(Identifier id, String file, JsonObject json, Template template, List<String> errors) {
         public boolean broken() {
             return !errors.isEmpty();
@@ -25,9 +29,44 @@ public record Book(Identifier id, JsonObject json, Map<String, String> vars, Lis
     /** One chapter tab: the section, its first spread and its colour (null for the book's palette). */
     public record Tab(String section, int spread, @org.jspecify.annotations.Nullable String color, @org.jspecify.annotations.Nullable JsonElement icon) {}
 
-    public int indexOf(Identifier page) {
+    /** Position in the page file list. */
+    public int pageIndex(Identifier page) {
         for (int i = 0; i < pages.size(); i++) if (pages.get(i).id().equals(page)) return i;
         return -1;
+    }
+
+    /** True when the book asks for page flow: short pages share a spread and long ones run on. */
+    public boolean flows() {
+        return json.has("flow") && json.get("flow").getAsBoolean();
+    }
+
+    public @org.jspecify.annotations.Nullable Flow flow() {
+        return flows() ? cache.get(this) : null;
+    }
+
+    public int spreadCount() {
+        Flow f = flow();
+        return f != null ? f.spreads() : pages.size();
+    }
+
+    /** The spread a page file starts on. */
+    public int indexOf(Identifier page) {
+        Flow f = flow();
+        return f != null ? f.spreadOf(page) : pageIndex(page);
+    }
+
+    /** The printed number of the first page a file is on. */
+    public int pageNumber(Identifier page) {
+        Flow f = flow();
+        return f != null ? f.pageOf(page) + 1 : pageIndex(page) * 2 + 1;
+    }
+
+    /** The file shown on the left of a spread, for the book stand. */
+    public @org.jspecify.annotations.Nullable Page pageAt(int spread) {
+        Flow f = flow();
+        if (f == null) return pages.isEmpty() ? null : pages.get(Math.max(0, Math.min(spread, pages.size() - 1)));
+        Flow.Half h = f.half(Math.max(0, Math.min(spread, f.spreads() - 1)) * 2);
+        return h != null ? h.page() : pages.isEmpty() ? null : pages.getFirst();
     }
 
     public int contentsIndex() {
@@ -60,11 +99,14 @@ public record Book(Identifier id, JsonObject json, Map<String, String> vars, Lis
             if (sec.equals("contents")) continue;
             JsonObject so = section(sec);
             if (so.has("tab") && !so.get("tab").getAsBoolean()) continue;
-            for (int i = 0; i < pages.size(); i++) {
-                if (!pages.get(i).section().equals(sec)) continue;
-                out.add(new Tab(sec, i, so.has("color") ? so.get("color").getAsString() : null, so.get("icon")));
-                break;
+            int at = -1;
+            for (Page p : pages) {
+                if (!p.section().equals(sec)) continue;
+                int i = indexOf(p.id());
+                if (i >= 0 && (at < 0 || i < at)) at = i;
+                if (!flows()) break;
             }
+            if (at >= 0) out.add(new Tab(sec, at, so.has("color") ? so.get("color").getAsString() : null, so.get("icon")));
         }
         return out;
     }
