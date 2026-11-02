@@ -1,0 +1,28 @@
+{
+    "schemaVersion": 1,
+    "id": "${id}",
+    "version": "${version}",
+    "name": "${name}",
+    "description": "${description}",
+    "authors": [
+        "${author}"
+    ],
+    "license": "All Rights Reserved",
+    "icon": "simplebooks_logo.png",
+    "environment": "*",
+    "accessWidener": "simplebooks.accesswidener",
+    "entrypoints": {
+        "client": [
+            "com.workshopcraft.simplebooks.fabric.SimpleBooksFabricClient"
+        ],
+        "main": [
+            "com.workshopcraft.simplebooks.fabric.SimpleBooksFabric"
+        ]
+    },
+    "depends": {
+        "fabricloader": ">=${loader}",
+        "fabric-api": "*",
+        "minecraft": "${minecraft}",
+        "java": ">=${java}"
+    }
+}

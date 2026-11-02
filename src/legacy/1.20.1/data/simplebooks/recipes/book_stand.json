@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": ["SSS", " | ", "PPP"],
+  "key": { "S": { "tag": "minecraft:wooden_slabs" }, "|": { "item": "minecraft:stick" }, "P": { "tag": "minecraft:planks" } },
+  "result": { "item": "simplebooks:book_stand", "count": 1 }
+}

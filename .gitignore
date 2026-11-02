@@ -30,3 +30,8 @@ logs
 
 # dev only, see dev/README section in README.md
 dev/*.jar
+
+.kotlin
+
+# local release output
+dist
