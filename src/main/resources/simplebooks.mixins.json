@@ -1,0 +1,12 @@
+{
+    "required": true,
+    "minVersion": "0.8",
+    "package": "com.workshopcraft.simplebooks.mixin",
+    "compatibilityLevel": "JAVA_${java}",${refmap}
+    "mixins": [
+        "PackRepositoryMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    }
+}

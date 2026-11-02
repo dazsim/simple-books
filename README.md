@@ -374,6 +374,14 @@ Hidden pages are removed before the contents spread and page numbers are worked 
 
 Your book is plain resources, so a mod with a book needs no code changes and still runs without Simple Books (see [Optional integration](#optional-integration)). To hand players the book, add a `simplebooks:guide` recipe with a load condition so it only exists when Simple Books is installed (examples per version in [Recipes, loot and advancements](#recipes-loot-and-advancements)). A vanilla crafting recipe with the result `{ "id": "simplebooks:guide", "components": { "simplebooks:book": "yourmod:manual" } }` still works on 1.21.1 and later. Declare Simple Books as a suggested or optional dependency in `fabric.mod.json` (`"suggests"`), `neoforge.mods.toml` (`type = "optional"`) or the Forge 1.20.1 `mods.toml` (`mandatory = false`).
 
+## Pack-wide books (config folder)
+
+Anything in `config/simplebooks/` is loaded as an always-on pack called "Simple Books (pack config)" on both the server and the client, with no pack.mcmeta needed. Put books in `config/simplebooks/assets/<namespace>/simplebooks/books/` and data in `config/simplebooks/data/<namespace>/...`, the same layout as inside a mod jar. It sits above mod packs and below world data packs and player resource packs, so those can still override it. Handy for modpacks that want a book without KubeJS or a loader mod.
+
+## Quests (in progress)
+
+Quest support is being built in stages. So far Simple Books reads quest files and checks them, but does not show or track quests yet. Quests for the book `mypack:journal` live in `data/mypack/simplebooks/quests/journal/`: `chapters/*.json`, `quests/**/*.json` and `pools/*.json`. Problems are logged on load with the file and the field, and ops can run `/sbquests validate [book]` to check the files again without reloading. Progress will be saved in the world, and server options live in `config/simplebooks.json` (`team_source`, `first_join_book`, `hand_in_box`, `command_reward_permission`), which is written with defaults on first start.
+
 ## Commands (client side)
 
 - `/simplebooks open <book> [page]`

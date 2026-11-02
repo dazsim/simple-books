@@ -11,6 +11,9 @@
     "icon": "simplebooks_logo.png",
     "environment": "*",
     "accessWidener": "simplebooks.accesswidener",
+    "mixins": [
+        "simplebooks.mixins.json"
+    ],
     "entrypoints": {
         "client": [
             "com.workshopcraft.simplebooks.fabric.SimpleBooksFabricClient"

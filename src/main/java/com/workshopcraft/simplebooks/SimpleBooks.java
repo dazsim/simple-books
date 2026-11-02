@@ -8,8 +8,10 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Path;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public final class SimpleBooks {
     public static final String MOD_ID = "simplebooks";
@@ -24,6 +26,7 @@ public final class SimpleBooks {
     public static Opener opener = (book, spread, hand, stand) -> {};
     public static Consumer<PageTurn> toServer = p -> {};
     public static Predicate<String> modLoaded = id -> true;
+    public static Supplier<Path> configDir = () -> Path.of("config");
 
     private SimpleBooks() {}
 

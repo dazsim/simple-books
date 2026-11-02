@@ -4,6 +4,7 @@ import com.workshopcraft.simplebooks.SimpleBooks;
 import com.workshopcraft.simplebooks.client.BookRegistry;
 import com.workshopcraft.simplebooks.client.BookStandRenderer;
 import com.workshopcraft.simplebooks.client.SimpleBooksClient;
+import com.workshopcraft.simplebooks.quest.QuestDefsPacket;
 import com.workshopcraft.simplebooks.registry.SimpleBooksContent;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
@@ -35,6 +36,11 @@ public class SimpleBooksFabricClient implements ClientModInitializer {
             ClientPlayNetworking.send(com.workshopcraft.simplebooks.PageTurn.ID, buf);
         };
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new Books());
+        *///?}
+        //? if >=1.20.5 {
+        ClientPlayNetworking.registerGlobalReceiver(QuestDefsPacket.TYPE, (payload, ctx) -> payload.handle());
+        //?} else {
+        /*ClientPlayNetworking.registerGlobalReceiver(QuestDefsPacket.ID, (client, handler, buf, sender) -> QuestDefsPacket.read(buf).handle());
         *///?}
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, ctx) -> dispatcher.register(SimpleBooksClient.command()));
         BlockEntityRendererRegistry.register(SimpleBooksContent.STAND_ENTITY, BookStandRenderer::new);

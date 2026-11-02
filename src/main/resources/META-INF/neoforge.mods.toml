@@ -9,6 +9,8 @@ authors = "${author}"
 credits = ""
 description = '''${description}'''
 logoFile = "simplebooks_logo.png"
+[[mixins]]
+config = "simplebooks.mixins.json"
 [[dependencies.${id}]]
 modId = "neoforge"
 type = "required"

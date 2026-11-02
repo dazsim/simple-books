@@ -35,8 +35,14 @@ legacyForge {
     }
 }
 
+mixin {
+    add(sourceSets.main.get(), "simplebooks.refmap.json")
+    config("simplebooks.mixins.json")
+}
+
 dependencies {
     compileOnly("org.jspecify:jspecify:1.0.0")
+    annotationProcessor("org.spongepowered:mixin:0.8.5:processor")
 }
 
 java {
@@ -55,9 +61,11 @@ tasks {
             "author" to sc.properties.get<String>("mod.author"),
             "description" to sc.properties.get<String>("mod.description"),
             "minecraft" to sc.properties.get<String>("mod.mc_compat"),
+            "java" to "17",
+            "refmap" to "\n    \"refmap\": \"simplebooks.refmap.json\",",
         )
         inputs.properties(props)
-        filesMatching(listOf("META-INF/mods.toml", "pack.mcmeta")) { expand(props) }
+        filesMatching(listOf("META-INF/mods.toml", "pack.mcmeta", "simplebooks.mixins.json")) { expand(props) }
         exclude("fabric.mod.json", "META-INF/neoforge.mods.toml", "simplebooks.accesswidener", "META-INF/accesstransformer.cfg",
             "assets/simplebooks/items/**", "data/simplebooks/recipe/**", "data/simplebooks/loot_table/**")
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -65,6 +73,10 @@ tasks {
 
     named("createMinecraftArtifacts") {
         dependsOn("stonecutterGenerate")
+    }
+
+    jar {
+        manifest.attributes("MixinConfigs" to "simplebooks.mixins.json")
     }
 
     withType<Jar> {

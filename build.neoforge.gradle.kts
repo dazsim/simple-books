@@ -65,9 +65,11 @@ tasks {
             "description" to sc.properties.get<String>("mod.description"),
             "minecraft" to sc.properties.get<String>("mod.mc_compat"),
             "neoforge" to if (modern) "[26.1.0.0-beta,)" else "[21.1,)",
+            "java" to requiredJava.majorVersion,
+            "refmap" to "",
         )
         inputs.properties(props)
-        filesMatching(listOf("META-INF/neoforge.mods.toml", "pack.mcmeta")) { expand(props) }
+        filesMatching(listOf("META-INF/neoforge.mods.toml", "pack.mcmeta", "simplebooks.mixins.json")) { expand(props) }
         exclude("fabric.mod.json", "META-INF/mods.toml", "simplebooks.accesswidener")
         if (!modern) exclude("pack.mcmeta", "META-INF/accesstransformer.cfg", "assets/simplebooks/items/**")
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE

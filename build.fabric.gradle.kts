@@ -57,9 +57,10 @@ tasks {
             "minecraft" to sc.properties.get<String>("mod.mc_compat"),
             "loader" to Regex("\\d+\\.\\d+\\.\\d+").find(sc.properties.get<String>("deps.fabric_loader"))!!.value,
             "java" to requiredJava.majorVersion,
+            "refmap" to "",
         )
         inputs.properties(props)
-        filesMatching("fabric.mod.json") {
+        filesMatching(listOf("fabric.mod.json", "simplebooks.mixins.json")) {
             expand(props)
         }
         if (!modern) filesMatching("fabric.mod.json") { filter(StripAccessWidener::class.java) }
