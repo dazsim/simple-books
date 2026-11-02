@@ -56,9 +56,11 @@ public record PageTurn(int hand, BlockPos pos, int spread) implements CustomPack
     }
 
     private boolean inRange(ServerPlayer player) {
-        //? if >=1.20.5 {
+        //? if >=1.21.2 {
         return player.isWithinBlockInteractionRange(pos, 4.0);
-        //?} else {
+        //?} else if >=1.20.5 {
+        /*return player.canInteractWithBlock(pos, 4.0);
+        *///?} else {
         /*return player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= 81.0;
         *///?}
     }

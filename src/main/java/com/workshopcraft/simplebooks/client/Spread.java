@@ -5,9 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.FontDescription;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
@@ -51,7 +49,7 @@ public class Spread {
         }
     }
 
-    private final @Nullable GuiGraphicsExtractor g;
+    private final @Nullable Gfx g;
     private final Font font;
     private final Book book;
     private final Book.@Nullable Page page;
@@ -64,7 +62,7 @@ public class Spread {
     private final List<String> arrows = new ArrayList<>();
     private record Box(float x0, float y0, float x1, float y1, String what, boolean icon) {}
     private final List<Box> boxes = new ArrayList<>();
-    private final @Nullable FontDescription fontDesc;
+    private final net.minecraft.network.chat.@Nullable Style fontDesc;
     private final Flow.@Nullable Half half;
     private final boolean onRight;
     private final int pageNo;
@@ -74,12 +72,12 @@ public class Spread {
     private final List<String> roomNotes = new ArrayList<>();
     private float roomLeft;
 
-    public Spread(@Nullable GuiGraphicsExtractor g, Font font, Book book, Book.@Nullable Page page, int spreadNo) {
+    public Spread(@Nullable Gfx g, Font font, Book book, Book.@Nullable Page page, int spreadNo) {
         this(g, font, book, page, spreadNo, null, false, 0);
     }
 
     /** One page of a flowing book: the half says which template side and where the steps start, onRight where it goes. */
-    public Spread(@Nullable GuiGraphicsExtractor g, Font font, Book book, Book.@Nullable Page page, int spreadNo,
+    public Spread(@Nullable Gfx g, Font font, Book book, Book.@Nullable Page page, int spreadNo,
                   Flow.@Nullable Half half, boolean onRight, int pageNo) {
         this.g = g;
         this.font = font;
@@ -91,7 +89,7 @@ public class Spread {
         this.pageNo = pageNo;
         String f = var("font");
         Identifier fid = f == null ? null : Identifier.tryParse(f);
-        this.fontDesc = fid == null || fid.equals(SimpleBooks.mc("default")) ? null : new FontDescription.Resource(fid);
+        this.fontDesc = fid == null || fid.equals(SimpleBooks.mc("default")) ? null : Texts.font(fid);
     }
 
     /** A style value: the page's own style, then the book's, then the template's vars, then the defaults. */
@@ -106,7 +104,7 @@ public class Spread {
     }
 
     Component styled(Component c) {
-        return fontDesc == null ? c : c.copy().withStyle(st -> st.withFont(fontDesc));
+        return fontDesc == null ? c : c.copy().withStyle(st -> st.withFont(fontDesc.getFont()));
     }
 
     private int width(String s) {
@@ -163,10 +161,10 @@ public class Spread {
 
     void fill(float x0, float y0, float x1, float y1, int col) {
         if (!draw || g == null) return;
-        g.pose().pushMatrix();
-        g.pose().translate(x0, y0);
+        g.push();
+        g.translate(x0, y0);
         g.fill(0, 0, Math.round(x1 - x0), Math.round(y1 - y0), col);
-        g.pose().popMatrix();
+        g.pop();
     }
 
     /**
@@ -189,11 +187,11 @@ public class Spread {
     void text(FormattedCharSequence s, float x, float y, float sc, int col) {
         if (draw && g == null) note(s, x, y, sc);
         if (!draw || g == null) return;
-        g.pose().pushMatrix();
-        g.pose().translate(x, y);
-        g.pose().scale(2 * fs(sc), 2 * fs(sc));
+        g.push();
+        g.translate(x, y);
+        g.scale(2 * fs(sc), 2 * fs(sc));
         g.text(font, s, 0, 0, col, false);
-        g.pose().popMatrix();
+        g.pop();
     }
 
     void text(Component c, float x, float y, float sc, int col) {
@@ -332,12 +330,12 @@ public class Spread {
             return;
         }
         if (draw && g != null) {
-            g.pose().pushMatrix();
-            g.pose().translate(x, y);
-            g.pose().scale(size / 16f, size / 16f);
+            g.push();
+            g.translate(x, y);
+            g.scale(size / 16f, size / 16f);
             g.item(stack, 0, 0);
             if (ref.count() > 1) g.itemDecorations(font, stack, 0, 0, String.valueOf(ref.count()));
-            g.pose().popMatrix();
+            g.pop();
         }
         hits.add(new Hit(x, y, x + size, y + size, stack));
     }
@@ -376,11 +374,11 @@ public class Spread {
         float uw = w / r / size[0], vh = h / r / size[1];
         float u0 = (1 - uw) / 2, v0 = (1 - vh) / 2;
         if (draw && g != null) {
-            g.pose().pushMatrix();
-            g.pose().translate(x, y);
-            g.pose().scale(0.5f, 0.5f);
+            g.push();
+            g.translate(x, y);
+            g.scale(0.5f, 0.5f);
             g.blit(SimpleBooks.parse(tex), 0, 0, Math.round(w * 2), Math.round(h * 2), u0, u0 + uw, v0, v0 + vh);
-            g.pose().popMatrix();
+            g.pop();
         }
     }
 
@@ -486,12 +484,12 @@ public class Spread {
             else if (draw && g != null) {
                 String str = font.plainSubstrByWidth(label.getString(), (int) ((h - 16) / (2 * fs(1))));
                 Component c = styled(Component.literal(str));
-                g.pose().pushMatrix();
-                g.pose().translate(cx + 8, y + (h - textW(c, 1)) / 2);
-                g.pose().rotate((float) (Math.PI / 2));
-                g.pose().scale(2 * fs(1), 2 * fs(1));
+                g.push();
+                g.translate(cx + 8, y + (h - textW(c, 1)) / 2);
+                g.rotate((float) (Math.PI / 2));
+                g.scale(2 * fs(1), 2 * fs(1));
                 g.text(font, c, 0, 0, ink, false);
-                g.pose().popMatrix();
+                g.pop();
             }
             hits.add(0, new Hit(W - 22, y, x1, y + h, new Jump(t.spread(), label)));
         }
@@ -517,7 +515,7 @@ public class Spread {
     // ---------- page ----------
 
     /** What one spread shows: its page file, or in a flowing book the one or two files on its pages. */
-    public static List<Spread> sheet(@Nullable GuiGraphicsExtractor g, Font font, Book b, int spread) {
+    public static List<Spread> sheet(@Nullable Gfx g, Font font, Book b, int spread) {
         Flow f = b.flow();
         if (f == null) return List.of(new Spread(g, font, b, b.pages().isEmpty() ? null : b.pages().get(Math.min(spread, b.pages().size() - 1)), spread));
         List<Spread> out = new ArrayList<>();

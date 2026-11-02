@@ -1,10 +1,7 @@
 package com.workshopcraft.simplebooks.client;
 
 import com.workshopcraft.simplebooks.SimpleBooks;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -18,10 +15,6 @@ import java.util.Deque;
 import java.util.List;
 
 public class BookScreen extends Screen {
-    private static final Identifier FWD = SimpleBooks.mc("widget/page_forward");
-    private static final Identifier FWD_HI = SimpleBooks.mc("widget/page_forward_highlighted");
-    private static final Identifier BACK = SimpleBooks.mc("widget/page_backward");
-    private static final Identifier BACK_HI = SimpleBooks.mc("widget/page_backward_highlighted");
     private static final int BTN_W = 69, BTN_H = 39, BTN_Y = 916, MARK_X = 1460, MARK_Y = 4, MARK_W = 34, MARK_H = 70;
 
     private final Identifier bookId;
@@ -83,16 +76,35 @@ public class BookScreen extends Screen {
         oy = (height - Spread.H * scale) / 2;
     }
 
+    //? if >=26.1 {
     @Override
-    public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float a) {
-        super.extractRenderState(g, mouseX, mouseY, a);
+    public void extractRenderState(net.minecraft.client.gui.GuiGraphicsExtractor gg, int mouseX, int mouseY, float a) {
+        super.extractRenderState(gg, mouseX, mouseY, a);
+        draw(new Gfx(gg), mouseX, mouseY);
+    }
+    //?} else if >=1.20.2 {
+    /*@Override
+    public void render(net.minecraft.client.gui.GuiGraphics gg, int mouseX, int mouseY, float a) {
+        super.render(gg, mouseX, mouseY, a);
+        draw(new Gfx(gg), mouseX, mouseY);
+    }
+    *///?} else {
+    /*@Override
+    public void render(net.minecraft.client.gui.GuiGraphics gg, int mouseX, int mouseY, float a) {
+        renderBackground(gg);
+        super.render(gg, mouseX, mouseY, a);
+        draw(new Gfx(gg), mouseX, mouseY);
+    }
+    *///?}
+
+    private void draw(Gfx g, int mouseX, int mouseY) {
         layout();
         Book b = book();
         spread = Math.min(spread, spreads() - 1);
         float mx = (mouseX - ox) / scale, my = (mouseY - oy) / scale;
-        g.pose().pushMatrix();
-        g.pose().translate(ox, oy);
-        g.pose().scale(scale, scale);
+        g.push();
+        g.translate(ox, oy);
+        g.scale(scale, scale);
         Spread s;
         List<Spread> parts = List.of();
         if (b == null) {
@@ -118,12 +130,12 @@ public class BookScreen extends Screen {
         }
         if (spread > 0) {
             boolean hi = in(mx, my, Spread.L, BTN_Y, BTN_W, BTN_H);
-            g.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, hi ? BACK_HI : BACK, Spread.L, BTN_Y, BTN_W, BTN_H, s.color("$button_tint"));
+            g.pageButton(false, hi, Spread.L, BTN_Y, BTN_W, BTN_H, s.color("$button_tint"));
         }
         if (spread < spreads() - 1) {
             int x = Spread.R + Spread.CW - BTN_W;
             boolean hi = in(mx, my, x, BTN_Y, BTN_W, BTN_H);
-            g.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, hi ? FWD_HI : FWD, x, BTN_Y, BTN_W, BTN_H, s.color("$button_tint"));
+            g.pageButton(true, hi, x, BTN_Y, BTN_W, BTN_H, s.color("$button_tint"));
         }
         boolean markHover = false;
         if (b != null && b.contentsIndex() >= 0) {
@@ -136,8 +148,8 @@ public class BookScreen extends Screen {
             }
             g.fill(MARK_X + 4, MARK_Y + 4, MARK_X + MARK_W - 4, MARK_Y + 6, s.color("$mark_line"));
         }
-        g.pose().popMatrix();
-        if (markHover) g.setTooltipForNextFrame(font, Component.translatable("simplebooks.contents"), mouseX, mouseY);
+        g.pop();
+        if (markHover) g.tooltip(font, Component.translatable("simplebooks.contents"), mouseX, mouseY);
         if (turnFrom >= 0 || parts.size() < 2) hits = turnFrom >= 0 ? List.of() : s.hits;
         else {
             hits = new java.util.ArrayList<>();
@@ -146,13 +158,13 @@ public class BookScreen extends Screen {
         for (Spread.Hit h : hits) {
             if (!h.contains(mx, my)) continue;
             if (h.target() instanceof Spread.Jump j) {
-                g.setTooltipForNextFrame(font, j.label(), mouseX, mouseY);
-                g.requestCursor(com.mojang.blaze3d.platform.cursor.CursorTypes.POINTING_HAND);
+                g.tooltip(font, j.label(), mouseX, mouseY);
+                g.pointer();
                 break;
             }
-            if (h.target() instanceof ItemStack st) g.setTooltipForNextFrame(font, st, mouseX, mouseY);
-            else if (h.target() instanceof Component c) g.setTooltipForNextFrame(font, c, mouseX, mouseY);
-            else if (h.target() instanceof Identifier) g.requestCursor(com.mojang.blaze3d.platform.cursor.CursorTypes.POINTING_HAND);
+            if (h.target() instanceof ItemStack st) g.tooltip(font, st, mouseX, mouseY);
+            else if (h.target() instanceof Component c) g.tooltip(font, c, mouseX, mouseY);
+            else if (h.target() instanceof Identifier) g.pointer();
             break;
         }
     }
@@ -161,7 +173,7 @@ public class BookScreen extends Screen {
      * Page turn: the old and new spreads each keep one still half, and the turning sheet folds
      * towards the spine (old page) and then opens out on the other side (new page).
      */
-    private void turning(GuiGraphicsExtractor g, Book b, float t) {
+    private void turning(Gfx g, Book b, float t) {
         boolean fwd = spread > turnFrom;
         List<Spread> from = Spread.sheet(g, font, b, turnFrom);
         List<Spread> to = Spread.sheet(g, font, b, spread);
@@ -172,19 +184,19 @@ public class BookScreen extends Screen {
         else half(g, to, fwd, -k);
     }
 
-    private void half(GuiGraphicsExtractor g, List<Spread> sheet, boolean left, float k) {
+    private void half(Gfx g, List<Spread> sheet, boolean left, float k) {
         if (k < 0.02f) return;
         int x0 = left ? Spread.PX0 : Spread.SPINE, x1 = left ? Spread.SPINE : Spread.PX1;
-        g.pose().pushMatrix();
-        g.pose().translate(Spread.SPINE, 0);
-        g.pose().scale(k, 1);
-        g.pose().translate(-Spread.SPINE, 0);
+        g.push();
+        g.translate(Spread.SPINE, 0);
+        g.scale(k, 1);
+        g.translate(-Spread.SPINE, 0);
         g.enableScissor(x0, Spread.PT, x1, Spread.PBOT);
         sheet.get(0).paperHalf(left);
         for (Spread s : sheet) s.content();
         if (k < 1) g.fill(x0, Spread.PT, x1, Spread.PBOT, (int) ((1 - k) * 0.35f * 255) << 24);
         g.disableScissor();
-        g.pose().popMatrix();
+        g.pop();
     }
 
     private Book emptyBook() {
@@ -195,10 +207,31 @@ public class BookScreen extends Screen {
         return mx >= x && mx < x + w && my >= y && my < y + h;
     }
 
+    //? if >=26.1 {
     @Override
-    public boolean mouseClicked(MouseButtonEvent e, boolean doubleClick) {
-        float mx = (float) ((e.x() - ox) / scale), my = (float) ((e.y() - oy) / scale);
-        if (e.button() == 0) {
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent e, boolean doubleClick) {
+        return click(e.x(), e.y(), e.button()) || super.mouseClicked(e, doubleClick);
+    }
+
+    @Override
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent e) {
+        return key(e.key()) || super.keyPressed(e);
+    }
+    //?} else {
+    /*@Override
+    public boolean mouseClicked(double x, double y, int button) {
+        return click(x, y, button) || super.mouseClicked(x, y, button);
+    }
+
+    @Override
+    public boolean keyPressed(int key, int scan, int mods) {
+        return key(key) || super.keyPressed(key, scan, mods);
+    }
+    *///?}
+
+    private boolean click(double x, double y, int button) {
+        float mx = (float) ((x - ox) / scale), my = (float) ((y - oy) / scale);
+        if (button == 0) {
             if (spread > 0 && in(mx, my, Spread.L, BTN_Y, BTN_W, BTN_H)) return turn(spread - 1, false);
             if (spread < spreads() - 1 && in(mx, my, Spread.R + Spread.CW - BTN_W, BTN_Y, BTN_W, BTN_H)) return turn(spread + 1, false);
             Book bk = book();
@@ -214,21 +247,30 @@ public class BookScreen extends Screen {
                 }
             }
         }
-        if (e.button() == 1 && !history.isEmpty()) return turn(history.pop(), false);
-        return super.mouseClicked(e, doubleClick);
+        if (button == 1 && !history.isEmpty()) return turn(history.pop(), false);
+        return false;
     }
 
-    @Override
-    public boolean keyPressed(KeyEvent e) {
-        int k = e.key();
+    private boolean key(int k) {
         if ((k == InputConstants.KEY_RIGHT || k == InputConstants.KEY_PAGEDOWN) && spread < spreads() - 1) return turn(spread + 1, false);
         if ((k == InputConstants.KEY_LEFT || k == InputConstants.KEY_PAGEUP) && spread > 0) return turn(spread - 1, false);
         if (k == InputConstants.KEY_BACKSPACE && !history.isEmpty()) return turn(history.pop(), false);
-        return super.keyPressed(e);
+        return false;
     }
 
+    //? if >=1.20.2 {
     @Override
     public boolean mouseScrolled(double x, double y, double sx, double sy) {
+        return scroll(sy);
+    }
+    //?} else {
+    /*@Override
+    public boolean mouseScrolled(double x, double y, double sy) {
+        return scroll(sy);
+    }
+    *///?}
+
+    private boolean scroll(double sy) {
         if (sy < 0 && spread < spreads() - 1) return turn(spread + 1, false);
         if (sy > 0 && spread > 0) return turn(spread - 1, false);
         return false;

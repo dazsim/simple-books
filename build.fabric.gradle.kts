@@ -69,6 +69,7 @@ tasks {
     }
 
     withType<Jar> {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
         val name = project.property("mod.name")
         inputs.property("mod_name", name)
         from(rootProject.file("LICENSE")) { rename { "${it}_$name" } }

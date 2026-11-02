@@ -9,7 +9,6 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
-import net.minecraft.util.Util;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.jspecify.annotations.Nullable;
@@ -59,7 +58,7 @@ public record ItemRef(List<String> ids, @Nullable String label, int count, @Null
     public ItemStack stack() {
         List<ItemStack> s = stacks();
         if (s.isEmpty()) return ItemStack.EMPTY;
-        ItemStack st = s.get((int) (Util.getMillis() / 1000 % s.size()));
+        ItemStack st = s.get((int) (SimpleBooks.millis() / 1000 % s.size()));
         if (count > 1) st = st.copyWithCount(Math.min(count, st.getMaxStackSize()));
         return st;
     }

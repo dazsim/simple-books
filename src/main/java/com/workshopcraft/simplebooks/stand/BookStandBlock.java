@@ -53,7 +53,7 @@ public class BookStandBlock extends BaseEntityBlock {
 
     //? if <1.21.2 {
     /*@Override
-    public RenderShape getRenderShape(BlockState state) {
+    public net.minecraft.world.level.block.RenderShape getRenderShape(BlockState state) {
         return net.minecraft.world.level.block.RenderShape.MODEL;
     }
     *///?}
