@@ -2,9 +2,9 @@
 
 Guide books for Minecraft mods, written as JSON. Each mod ships its own pages; Simple Books draws them as a double-page parchment spread with real item icons and names, numbered steps joined by ink arrows, pictures and clickable links.
 
-Minecraft 26.1 to 26.1.x, NeoForge and Fabric (Fabric needs Fabric API). Client side rendering; the guide item is registered on both sides.
+Minecraft 1.20.1 (Forge, Fabric), 1.21.1, 26.1.2 and 26.3 (NeoForge, Fabric). Fabric needs Fabric API. Client side rendering; the guide item is registered on both sides. See [Versions](#versions) for what differs between them.
 
-Status: 1.0.0-release.1 (per-book styling, chapter tabs, optional pages, page-turn animation, layout checks).
+Status: 1.1.0 (multi-version build, `simplebooks:guide` recipe type). 1.0.x was 26.1 only.
 
 ## Optional integration
 
@@ -13,12 +13,80 @@ Simple Books is optional for every mod that uses it. A mod with a book must run 
 - Put the book, its pages, its pictures and its lang lines in your own mod's resources (paths below). Nothing else is needed: no code dependency, no jar-in-jar.
 - If Simple Books is not installed those files are just unused resources. No crash, no missing class.
 - If you want to give or craft a book, guard it:
-  - Recipes: add a load condition so the recipe only loads with Simple Books present, for example `"neoforge:conditions": [{ "type": "neoforge:mod_loaded", "modid": "simplebooks" }]` on NeoForge or `"fabric:load_conditions": [{ "condition": "fabric:all_mods_loaded", "values": ["simplebooks"] }]` on Fabric. The result is `simplebooks:guide` with the component `"simplebooks:book": "yourmod:yourbook"`.
+  - Recipes: add a load condition so the recipe only loads with Simple Books present: `"neoforge:conditions": [{ "type": "neoforge:mod_loaded", "modid": "simplebooks" }]` on NeoForge, `"conditions": [{ "type": "forge:mod_loaded", "modid": "simplebooks" }]` on Forge 1.20.1, `"fabric:load_conditions": [{ "condition": "fabric:all_mods_loaded", "values": ["simplebooks"] }]` on Fabric. The easiest recipe is the `simplebooks:guide` type (see [Recipes, loot and advancements](#recipes-loot-and-advancements)).
   - Code: check the mod is loaded (`ModList.get().isLoaded("simplebooks")` or `FabricLoader.getInstance().isModLoaded("simplebooks")`) and look the item and component up by id from the registries, so your mod never links against Simple Books classes.
 - Declare Simple Books as an optional (suggested) dependency in your mod metadata.
 - Modpack makers can change any page, template or picture with a resource pack.
 
-Give a book by command: `/give @p simplebooks:guide[simplebooks:book="morefood:cookbook"]`
+Give a book by command: `/give @p simplebooks:guide[simplebooks:book="morefood:cookbook"]` (1.21.1 and later) or `/give @p simplebooks:guide{"simplebooks:book":"morefood:cookbook"}` (1.20.1).
+
+## Versions
+
+| Minecraft | Loaders | Java | Book data on the item |
+| --- | --- | --- | --- |
+| 1.20.1 | Forge, Fabric | 17 | root NBT |
+| 1.21.1 | NeoForge, Fabric | 21 | components |
+| 26.1.2 | NeoForge, Fabric | 25 | components |
+| 26.3 | NeoForge, Fabric | 25 | components |
+
+Book, page and template JSON, pictures, fonts and lang files are the same on every version, and so are their paths (`assets/<namespace>/simplebooks/...`). One resource pack or mod jar folder works everywhere; only `pack.mcmeta` and the data files below differ.
+
+The item id is `simplebooks:guide` everywhere. Which book it opens, and the spread it was left at, are stored as:
+
+- 1.21.1 and later: components `simplebooks:book` (a resource id string) and `simplebooks:spread` (an int). Same as 1.0.x, so existing books keep working.
+- 1.20.1: root NBT tags on the stack, string `simplebooks:book` and int `simplebooks:spread`, for example `{"simplebooks:book":"muchmorestorage:manual","simplebooks:spread":3}`. There is no component system on 1.20.1; the tag names match the component ids so commands and data files read the same.
+
+A different item look per book needs the vanilla `minecraft:item_model` component, which only exists from 1.21.2. Set it next to `simplebooks:book` in a vanilla recipe result or a `/give`. On 1.20.1 and 1.21.1 every book uses the default guide model.
+
+### Recipes, loot and advancements
+
+Recipe type `simplebooks:guide` is a crafting recipe whose result is a guide for `book`. It works the same on every version, so you do not need to write the result stack yourself. With `pattern` and `key` it is shaped, with `ingredients` it is shapeless. `book` is required; `count` is optional and should stay 1, since the guide does not stack (1.21.1 rejects anything larger). Ingredients use the version's own format: `{ "item": "minecraft:book" }` or `{ "tag": "c:ingots/iron" }` on 1.20.1 and 1.21.1, plain strings `"minecraft:book"` or `"#c:ingots/iron"` on 26.x. Folder names follow vanilla: `recipes`, `loot_tables`, `advancements` on 1.20.1, `recipe`, `loot_table`, `advancement` on 1.21.1 and later.
+
+1.20.1 (Forge; drop `conditions` and add `fabric:load_conditions` on Fabric):
+
+```json
+{
+  "conditions": [{ "type": "forge:mod_loaded", "modid": "simplebooks" }],
+  "type": "simplebooks:guide",
+  "book": "yourmod:manual",
+  "ingredients": [{ "item": "minecraft:book" }, { "item": "yourmod:gear" }]
+}
+```
+
+1.21.1 and 26.x (both condition keys can sit in one file; each loader ignores the other's):
+
+```json
+{
+  "fabric:load_conditions": [{ "condition": "fabric:all_mods_loaded", "values": ["simplebooks"] }],
+  "neoforge:conditions": [{ "type": "neoforge:mod_loaded", "modid": "simplebooks" }],
+  "type": "simplebooks:guide",
+  "book": "yourmod:manual",
+  "pattern": ["G", "B"],
+  "key": { "G": "yourmod:gear", "B": "minecraft:book" }
+}
+```
+
+On 1.21.1 write the keys as `{ "item": "yourmod:gear" }`.
+
+Loot table entry, 1.20.1:
+
+```json
+{ "type": "minecraft:item", "name": "simplebooks:guide",
+  "functions": [{ "function": "minecraft:set_nbt", "tag": "{\"simplebooks:book\":\"yourmod:manual\"}" }] }
+```
+
+Loot table entry, 1.21.1 and later:
+
+```json
+{ "type": "minecraft:item", "name": "simplebooks:guide",
+  "functions": [{ "function": "minecraft:set_components", "components": { "simplebooks:book": "yourmod:manual" } }] }
+```
+
+Advancement icon, 1.20.1: `{ "item": "simplebooks:guide", "nbt": "{\"simplebooks:book\":\"yourmod:manual\"}" }`
+
+Advancement icon, 1.21.1 and later: `{ "id": "simplebooks:guide", "components": { "simplebooks:book": "yourmod:manual" } }`
+
+`pack.mcmeta` for a resource pack with only books: `"pack_format": 15` on 1.20.1, `34` on 1.21.1, `"min_format": 84, "max_format": [200, 0]` on 26.x.
 
 ## Files
 
@@ -304,19 +372,7 @@ Hidden pages are removed before the contents spread and page numbers are worked 
 
 ### 8. Shipping a book as an optional dependency
 
-Your book is plain resources, so a mod with a book needs no code changes and still runs without Simple Books (see [Optional integration](#optional-integration)). To hand players the book, add a recipe with a load condition so it only exists when Simple Books is installed:
-
-```json
-{
-  "fabric:load_conditions": [{ "condition": "fabric:all_mods_loaded", "values": ["simplebooks"] }],
-  "neoforge:conditions": [{ "type": "neoforge:mod_loaded", "modid": "simplebooks" }],
-  "type": "minecraft:crafting_shapeless",
-  "ingredients": ["minecraft:book", "yourmod:gear"],
-  "result": { "id": "simplebooks:guide", "components": { "simplebooks:book": "yourmod:manual" } }
-}
-```
-
-Both condition keys can sit in the same file; each loader ignores the other's. Declare Simple Books as a suggested or optional dependency in `fabric.mod.json` (`"suggests"`) and `neoforge.mods.toml` (`type = "optional"`).
+Your book is plain resources, so a mod with a book needs no code changes and still runs without Simple Books (see [Optional integration](#optional-integration)). To hand players the book, add a `simplebooks:guide` recipe with a load condition so it only exists when Simple Books is installed (examples per version in [Recipes, loot and advancements](#recipes-loot-and-advancements)). A vanilla crafting recipe with the result `{ "id": "simplebooks:guide", "components": { "simplebooks:book": "yourmod:manual" } }` still works on 1.21.1 and later. Declare Simple Books as a suggested or optional dependency in `fabric.mod.json` (`"suggests"`), `neoforge.mods.toml` (`type = "optional"`) or the Forge 1.20.1 `mods.toml` (`mandatory = false`).
 
 ## Commands (client side)
 
@@ -327,5 +383,7 @@ Both condition keys can sit in the same file; each loader ignores the other's. D
 ## Development
 
 `dev/example-pack` is an example resource pack with a deliberately broken book (`simplebooks:broken_test`) and the blueprint sample (`simplebooks:blueprints`). The More Foods cookbook now ships inside More Foods; most of its pages are made by `dev/cookbook_gen.py` from the More Foods recipe files and written straight into that repo (`python3 dev/cookbook_gen.py <more foods repo> <vanilla en_us.json>`); `pizza.json` and `pizza_2.json` are written by hand. `runClient` copies it into the run folder and enables it; it is never packed into the jar. If `dev/morefood-fabric.jar` or `dev/morefood-neoforge.jar` exist (More Foods 2.0 alpha jars, not in git), they are put on the dev client's classpath so the cookbook shows real items.
+
+The build uses Stonecutter: one source tree in `src/main`, one project per target under `versions/` (for example `1.20.1-forge`, `26.1.2-fabric`). `./gradlew build` builds all of them; `./gradlew :1.21.1-neoforge:runClient` runs one. Files that only differ by format on old versions (recipe, loot table, item model, pack.mcmeta) live in `src/legacy/<version>` and win over `src/main/resources`. Add `-PquickPlay=localhost:25565` to `runClient` to join a server straight away as `Dev`.
 
 Not yet done: grant events, Python preview renderer.
