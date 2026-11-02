@@ -33,6 +33,7 @@ neoForge {
         register("client") {
             gameDirectory = rootProject.file("runs/${sc.current.project}")
             client()
+            programArguments.addAll(providers.gradleProperty("quickPlay").map { listOf("--quickPlayMultiplayer", it) }.orElse(listOf()))
         }
         register("server") {
             gameDirectory = rootProject.file("runs/${sc.current.project}-server")

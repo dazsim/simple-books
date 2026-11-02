@@ -31,6 +31,7 @@ loom {
     runConfigs.all {
         runDirectory = rootProject.file("runs/${sc.current.project}")
     }
+    providers.gradleProperty("quickPlay").orNull?.let { host -> runs.named("client") { programArgs("--quickPlayMultiplayer", host, "--username", "Dev") } }
 }
 
 sourceSets.main {
