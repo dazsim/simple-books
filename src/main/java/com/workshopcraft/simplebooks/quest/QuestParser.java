@@ -322,7 +322,11 @@ public final class QuestParser {
                 file = q.e.file();
                 warn("/pool", "not listed in " + q.pool + ", it will never be offered");
             }
+            file = q.e.file();
+            if (q.repeat != null) warn("/repeat", "ignored on pool quests, the board refresh brings them back");
+            if (q.exclusive != null) warn("/exclusive", "ignored on pool quests");
         }
+
         // layouts
         for (CB c : chapters.values()) {
             List<QB> in = quests.values().stream().filter(q -> c.e.id().equals(q.chapter)).toList();
@@ -529,6 +533,10 @@ public final class QuestParser {
             JsonArray cost = rr.arr("cost");
             JsonArray costOut = new JsonArray();
             if (cost != null) p.cost = rewards(cost, "/reroll/cost", costOut);
+            for (int i = 0; i < p.cost.size(); i++) {
+                String k = p.cost.get(i).kind();
+                if (!k.equals("item") && !k.equals("xp_levels")) warn("/reroll/cost/" + i, "only item and xp_levels costs are taken, " + k + " is ignored");
+            }
             rr.finish();
             out.getAsJsonObject("reroll").add("cost", costOut);
         }
@@ -673,6 +681,7 @@ public final class QuestParser {
                 Task t = q.tasks.get(i);
                 if (t.fromStats()) error("/tasks/" + i + "/from_stats", "cannot be used in a repeat quest");
                 else if (t.type().equals("advancement") && !trusted) warn("/tasks/" + i, "an advancement stays done, so every cycle completes at once");
+                else if (t.type().equals("item") && !t.consume() && !trusted) warn("/tasks/" + i, "items still held complete every cycle at once, use \"consume\": true");
             }
         }
 

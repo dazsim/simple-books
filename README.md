@@ -382,6 +382,8 @@ Anything in `config/simplebooks/` is loaded as an always-on pack called "Simple 
 
 Quest support is being built in stages. So far Simple Books reads quest files and checks them, but does not show or track quests yet. Quests for the book `mypack:journal` live in `data/mypack/simplebooks/quests/journal/`: `chapters/*.json`, `quests/**/*.json` and `pools/*.json`. Problems are logged on load with the file and the field, and ops can run `/sbquests validate [book]` to check the files again without reloading. Progress will be saved in the world, and server options live in `config/simplebooks.json` (`team_source`, `first_join_book`, `hand_in_box`, `command_reward_permission`), which is written with defaults on first start.
 
+Repeatable quests (`"repeat": { "cooldown": "20m", "limit": 0 }`) open again once the cooldown has passed in real time, counted from when they were finished. Item tasks in a repeatable quest should use `"consume": true` so the items are handed in: an item task without consume only checks what the team holds, so it would complete again the moment the quest reopens. The validator warns about this.
+
 ## Commands (client side)
 
 - `/simplebooks open <book> [page]`
