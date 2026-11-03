@@ -429,7 +429,7 @@ public final class QuestEngine {
         Prog p = prog(t).get(q.id());
         if (p != null && p.complete()) return "complete";
         if (open(t, b, q)) return p != null && p.tasks.values().stream().anyMatch(v -> v > 0) ? "in_progress" : "available";
-        return q.visibility().equals("visible") ? "locked" : "hidden";
+        return q.visibility().equals("hidden") || q.visibility().equals("secret") ? "hidden" : "locked";
     }
 
     static long target(Quest q, Task t) {
@@ -975,6 +975,7 @@ public final class QuestEngine {
             for (Quest q : b.quests().values()) {
                 JsonObject qo = new JsonObject();
                 String st = status(t, b, q);
+                if (q.visibility().equals("secret") && !st.equals("complete")) st = "hidden";
                 qo.addProperty("s", st);
                 Prog p = prog(t).get(q.id());
                 if (p != null) {
