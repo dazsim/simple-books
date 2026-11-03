@@ -15,14 +15,16 @@ final class QuestToast implements Toast {
     private static final long SHOW_MS = 5000;
     private final Component head, line;
     private final ItemStack icon;
+    private final boolean secret;
     //? if >=26.1 {
     private Visibility wanted = Visibility.SHOW;
     //?}
 
-    private QuestToast(Component head, Component line, ItemStack icon) {
+    private QuestToast(Component head, Component line, ItemStack icon, boolean secret) {
         this.head = head;
         this.line = line;
         this.icon = icon;
+        this.secret = secret;
     }
 
     static void show(JsonObject o) {
@@ -37,6 +39,17 @@ final class QuestToast implements Toast {
         switch (kind) {
             case "complete" -> head = Component.translatable("simplebooks.toast.complete");
             case "unlock" -> head = Component.translatable("simplebooks.toast.unlock");
+            case "secret" -> head = Component.translatable("simplebooks.toast.secret");
+            case "again" -> head = Component.translatable("simplebooks.toast.again");
+            case "tier" -> {
+                head = Component.translatable("simplebooks.toast.tier");
+                int n = o.has("count") ? o.get("count").getAsInt() : 0;
+                if (q != null && n >= 1 && n <= q.tiers().size()) {
+                    QuestDefs.Tier t = q.tiers().get(n - 1);
+                    Component tn = t.title() != null ? Texts.of(t.title()) : Component.translatable("simplebooks.quest.tier_n", n);
+                    line = title.copy().append(": ").append(tn);
+                }
+            }
             case "rewards" -> {
                 head = Component.translatable("simplebooks.toast.rewards");
                 int n = o.has("count") ? o.get("count").getAsInt() : 0;
@@ -49,7 +62,7 @@ final class QuestToast implements Toast {
         }
         ItemStack st = ItemRef.parse(new JsonPrimitive(ic)).stack();
         if (st.isEmpty()) st = ItemRef.parse(new JsonPrimitive("minecraft:writable_book")).stack();
-        QuestToast t = new QuestToast(head, line, st);
+        QuestToast t = new QuestToast(head, line, st, kind.equals("secret"));
         Minecraft mc = Minecraft.getInstance();
         //? if >=26.3 {
         /*mc.gui.toastManager().addToast(t);
@@ -62,12 +75,12 @@ final class QuestToast implements Toast {
 
     private void paint(Gfx g, Font font) {
         int w = width(), h = height();
-        g.fill(0, 0, w, h, 0xFF5C4028);
-        g.fill(1, 1, w - 1, h - 1, 0xFFAA8C60);
-        g.fill(2, 2, w - 2, h - 2, 0xFFF1E4C2);
-        g.fill(4, h - 4, w - 4, h - 3, 0xFFDECEA8);
+        g.fill(0, 0, w, h, secret ? 0xFF3E2456 : 0xFF5C4028);
+        g.fill(1, 1, w - 1, h - 1, secret ? 0xFFC8A040 : 0xFFAA8C60);
+        g.fill(2, 2, w - 2, h - 2, secret ? 0xFFEDE2F0 : 0xFFF1E4C2);
+        g.fill(4, h - 4, w - 4, h - 3, secret ? 0xFFD8C8E0 : 0xFFDECEA8);
         g.item(icon, 8, 8);
-        g.text(font, head, 30, 7, 0xFF802C16, false);
+        g.text(font, head, 30, 7, secret ? 0xFF5A2A86 : 0xFF802C16, false);
         String s = line.getString();
         int max = w - 36;
         if (font.width(s) > max) {
