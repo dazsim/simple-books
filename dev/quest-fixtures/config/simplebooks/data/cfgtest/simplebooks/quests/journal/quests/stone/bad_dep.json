@@ -1,0 +1,1 @@
+{ "chapter": "stone", "sort": 3, "title": "Broken", "depends": ["nope"], "tasks": [ { "type": "craft", "item": "minecraft:not_an_item" } ] }

@@ -1,0 +1,1 @@
+{ "chapter": "box", "sort": 3, "title": "Dirt by hand", "tasks": [ { "id": "d", "type": "item", "item": "minecraft:dirt", "count": 5, "consume": true, "hand_in": "hand" } ] }

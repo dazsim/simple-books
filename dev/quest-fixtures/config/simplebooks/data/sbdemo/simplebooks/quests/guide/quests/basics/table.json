@@ -1,0 +1,1 @@
+{ "chapter": "basics", "sort": 3, "title": "Make a crafting table", "icon": "minecraft:crafting_table", "depends": ["wood"], "text": "Four planks in a square.", "tasks": [ { "id": "t", "type": "craft", "item": "minecraft:crafting_table" } ], "rewards": [ { "item": "minecraft:apple", "count": 3 } ] }

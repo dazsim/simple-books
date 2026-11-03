@@ -1,0 +1,16 @@
+{
+ "chapter": "crafting",
+ "sort": 1,
+ "title": "Planks",
+ "icon": "minecraft:oak_planks",
+ "depends": [],
+ "text": "Craft planks.",
+ "tasks": [
+  {
+   "id": "c",
+   "type": "craft",
+   "item": "minecraft:oak_planks",
+   "count": 4
+  }
+ ]
+}

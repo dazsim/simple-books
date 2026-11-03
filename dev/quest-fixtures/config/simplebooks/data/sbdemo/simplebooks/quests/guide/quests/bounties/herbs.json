@@ -1,0 +1,19 @@
+{
+ "pool": "bounties",
+ "title": "Rare herbs",
+ "icon": "minecraft:fern",
+ "text": "Hard to find, well paid.",
+ "tasks": [
+  {
+   "id": "c",
+   "type": "checkbox",
+   "text": "Find the herbs"
+  }
+ ],
+ "rewards": [
+  {
+   "item": "minecraft:emerald",
+   "count": 3
+  }
+ ]
+}

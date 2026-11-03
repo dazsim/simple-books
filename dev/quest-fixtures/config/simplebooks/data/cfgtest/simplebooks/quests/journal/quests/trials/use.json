@@ -1,0 +1,1 @@
+{ "chapter": "trials", "sort": 9, "title": "Use", "tasks": [ { "id": "u", "type": "use", "item": "minecraft:ender_pearl", "count": 1 }, { "id": "p", "type": "place", "block": "minecraft:stone", "count": 1 }, { "id": "b", "type": "break", "block": "minecraft:stone", "count": 1 }, { "id": "k", "type": "pickup", "item": "minecraft:dirt", "count": 1 } ] }

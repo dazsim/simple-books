@@ -1,0 +1,19 @@
+{
+ "pool": "bounties",
+ "title": "Rat catcher",
+ "icon": "minecraft:rabbit_hide",
+ "text": "Something is eating the grain.",
+ "tasks": [
+  {
+   "id": "c",
+   "type": "checkbox",
+   "text": "Clear the store room"
+  }
+ ],
+ "rewards": [
+  {
+   "item": "minecraft:emerald",
+   "count": 1
+  }
+ ]
+}

@@ -1,0 +1,21 @@
+{
+ "chapter": "camp",
+ "sort": 5,
+ "title": "The hidden spring",
+ "icon": "minecraft:water_bucket",
+ "visibility": "secret",
+ "text": "Behind the falls there was a spring all along.",
+ "tasks": [
+  {
+   "id": "c",
+   "type": "checkbox",
+   "text": "Drink from the spring"
+  }
+ ],
+ "rewards": [
+  {
+   "item": "minecraft:golden_apple",
+   "count": 1
+  }
+ ]
+}

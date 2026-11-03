@@ -1,0 +1,17 @@
+{
+ "chapter": "tale",
+ "sort": 5,
+ "title": "Home again",
+ "icon": "minecraft:red_bed",
+ "text": "Back in the light at last. Tam would have liked to hear about it.",
+ "page": {
+  "steps": []
+ },
+ "tasks": [
+  {
+   "id": "s",
+   "type": "checkbox",
+   "text": "Tell the story"
+  }
+ ]
+}

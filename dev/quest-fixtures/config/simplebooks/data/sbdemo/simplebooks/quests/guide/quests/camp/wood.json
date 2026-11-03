@@ -1,0 +1,25 @@
+{
+ "chapter": "camp",
+ "sort": 1,
+ "title": "Firewood",
+ "icon": "minecraft:oak_log",
+ "text": "The fire needs feeding. Bring wood again once it burns down.",
+ "repeat": {
+  "cooldown": "40s",
+  "limit": 3
+ },
+ "toast": "both",
+ "tasks": [
+  {
+   "id": "c",
+   "type": "checkbox",
+   "text": "Stack the wood"
+  }
+ ],
+ "rewards": [
+  {
+   "item": "minecraft:bread",
+   "count": 1
+  }
+ ]
+}

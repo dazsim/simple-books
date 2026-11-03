@@ -1,0 +1,1 @@
+{ "title": "Hunt", "pool": "bounties", "repeat": { "cooldown": "20m" }, "tasks": [ { "id": "z", "type": "kill", "entity": "minecraft:zombie", "count": 5 } ] }

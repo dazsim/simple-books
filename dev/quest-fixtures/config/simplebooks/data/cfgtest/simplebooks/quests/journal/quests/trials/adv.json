@@ -1,0 +1,1 @@
+{ "chapter": "trials", "sort": 3, "title": "Stone", "tasks": [ { "id": "a", "type": "advancement", "advancement": "minecraft:story/mine_stone" } ] }

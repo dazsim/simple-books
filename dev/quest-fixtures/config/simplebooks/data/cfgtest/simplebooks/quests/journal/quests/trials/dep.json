@@ -1,0 +1,1 @@
+{ "chapter": "trials", "sort": 6, "title": "Secret", "visibility": "hidden", "depends": ["check"], "tasks": [ { "id": "t", "type": "craft", "item": "minecraft:crafting_table" } ] }

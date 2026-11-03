@@ -1,0 +1,18 @@
+{
+ "chapter": "crafting",
+ "sort": 12,
+ "title": "Compass",
+ "icon": "minecraft:compass",
+ "depends": [
+  "bucket"
+ ],
+ "text": "Craft compass.",
+ "tasks": [
+  {
+   "id": "c",
+   "type": "craft",
+   "item": "minecraft:compass",
+   "count": 1
+  }
+ ]
+}

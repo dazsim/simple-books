@@ -1,0 +1,1 @@
+{ "chapter": "box", "sort": 2, "title": "Cobble", "tasks": [ { "id": "c", "type": "item", "item": "minecraft:cobblestone", "count": 10, "consume": true }, { "id": "coal2", "type": "item", "item": "minecraft:coal", "count": 5, "consume": true } ] }

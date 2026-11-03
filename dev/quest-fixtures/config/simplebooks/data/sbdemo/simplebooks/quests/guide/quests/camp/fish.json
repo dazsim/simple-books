@@ -1,0 +1,23 @@
+{
+ "chapter": "camp",
+ "sort": 2,
+ "title": "Daily catch",
+ "icon": "minecraft:cod",
+ "text": "Fresh fish for the camp, once every twenty minutes.",
+ "repeat": {
+  "cooldown": "20m"
+ },
+ "tasks": [
+  {
+   "id": "c",
+   "type": "checkbox",
+   "text": "Bring in the catch"
+  }
+ ],
+ "rewards": [
+  {
+   "item": "minecraft:cooked_cod",
+   "count": 2
+  }
+ ]
+}

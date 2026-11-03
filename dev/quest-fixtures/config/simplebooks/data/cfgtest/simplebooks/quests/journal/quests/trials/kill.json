@@ -1,0 +1,1 @@
+{ "chapter": "trials", "sort": 1, "title": "Kill", "tasks": [ { "id": "z", "type": "kill", "entity": "minecraft:zombie", "count": 2 } ], "rewards": [ { "xp": 5 } ] }

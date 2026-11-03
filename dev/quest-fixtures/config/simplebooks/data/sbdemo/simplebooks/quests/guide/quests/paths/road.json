@@ -1,0 +1,64 @@
+{
+ "chapter": "paths",
+ "sort": 4,
+ "title": "The long road",
+ "icon": "minecraft:map",
+ "text": "The road out of the valley is long. Pack well before you leave.\nThe first night is the hardest. Find a hill, dig in, and light the place up before the sun goes down.\nOn the second day you reach the river. Follow it north until the trees thin out.\nAfter that the plains open up, and there is no shelter for a long way. Carry wood with you.\nAt the far edge of the plains the old fort waits. Report there when you arrive.",
+ "page": {
+  "steps": [
+   {
+    "kind": "text",
+    "title": "Planks",
+    "text": "Step 1 of the long road: make planks and keep it with you for the trip ahead."
+   },
+   {
+    "kind": "text",
+    "title": "Sticks",
+    "text": "Step 2 of the long road: make sticks and keep it with you for the trip ahead."
+   },
+   {
+    "kind": "text",
+    "title": "Crafting table",
+    "text": "Step 3 of the long road: make crafting table and keep it with you for the trip ahead."
+   },
+   {
+    "kind": "text",
+    "title": "Chest",
+    "text": "Step 4 of the long road: make chest and keep it with you for the trip ahead."
+   },
+   {
+    "kind": "text",
+    "title": "Furnace",
+    "text": "Step 5 of the long road: make furnace and keep it with you for the trip ahead."
+   },
+   {
+    "kind": "text",
+    "title": "Torch",
+    "text": "Step 6 of the long road: make torch and keep it with you for the trip ahead."
+   },
+   {
+    "kind": "text",
+    "title": "Ladder",
+    "text": "Step 7 of the long road: make ladder and keep it with you for the trip ahead."
+   },
+   {
+    "kind": "text",
+    "title": "Bowl",
+    "text": "Step 8 of the long road: make bowl and keep it with you for the trip ahead."
+   }
+  ]
+ },
+ "tasks": [
+  {
+   "id": "c",
+   "type": "checkbox",
+   "text": "Reach the old fort"
+  }
+ ],
+ "rewards": [
+  {
+   "item": "minecraft:bread",
+   "count": 2
+  }
+ ]
+}

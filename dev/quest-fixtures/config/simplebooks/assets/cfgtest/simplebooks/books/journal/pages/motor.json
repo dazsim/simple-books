@@ -1,0 +1,7 @@
+{
+  "section": "machines",
+  "sort": 3,
+  "requires": ["simplemachines"],
+  "title": "Motor",
+  "text": "Only shown when Simple Machines is installed. Links to this page from other pages are hidden too."
+}

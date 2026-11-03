@@ -1,0 +1,10 @@
+{
+ "title": "The Old Mine",
+ "icon": "minecraft:writable_book",
+ "sort": 5,
+ "layout": "story",
+ "depends": [
+  "basics/look"
+ ],
+ "text": "A short story told one quest at a time."
+}

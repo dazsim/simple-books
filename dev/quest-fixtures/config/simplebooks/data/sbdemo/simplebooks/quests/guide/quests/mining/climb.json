@@ -1,0 +1,1 @@
+{ "chapter": "mining", "sort": 5, "title": "Back to the top", "optional": true, "tasks": [ { "id": "h", "type": "simplebooks:dev_height", "count": 120 } ] }

@@ -1,0 +1,26 @@
+{
+  "section": "parts",
+  "title": "Gears",
+  "subtitle": "Sheet 3 of 3",
+  "style": {
+    "head": "#ffe680"
+  },
+  "text": "Three standard gears. This page sets its own heading colour in a page style block.",
+  "drawing": "simplebooks:textures/simplebooks/blueprints/gears.png",
+  "caption": "Pitch circles shown",
+  "right_title": "Sizes",
+  "steps": [
+    {
+      "kind": "text",
+      "text": "Large: ten teeth. Medium: eight. Small: six."
+    },
+    {
+      "kind": "craft_shapeless",
+      "inputs": [
+        "minecraft:gold_ingot"
+      ],
+      "output": "minecraft:gold_nugget",
+      "title": "Cut the teeth"
+    }
+  ]
+}

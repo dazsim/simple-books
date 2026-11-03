@@ -1,0 +1,18 @@
+{
+ "chapter": "crafting",
+ "sort": 3,
+ "title": "A chest",
+ "icon": "minecraft:chest",
+ "depends": [
+  "planks"
+ ],
+ "text": "Craft a chest.",
+ "tasks": [
+  {
+   "id": "c",
+   "type": "craft",
+   "item": "minecraft:chest",
+   "count": 1
+  }
+ ]
+}

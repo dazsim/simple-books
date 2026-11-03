@@ -1,0 +1,20 @@
+{
+ "chapter": "workshop",
+ "sort": 5,
+ "pos": [
+  2,
+  2
+ ],
+ "title": "Smithing table",
+ "icon": "minecraft:smithing_table",
+ "depends": [
+  "table"
+ ],
+ "tasks": [
+  {
+   "id": "c",
+   "type": "craft",
+   "item": "minecraft:smithing_table"
+  }
+ ]
+}

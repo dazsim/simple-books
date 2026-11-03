@@ -1,0 +1,1 @@
+{ "chapter": "box", "sort": 4, "title": "Later", "depends": ["coal"], "tasks": [ { "id": "s", "type": "item", "item": "minecraft:sand", "count": 5, "consume": true } ] }

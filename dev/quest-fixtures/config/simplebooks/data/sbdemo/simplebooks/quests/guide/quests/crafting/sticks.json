@@ -1,0 +1,18 @@
+{
+ "chapter": "crafting",
+ "sort": 2,
+ "title": "Sticks",
+ "icon": "minecraft:stick",
+ "depends": [
+  "planks"
+ ],
+ "text": "Craft sticks.",
+ "tasks": [
+  {
+   "id": "c",
+   "type": "craft",
+   "item": "minecraft:stick",
+   "count": 4
+  }
+ ]
+}

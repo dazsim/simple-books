@@ -1,0 +1,24 @@
+{
+ "chapter": "paths",
+ "sort": 5,
+ "title": "Race to the west tower",
+ "icon": "minecraft:feather",
+ "text": "Whoever reaches a tower first claims it for the team.",
+ "exclusive": {
+  "group": "race",
+  "lock_on": "complete"
+ },
+ "tasks": [
+  {
+   "id": "c",
+   "type": "checkbox",
+   "text": "Reach the west tower"
+  }
+ ],
+ "rewards": [
+  {
+   "item": "minecraft:bread",
+   "count": 1
+  }
+ ]
+}

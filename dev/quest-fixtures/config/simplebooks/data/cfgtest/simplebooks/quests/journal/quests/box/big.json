@@ -1,0 +1,1 @@
+{ "chapter": "box", "sort": 5, "title": "Stone Stockpile", "icon": "minecraft:stone", "tasks": [ { "id": "cobble", "type": "item", "item": "minecraft:cobblestone", "count": 100000, "consume": true, "hand_in": "box" } ] }

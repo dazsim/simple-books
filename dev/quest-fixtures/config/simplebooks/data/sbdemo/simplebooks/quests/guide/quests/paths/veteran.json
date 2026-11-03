@@ -1,0 +1,25 @@
+{
+ "chapter": "paths",
+ "sort": 3,
+ "title": "Veteran",
+ "icon": "minecraft:shield",
+ "text": "Finish the path you picked.",
+ "depends": [
+  "sword",
+  "bow"
+ ],
+ "depends_mode": "any",
+ "tasks": [
+  {
+   "id": "c",
+   "type": "checkbox",
+   "text": "Report to the captain"
+  }
+ ],
+ "rewards": [
+  {
+   "item": "minecraft:bread",
+   "count": 1
+  }
+ ]
+}

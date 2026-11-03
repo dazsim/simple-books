@@ -1,0 +1,52 @@
+{
+ "chapter": "camp",
+ "sort": 3,
+ "title": "Stone breaker",
+ "icon": "minecraft:iron_pickaxe",
+ "text": "Break stone to earn each badge.",
+ "tasks": [
+  {
+   "id": "b",
+   "type": "break",
+   "block": "minecraft:stone"
+  }
+ ],
+ "tiers": [
+  {
+   "count": 10,
+   "title": "Bronze",
+   "rewards": [
+    {
+     "item": "minecraft:copper_ingot",
+     "count": 4
+    }
+   ]
+  },
+  {
+   "count": 50,
+   "title": "Silver",
+   "rewards": [
+    {
+     "item": "minecraft:iron_ingot",
+     "count": 4
+    }
+   ]
+  },
+  {
+   "count": 100,
+   "title": "Gold",
+   "rewards": [
+    {
+     "item": "minecraft:gold_ingot",
+     "count": 4
+    }
+   ]
+  }
+ ],
+ "rewards": [
+  {
+   "item": "minecraft:diamond",
+   "count": 1
+  }
+ ]
+}

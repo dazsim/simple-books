@@ -1,0 +1,1 @@
+{ "chapter": "stone", "sort": 1, "title": "Logs", "tasks": [ { "id": "logs", "type": "item", "item": "#minecraft:logs", "count": 16 } ], "rewards": [ { "item": "minecraft:torch", "count": 8 } ] }

@@ -1,0 +1,7 @@
+{
+ "title": "Bounty Board",
+ "icon": "minecraft:writable_book",
+ "sort": 8,
+ "layout": "board",
+ "text": "New jobs are pinned up as old ones are done."
+}

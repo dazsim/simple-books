@@ -1,0 +1,1 @@
+{ "chapter": "stone", "sort": 2, "title": "Pick", "depends": ["logs"], "tasks": [ { "id": "pick", "type": "craft", "item": "minecraft:stone_pickaxe" } ] }

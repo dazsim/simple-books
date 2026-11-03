@@ -1,0 +1,1 @@
+{ "chapter": "stone", "sort": 3, "title": "Unknown", "icon": "minecraft:nope_icon", "tasks": [ { "id": "a", "type": "craft", "item": "minecraft:not_an_item" }, { "id": "b", "type": "biome", "biome": "minecraft:no_biome" } ], "rewards": [ { "loot_table": "minecraft:chests/none" } ] }

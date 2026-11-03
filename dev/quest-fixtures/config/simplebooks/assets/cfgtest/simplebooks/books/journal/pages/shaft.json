@@ -1,0 +1,14 @@
+{
+  "section": "machines",
+  "sort": 2,
+  "title": "Drive Shaft and Flywheel Assembly",
+  "subtitle": "Sheet 2 of 3",
+  "text": "The flywheel keeps the shaft turning smoothly between strokes. Two bearings hold the shaft level.\n\nThis long title checks that the stand wraps or shrinks titles to fit the page.",
+  "drawing": "simplebooks:textures/simplebooks/blueprints/shaft.png",
+  "caption": "Plan view",
+  "right_title": "Parts list",
+  "steps": [
+    { "kind": "sequence", "title": "Shaft", "cells": ["minecraft:stick", "minecraft:iron_ingot", "minecraft:lightning_rod"], "text": "Cap a stick with iron, then lengthen it." },
+    { "kind": "craft_shapeless", "inputs": ["minecraft:iron_block", "minecraft:stone"], "output": "minecraft:grindstone", "title": "Flywheel" }
+  ]
+}

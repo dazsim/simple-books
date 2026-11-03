@@ -1,0 +1,1 @@
+{ "offers": 1, "refresh": { "cooldown": "1h" }, "quests": [ { "quest": "hunt", "weight": 2 } ] }

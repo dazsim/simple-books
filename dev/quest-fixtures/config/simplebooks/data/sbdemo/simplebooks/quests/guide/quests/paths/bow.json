@@ -1,0 +1,24 @@
+{
+ "chapter": "paths",
+ "sort": 2,
+ "title": "Path of the bow",
+ "icon": "minecraft:bow",
+ "text": "Guard from afar. Taking this path closes the sword.",
+ "exclusive": {
+  "group": "trade",
+  "lock_on": "choose"
+ },
+ "rewards": [
+  {
+   "item": "minecraft:bow",
+   "count": 1
+  }
+ ],
+ "tasks": [
+  {
+   "id": "c",
+   "type": "checkbox",
+   "text": "Practice at the targets"
+  }
+ ]
+}

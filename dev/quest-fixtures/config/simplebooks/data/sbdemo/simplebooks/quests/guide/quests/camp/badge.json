@@ -1,0 +1,17 @@
+{
+ "chapter": "camp",
+ "sort": 6,
+ "title": "Camp foreman",
+ "icon": "minecraft:bell",
+ "text": "Needs the Bronze badge from Stone breaker.",
+ "depends": [
+  "miner#1"
+ ],
+ "tasks": [
+  {
+   "id": "c",
+   "type": "checkbox",
+   "text": "Ring the bell"
+  }
+ ]
+}

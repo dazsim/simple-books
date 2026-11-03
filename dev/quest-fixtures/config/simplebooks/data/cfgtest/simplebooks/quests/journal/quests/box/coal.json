@@ -1,0 +1,1 @@
+{ "chapter": "box", "sort": 1, "title": "Coal Drive", "icon": "minecraft:coal", "tasks": [ { "id": "coal", "type": "item", "item": "minecraft:coal", "count": 20, "consume": true, "hand_in": "box" }, { "id": "iron", "type": "item", "item": "minecraft:iron_ingot", "count": 3, "consume": true } ], "rewards": [ { "item": "minecraft:torch", "count": 4 } ] }

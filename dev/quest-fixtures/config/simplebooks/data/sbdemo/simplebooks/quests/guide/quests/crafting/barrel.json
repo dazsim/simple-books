@@ -1,0 +1,19 @@
+{
+ "chapter": "crafting",
+ "sort": 6,
+ "title": "A barrel",
+ "icon": "minecraft:barrel",
+ "depends": [
+  "chest"
+ ],
+ "text": "Craft a barrel.",
+ "tasks": [
+  {
+   "id": "c",
+   "type": "craft",
+   "item": "minecraft:barrel",
+   "count": 1
+  }
+ ],
+ "optional": true
+}

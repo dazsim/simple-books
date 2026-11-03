@@ -1,0 +1,20 @@
+{
+ "chapter": "workshop",
+ "sort": 3,
+ "pos": [
+  2,
+  0
+ ],
+ "title": "Smoker",
+ "icon": "minecraft:smoker",
+ "depends": [
+  "table"
+ ],
+ "tasks": [
+  {
+   "id": "c",
+   "type": "craft",
+   "item": "minecraft:smoker"
+  }
+ ]
+}

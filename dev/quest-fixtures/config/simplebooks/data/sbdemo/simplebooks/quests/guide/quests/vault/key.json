@@ -1,0 +1,13 @@
+{
+ "chapter": "vault",
+ "sort": 1,
+ "title": "The key",
+ "icon": "minecraft:tripwire_hook",
+ "tasks": [
+  {
+   "id": "c",
+   "type": "checkbox",
+   "text": "Turn the key"
+  }
+ ]
+}

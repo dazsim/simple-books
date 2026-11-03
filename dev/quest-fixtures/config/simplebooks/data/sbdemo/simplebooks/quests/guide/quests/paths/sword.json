@@ -1,0 +1,24 @@
+{
+ "chapter": "paths",
+ "sort": 1,
+ "title": "Path of the sword",
+ "icon": "minecraft:iron_sword",
+ "text": "Fight for the camp. Taking this path closes the bow.",
+ "exclusive": {
+  "group": "trade",
+  "lock_on": "choose"
+ },
+ "rewards": [
+  {
+   "item": "minecraft:iron_sword",
+   "count": 1
+  }
+ ],
+ "tasks": [
+  {
+   "id": "c",
+   "type": "checkbox",
+   "text": "Train with a blade"
+  }
+ ]
+}

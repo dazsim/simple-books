@@ -1,0 +1,23 @@
+{
+ "chapter": "tale",
+ "sort": 3,
+ "title": "Tam's notes",
+ "icon": "minecraft:paper",
+ "text": "Scraps of paper are pinned by the door. They are not needed, but they tell you what Tam found.",
+ "page": {
+  "steps": [
+   {
+    "kind": "text",
+    "text": "\"Iron below the third ladder. Watch the water.\""
+   }
+  ]
+ },
+ "tasks": [
+  {
+   "id": "c",
+   "type": "checkbox",
+   "text": "Read the notes"
+  }
+ ],
+ "optional": true
+}

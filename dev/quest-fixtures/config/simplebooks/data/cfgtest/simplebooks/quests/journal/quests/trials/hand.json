@@ -1,0 +1,1 @@
+{ "chapter": "trials", "sort": 5, "title": "Diamonds", "tasks": [ { "id": "d", "type": "item", "item": "minecraft:diamond", "count": 4, "consume": true } ], "rewards": [ { "item": "minecraft:torch", "count": 4 }, { "xp": 10 }, { "command": "tag @s add sbclaimed", "label": "Tag" } ], "choose_one": [ { "item": "minecraft:iron_sword" }, { "item": "minecraft:shield" } ] }

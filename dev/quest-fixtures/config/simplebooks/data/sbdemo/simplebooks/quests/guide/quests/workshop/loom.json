@@ -1,0 +1,20 @@
+{
+ "chapter": "workshop",
+ "sort": 2,
+ "pos": [
+  0,
+  0
+ ],
+ "title": "Loom",
+ "icon": "minecraft:loom",
+ "depends": [
+  "table"
+ ],
+ "tasks": [
+  {
+   "id": "c",
+   "type": "craft",
+   "item": "minecraft:loom"
+  }
+ ]
+}

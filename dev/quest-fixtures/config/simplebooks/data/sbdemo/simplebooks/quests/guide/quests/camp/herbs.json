@@ -1,0 +1,29 @@
+{
+ "chapter": "camp",
+ "sort": 4,
+ "title": "Wild herbs",
+ "icon": "minecraft:fern",
+ "optional": true,
+ "text": "Not needed, but the cook will thank you.",
+ "page": {
+  "steps": [
+   {
+    "kind": "text",
+    "text": "Ferns grow in taiga and jungle. Shears pick them up."
+   }
+  ]
+ },
+ "tasks": [
+  {
+   "id": "c",
+   "type": "checkbox",
+   "text": "Pick some herbs"
+  }
+ ],
+ "rewards": [
+  {
+   "item": "minecraft:sweet_berries",
+   "count": 4
+  }
+ ]
+}

@@ -1,0 +1,38 @@
+{
+ "chapter": "workshop",
+ "sort": 1,
+ "pos": [
+  1,
+  1
+ ],
+ "title": "Crafting table",
+ "icon": "minecraft:crafting_table",
+ "depends": [],
+ "tasks": [
+  {
+   "id": "c",
+   "type": "craft",
+   "item": "minecraft:crafting_table"
+  }
+ ],
+ "text": "Every workshop starts with a table.",
+ "page": {
+  "steps": [
+   {
+    "kind": "text",
+    "text": "Four planks of any wood make one table."
+   },
+   {
+    "kind": "craft_shaped",
+    "pattern": [
+     "PP",
+     "PP"
+    ],
+    "key": {
+     "P": "minecraft:oak_planks"
+    },
+    "output": "minecraft:crafting_table"
+   }
+  ]
+ }
+}

@@ -1,0 +1,1 @@
+{ "chapter": "basics", "sort": 4, "title": "Stretch your legs", "icon": "minecraft:leather_boots", "text": "Jump around a bit.", "tasks": [ { "id": "j", "type": "stat", "stat": "minecraft:custom", "value": "minecraft:jump", "count": 10 } ] }

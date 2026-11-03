@@ -1,0 +1,18 @@
+{
+ "chapter": "crafting",
+ "sort": 5,
+ "title": "Torches",
+ "icon": "minecraft:torch",
+ "depends": [
+  "sticks"
+ ],
+ "text": "Craft torches.",
+ "tasks": [
+  {
+   "id": "c",
+   "type": "craft",
+   "item": "minecraft:torch",
+   "count": 8
+  }
+ ]
+}

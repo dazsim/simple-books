@@ -1,0 +1,36 @@
+{
+ "chapter": "tale",
+ "sort": 2,
+ "title": "The boarded door",
+ "icon": "minecraft:oak_door",
+ "text": "The entrance is nailed shut with planks. An axe makes short work of them.",
+ "page": {
+  "steps": [
+   {
+    "kind": "craft_shaped",
+    "pattern": [
+     "PP",
+     "PS",
+     " S"
+    ],
+    "key": {
+     "P": "minecraft:oak_planks",
+     "S": "minecraft:stick"
+    },
+    "output": "minecraft:wooden_axe",
+    "title": "Wooden axe"
+   },
+   {
+    "kind": "text",
+    "text": "Any axe will do, but stone lasts longer."
+   }
+  ]
+ },
+ "tasks": [
+  {
+   "id": "a",
+   "type": "craft",
+   "item": "#minecraft:axes"
+  }
+ ]
+}

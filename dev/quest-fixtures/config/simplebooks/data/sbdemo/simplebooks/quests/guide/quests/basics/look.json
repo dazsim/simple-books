@@ -1,0 +1,1 @@
+{ "chapter": "basics", "sort": 1, "title": "Read the guide", "icon": "minecraft:book", "text": "This book keeps track of what you have done. Tick the box when you have had a look around.", "tasks": [ { "id": "c", "type": "checkbox", "text": "Have a look around" } ] }

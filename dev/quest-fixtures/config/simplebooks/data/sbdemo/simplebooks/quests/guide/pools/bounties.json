@@ -1,0 +1,44 @@
+{
+ "offers": 3,
+ "refresh": {
+  "cooldown": "2m"
+ },
+ "reroll": {
+  "allowed": true,
+  "cost": [
+   {
+    "item": "minecraft:emerald",
+    "count": 2
+   }
+  ]
+ },
+ "quests": [
+  {
+   "quest": "bounties/rats",
+   "weight": 3
+  },
+  {
+   "quest": "bounties/logs",
+   "weight": 3
+  },
+  {
+   "quest": "bounties/wool",
+   "weight": 2
+  },
+  {
+   "quest": "bounties/bones",
+   "weight": 2
+  },
+  {
+   "quest": "bounties/herbs",
+   "weight": 1
+  },
+  {
+   "quest": "bounties/dragon",
+   "weight": 1,
+   "depends": [
+    "paths/veteran"
+   ]
+  }
+ ]
+}

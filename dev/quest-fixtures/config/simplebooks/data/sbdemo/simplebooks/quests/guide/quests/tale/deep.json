@@ -1,0 +1,28 @@
+{
+ "chapter": "tale",
+ "sort": 4,
+ "title": "Down the ladders",
+ "icon": "minecraft:ladder",
+ "text": "Three ladders down the air turns cold. Bring back what Tam was after.",
+ "page": {
+  "steps": [
+   {
+    "kind": "text",
+    "text": "Raw iron smelts into ingots in a furnace."
+   }
+  ]
+ },
+ "tasks": [
+  {
+   "id": "i",
+   "type": "item",
+   "item": "minecraft:raw_iron",
+   "count": 6
+  }
+ ],
+ "rewards": [
+  {
+   "xp": 40
+  }
+ ]
+}

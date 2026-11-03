@@ -1,0 +1,19 @@
+{
+ "chapter": "crafting",
+ "sort": 9,
+ "title": "Iron pickaxe",
+ "icon": "minecraft:iron_pickaxe",
+ "depends": [
+  "furnace",
+  "torch"
+ ],
+ "text": "Craft iron pickaxe.",
+ "tasks": [
+  {
+   "id": "c",
+   "type": "craft",
+   "item": "minecraft:iron_pickaxe",
+   "count": 1
+  }
+ ]
+}

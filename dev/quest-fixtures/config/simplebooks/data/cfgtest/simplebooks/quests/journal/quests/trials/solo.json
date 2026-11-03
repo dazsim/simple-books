@@ -1,0 +1,1 @@
+{ "chapter": "trials", "sort": 8, "title": "Logs solo", "tasks": [ { "id": "l", "type": "item", "item": "#minecraft:logs", "count": 10, "team_total": false } ] }
