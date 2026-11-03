@@ -19,6 +19,11 @@ public final class SimpleBooksClient {
 
     public static void init() {
         SimpleBooks.opener = BookScreen::open;
+        com.workshopcraft.simplebooks.quest.QuestClientStore.toasts = o -> net.minecraft.client.Minecraft.getInstance().execute(() -> QuestToast.show(o));
+        com.workshopcraft.simplebooks.quest.QuestClientStore.opens = o -> {
+            Identifier book = o.has("book") ? Identifier.tryParse(o.get("book").getAsString()) : null;
+            if (book != null) BookScreen.open(book, o.has("spread") ? o.get("spread").getAsInt() : 0, -2, null);
+        };
     }
 
     /** /simplebooks open|validate|list, built for any client command source type. */

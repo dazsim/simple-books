@@ -16,7 +16,8 @@ public record Template(Identifier id, Map<String, JsonObject> slots, Map<String,
                        Map<String, String> vars, List<String> errors) {
     public static final int PAGE_W = 644, PAGE_H = 920;
     public static final Set<String> SLOT_TYPES = Set.of("title", "subtitle", "text", "rule", "need_list", "ingredient_list",
-            "tool_list", "step_rows", "image_box", "link_list", "item_icon", "grid", "page_number", "arrow", "contents");
+            "tool_list", "step_rows", "image_box", "link_list", "item_icon", "grid", "page_number", "arrow", "contents",
+            "quest_list", "task_list", "reward_list", "quest_buttons", "team_list");
 
     static Template resolve(Identifier id, Map<Identifier, JsonObject> raw) {
         List<String> errors = new ArrayList<>();

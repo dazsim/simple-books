@@ -25,6 +25,11 @@ public final class DevHeightTask implements TaskType, SimpleBooksPlugin {
     }
 
     @Override
+    public com.workshopcraft.simplebooks.api.Display display(TaskSpec spec) {
+        return new com.workshopcraft.simplebooks.api.Display("minecraft:feather", "Climb to y = " + spec.count());
+    }
+
+    @Override
     public long poll(ServerPlayer player, TaskSpec spec) {
         return player.getBlockY() >= spec.count() ? spec.count() : 0;
     }

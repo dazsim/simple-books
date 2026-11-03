@@ -1,0 +1,15 @@
+{
+  "extends": "simplebooks:recipe",
+  "slots": {
+    "left.need": null,
+    "left.steps": null,
+    "left.turn": null,
+    "left.team": { "type": "team_list", "box": [0, 104, 644, 766], "show": "members" },
+    "right.title": { "bind": "right_title" },
+    "right.icon": null,
+    "right.subtitle": null,
+    "right.steps": null,
+    "right.links": null,
+    "right.players": { "type": "team_list", "box": [0, 104, 644, 766], "show": "players" }
+  }
+}

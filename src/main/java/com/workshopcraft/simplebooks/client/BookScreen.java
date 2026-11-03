@@ -27,6 +27,7 @@ public class BookScreen extends Screen {
     private static final long TURN_NS = 220_000_000L;
     private int turnFrom = -1;
     private long turnStart;
+    private @Nullable Book shown;
 
     public BookScreen(Identifier bookId, int spread, int hand, net.minecraft.core.@Nullable BlockPos stand) {
         super(Component.literal(bookId.toString()));
@@ -100,8 +101,19 @@ public class BookScreen extends Screen {
     private void draw(Gfx g, int mouseX, int mouseY) {
         layout();
         Book b = book();
+        if (b != shown) {
+            // quest progress rebuilds the book; stay on the same page when pages come or go
+            if (shown != null && b != null && b.flow() == null && shown.flow() == null) {
+                Book.Page was = shown.pageAt(spread);
+                int idx = was == null ? -1 : b.indexOf(was.id());
+                if (idx >= 0) spread = idx;
+            }
+            shown = b;
+        }
         spread = Math.min(spread, spreads() - 1);
         float mx = (mouseX - ox) / scale, my = (mouseY - oy) / scale;
+        QuestSlots.mx = mx;
+        QuestSlots.my = my;
         g.push();
         g.translate(ox, oy);
         g.scale(scale, scale);
@@ -165,6 +177,10 @@ public class BookScreen extends Screen {
             if (h.target() instanceof ItemStack st) g.tooltip(font, st, mouseX, mouseY);
             else if (h.target() instanceof Component c) g.tooltip(font, c, mouseX, mouseY);
             else if (h.target() instanceof Identifier) g.pointer();
+            else if (h.target() instanceof QuestSlots.Act a) {
+                if (a.tip() != null) g.tooltip(font, a.tip(), mouseX, mouseY);
+                g.pointer();
+            }
             break;
         }
     }
@@ -238,6 +254,10 @@ public class BookScreen extends Screen {
             if (bk != null && bk.contentsIndex() >= 0 && in(mx, my, MARK_X, MARK_Y, MARK_W, MARK_H))
                 return spread == bk.contentsIndex() || turn(bk.contentsIndex(), true);
             for (Spread.Hit h : hits) {
+                if (h.contains(mx, my) && h.target() instanceof QuestSlots.Act a && QuestSlots.press(a)) {
+                    minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                    return true;
+                }
                 if (h.contains(mx, my) && h.target() instanceof Spread.Jump j) return j.spread() == spread || turn(j.spread(), true);
                 if (h.contains(mx, my) && h.target() instanceof Identifier target) {
                     Book b = book();

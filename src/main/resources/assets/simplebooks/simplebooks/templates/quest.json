@@ -1,0 +1,17 @@
+{
+  "extends": "simplebooks:recipe",
+  "slots": {
+    "left.need": null,
+    "left.steps": null,
+    "left.turn": null,
+    "left.text": { "type": "text", "box": [0, 100, 644, 200], "bind": "text", "style": "body", "optional": true },
+    "left.tasks": { "type": "task_list", "box": [0, 100, 644, 770], "below": "left.text", "gap": 20 },
+    "right.title": { "bind": "right_title" },
+    "right.icon": null,
+    "right.subtitle": null,
+    "right.steps": null,
+    "right.links": null,
+    "right.rewards": { "type": "reward_list", "box": [0, 104, 644, 680] },
+    "right.buttons": { "type": "quest_buttons", "box": [0, 796, 644, 72] }
+  }
+}

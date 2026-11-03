@@ -35,7 +35,10 @@ public class Spread {
             Map.entry("slot", "#8b8b8b"), Map.entry("slot_shadow", "#373737"), Map.entry("slot_light", "#ffffff"),
             Map.entry("mark", "#802c16"), Map.entry("mark_hover", "#a83a1e"), Map.entry("mark_line", "#e0b080"),
             Map.entry("tabs", "#802c16,#2c5a80,#3c6a2c,#8a6a1c,#5a2c70"), Map.entry("tab_text", "$page"), Map.entry("tab_edge", "$cover_edge"),
-            Map.entry("button_tint", "#ffffff"));
+            Map.entry("button_tint", "#ffffff"),
+            Map.entry("done", "#3c6a2c"), Map.entry("locked", "#9a8a70"), Map.entry("claim", "#802c16"),
+            Map.entry("claim_hover", "#a83a1e"), Map.entry("closed", "#b4a07c"), Map.entry("line", "#decea8"),
+            Map.entry("line_done", "#3c6a2c"));
     public static final int TAB_ROOT = 1556, TAB_OUT = 34, TAB_MARGIN = 48;
     /** Real pixels per spread unit on screen, set by the book screen. */
     public static float renderScale = 1;
@@ -503,7 +506,7 @@ public class Spread {
                 : Component.literal(sec.isEmpty() ? "Other" : Character.toUpperCase(sec.charAt(0)) + sec.substring(1).replace('_', ' '));
     }
 
-    private void roundRect(float x0, float y0, float x1, float y1, float r, int col) {
+    void roundRect(float x0, float y0, float x1, float y1, float r, int col) {
         fill(x0, y0 + r, x1, y1 - r, col);
         for (int i = 0; i < r; i++) {
             float dx = (float) (r - Math.sqrt(r * r - (r - i - 0.5) * (r - i - 0.5)));
@@ -688,6 +691,16 @@ public class Spread {
                 if (type.equals("text")) body[sd] = true;
             }
             case "rule" -> rule(x, x + w, y);
+            case "quest_list", "task_list", "reward_list", "quest_buttons", "team_list" -> {
+                Float above = slot.has("below") ? bottoms.get(slot.get("below").getAsString()) : null;
+                if (above != null) {
+                    float ny = above + num(slot, "gap", 14);
+                    h += y - ny;
+                    y = ny;
+                }
+                new QuestSlots(this, json).draw(name, type, slot, x, y, w, h);
+                body[sd] = true;
+            }
             case "arrow" -> arrow(x, y, w > 0 ? w : h, w == 0, num(slot, "unit", 3), color("$arrow"));
             case "page_number" -> ctext(Component.translatable("simplebooks.page", half != null ? pageNo : spreadNo * 2 + (left ? 1 : 2)), x + w / 2, y, 1, color("$soft"));
             case "need_list", "ingredient_list", "tool_list" -> {
@@ -1297,9 +1310,26 @@ public class Spread {
 
     // ---------- contents ----------
 
+    private static String contentTitle(Book.Page p) {
+        return p.json().has("title") ? p.json().get("title").getAsString() : p.id().getPath();
+    }
+
+    /** "done/total" for a quest chapter's list page, or null. */
+    private static @Nullable String progress(Book.Page p) {
+        if (!p.json().has("chapter")) return null;
+        int[] dt = QuestBook.progress(p.json().get("chapter").getAsString());
+        return dt == null ? null : dt[0] + "/" + dt[1];
+    }
+
+    private Component contentNum(Book.Page p) {
+        String pr = progress(p);
+        String n = String.valueOf(book.pageNumber(p.id()));
+        return Component.literal(pr == null ? n : pr + "   " + n);
+    }
+
     private int contentLines(Book.Page p, float colW) {
-        String t = p.json().has("title") ? p.json().get("title").getAsString() : p.id().getPath();
-        Component num = Component.literal(String.valueOf(book.pageNumber(p.id())));
+        String t = contentTitle(p);
+        Component num = contentNum(p);
         return Math.min(2, wrap(Texts.of(t), colW - 24 - textW(num, 1) - 12, 1).size());
     }
 
@@ -1334,9 +1364,8 @@ public class Spread {
                     yy += 26;
                 } else {
                     Book.Page p = (Book.Page) r;
-                    String t = p.json().has("title") ? p.json().get("title").getAsString() : p.id().getPath();
-                    Component label = Texts.of(t);
-                    Component num = Component.literal(String.valueOf(book.pageNumber(p.id())));
+                    Component label = Texts.of(contentTitle(p));
+                    Component num = contentNum(p);
                     float nw = textW(num, 1), maxw = colW - 24 - nw;
                     List<FormattedCharSequence> ls = wrap(label, maxw - 12, 1);
                     cut(label, ls.size(), 2);
@@ -1347,7 +1376,14 @@ public class Spread {
                         text(ls.get(j), cx + 8 + (j > 0 ? 12 : 0), yy + j * 20, 1, col);
                         fill(cx + 8 + (j > 0 ? 12 : 0), yy + j * 20 + 16, cx + 8 + (j > 0 ? 12 : 0) + tw - 2, yy + j * 20 + 18, col);
                     }
-                    text(num, cx + colW - 16 - nw, yy + (n - 1) * 20, 1, color("$soft"));
+                    String pr = progress(p);
+                    if (pr != null) {
+                        String[] d = pr.split("/");
+                        Component pc = Component.literal(pr + "   ");
+                        text(pc, cx + colW - 16 - nw, yy + (n - 1) * 20, 1, color(d[0].equals(d[1]) ? "$done" : "$soft"));
+                        Component pn = Component.literal(String.valueOf(book.pageNumber(p.id())));
+                        text(pn, cx + colW - 16 - textW(pn, 1), yy + (n - 1) * 20, 1, color("$soft"));
+                    } else text(num, cx + colW - 16 - nw, yy + (n - 1) * 20, 1, color("$soft"));
                     hits.add(new Hit(cx, yy - 2, cx + colW - 16, yy + n * 20 - 2, p.id()));
                     yy += 20 * n;
                 }

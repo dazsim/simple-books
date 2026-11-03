@@ -32,16 +32,41 @@ public class BookRegistry extends SimplePreparableReloadListener<BookRegistry.Lo
     private static final Set<String> ITEM_KEYS = Set.of("inputs", "output", "appliance", "on", "tool", "ingredients", "tools",
             "item", "items", "icon", "right_icon");
 
-    public record Loaded(Map<Identifier, Book> books, Map<Identifier, int[]> images) {}
+    public record Loaded(Map<Identifier, Book> books, Map<Identifier, int[]> images, Map<Identifier, JsonObject> rawTemplates,
+                         Map<Identifier, Template> templates) {}
 
-    private static Loaded loaded = new Loaded(Map.of(), Map.of());
+    private static Loaded loaded = new Loaded(Map.of(), Map.of(), Map.of(), new HashMap<>());
 
     public static @Nullable Book get(Identifier id) {
-        return loaded.books.get(id);
+        return QuestBook.get(id, loaded.books.get(id), loaded);
     }
 
     public static Set<Identifier> ids() {
-        return loaded.books.keySet();
+        Set<Identifier> out = new java.util.TreeSet<>(loaded.books.keySet());
+        out.addAll(QuestBook.ids());
+        return out;
+    }
+
+    static Template template(Identifier id) {
+        return loaded.templates.computeIfAbsent(id, k -> safeResolve(k, loaded.rawTemplates));
+    }
+
+    static Book.Page contentsPage(Identifier bookId, JsonObject json, Template ct) {
+        JsonObject cj = new JsonObject();
+        cj.addProperty("template", "simplebooks:index");
+        cj.addProperty("section", "contents");
+        cj.addProperty("title", json.has("contents_title") ? json.get("contents_title").getAsString() : "simplebooks.contents");
+        return new Book.Page(SimpleBooks.of(bookId.getNamespace(), bookId.getPath() + "/contents"),
+                "(generated contents)", cj, ct, new ArrayList<>(ct.errors()));
+    }
+
+    static void sortPages(List<Book.Page> pages, List<String> sections) {
+        pages.sort(Comparator.comparingInt((Book.Page p) -> {
+                    int i = sections.indexOf(p.json().has("section") ? p.json().get("section").getAsString() : "");
+                    return i < 0 ? sections.size() : i;
+                })
+                .thenComparingInt(p -> p.json().has("sort") ? p.json().get("sort").getAsInt() : 0)
+                .thenComparing(p -> p.id().toString()));
     }
 
     public static int @Nullable [] imageSize(Identifier tex) {
@@ -145,28 +170,16 @@ public class BookRegistry extends SimplePreparableReloadListener<BookRegistry.Lo
                 }
                 pages.add(new Book.Page(pageId, file, pj, t, errors));
             }
-            if (sections.contains("contents")) {
-                JsonObject cj = new JsonObject();
-                cj.addProperty("template", "simplebooks:index");
-                cj.addProperty("section", "contents");
-                cj.addProperty("title", json.has("contents_title") ? json.get("contents_title").getAsString() : "simplebooks.contents");
-                Template ct = templates.computeIfAbsent(SimpleBooks.id("index"), k -> safeResolve(k, rawTemplates));
-                pages.add(new Book.Page(SimpleBooks.of(bookId.getNamespace(), bookId.getPath() + "/contents"),
-                        "(generated contents)", cj, ct, new ArrayList<>(ct.errors())));
-            }
-            pages.sort(Comparator.comparingInt((Book.Page p) -> {
-                        int i = sections.indexOf(p.json().has("section") ? p.json().get("section").getAsString() : "");
-                        return i < 0 ? sections.size() : i;
-                    })
-                    .thenComparingInt(p -> p.json().has("sort") ? p.json().get("sort").getAsInt() : 0)
-                    .thenComparing(p -> p.id().toString()));
+            if (sections.contains("contents"))
+                pages.add(contentsPage(bookId, json, templates.computeIfAbsent(SimpleBooks.id("index"), k -> safeResolve(k, rawTemplates))));
+            sortPages(pages, sections);
             Book book = new Book(bookId, json, vars, pages, bErrors, hidden);
             for (Book.Page p : pages) if (!p.broken()) checkLinks(book, p);
             for (Book.Page p : pages) for (String err : p.errors()) SimpleBooks.LOG.error("{} {}", p.file(), err);
             books.put(bookId, book);
         }
         SimpleBooks.LOG.info("Loaded {} book(s), {} template(s)", books.size(), rawTemplates.size());
-        return new Loaded(books, images);
+        return new Loaded(books, images, rawTemplates, new java.util.concurrent.ConcurrentHashMap<>(templates));
     }
 
     @Override
