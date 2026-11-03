@@ -115,7 +115,45 @@ final class QuestSlots {
 
     static boolean waiting(QuestDefs.Quest q) {
         JsonObject qs = st(q.id());
-        return "complete".equals(str(qs, "s")) && qs.has("claimed") && !qs.get("claimed").getAsBoolean() && hasRewards(q);
+        return qs.has("claimed") && !qs.get("claimed").getAsBoolean() && hasRewards(q);
+    }
+
+    /** Seconds until a repeat quest opens again, 0 when not waiting, -1 when it will not repeat. */
+    static long againLeft(JsonObject qs) {
+        if (!qs.has("again")) return 0;
+        long v = qs.get("again").getAsLong();
+        return v < 0 ? -1 : Math.max(0, v - QuestClientStore.stateAge());
+    }
+
+    static String dur(long secs) {
+        if (secs >= 3600) return secs / 3600 + "h " + secs % 3600 / 60 + "m";
+        if (secs >= 60) return (secs + 59) / 60 + "m";
+        return secs + "s";
+    }
+
+    /** How often a repeat quest has run and when it opens again, or null for other quests. */
+    private static @Nullable Component repeatLine(QuestDefs.Quest q, JsonObject qs) {
+        if (q.repeat() == null) return null;
+        long left = againLeft(qs);
+        int runs = qs.has("runs") ? qs.get("runs").getAsInt() : 0, limit = q.repeat().limit();
+        if (left < 0) return tr("simplebooks.quest.repeat_over", runs);
+        if (left > 0) return tr("simplebooks.quest.again_in", dur(left));
+        if (qs.has("again")) return tr("simplebooks.quest.again_soon");
+        if (runs == 0) return null;
+        return limit > 0 ? tr("simplebooks.quest.runs_of", runs, limit) : tr("simplebooks.quest.runs", runs);
+    }
+
+    private static int tierOf(JsonObject qs) {
+        return qs.has("tier") ? qs.get("tier").getAsInt() : 0;
+    }
+
+    private static int tiersClaimed(JsonObject qs) {
+        return qs.has("ct") ? qs.get("ct").getAsInt() : 0;
+    }
+
+    private static Component tierName(QuestDefs.Quest q, int i) {
+        QuestDefs.Tier t = q.tiers().get(i);
+        return t.title() != null ? Texts.of(t.title()) : tr("simplebooks.quest.tier_n", i + 1);
     }
 
     private static String str(JsonObject o, String k) {
@@ -151,6 +189,30 @@ final class QuestSlots {
         float u = sz / 14;
         for (int i = 0; i < 3; i++) s.fill(x + (3 + i) * u, y + (7 + i) * u, x + (5 + i) * u, y + (9 + i) * u, c);
         for (int i = 0; i < 6; i++) s.fill(x + (6 + i) * u, y + (8 - i) * u, x + (8 + i) * u, y + (10 - i) * u, c);
+    }
+
+    /** A dashed frame, for side quests. */
+    private void dashed(float x0, float y0, float x1, float y1, int bg) {
+        int c = s.color("$soft");
+        for (float d = x0; d < x1; d += 8) {
+            float e = Math.min(x1, d + 4);
+            s.fill(d, y0, e, y0 + 2, c);
+            s.fill(d, y1 - 2, e, y1, c);
+        }
+        for (float d = y0; d < y1; d += 8) {
+            float e = Math.min(y1, d + 4);
+            s.fill(x0, d, x0 + 2, e, c);
+            s.fill(x1 - 2, d, x1, e, c);
+        }
+    }
+
+    /** A quest title, with a softer side quest tag after it. */
+    private void titled(QuestDefs.Quest q, float x, float y, float w, int ink) {
+        Component tag = q.optional() ? tr("simplebooks.quest.optional") : null;
+        float tw = tag == null ? 0 : s.textW(tag, 1) + 8;
+        String t = fit(Texts.of(q.title()), w - tw);
+        s.text(Component.literal(t), x, y, 1, ink);
+        if (tag != null) s.text(tag, x + s.textW(Component.literal(t), 1) + 8, y, 1, s.color("$soft"));
     }
 
     private static boolean over(float x0, float y0, float x1, float y1) {
@@ -222,6 +284,7 @@ final class QuestSlots {
         boolean tick = !done && !locked && q.tasks().size() == 1 && q.tasks().get(0).type().equals("checkbox");
         if (tick && over(x, by, x + 28, by + 28)) s.fill(x - 3, by - 3, x + 31, by + 31, s.color("$rule"));
         box(x, by, 28, done, ink);
+        if (q.optional()) dashed(x - 4, by - 4, x + 32, by + 32, s.color("$page"));
         if (tick) s.hits.add(new Spread.Hit(x, by, x + 28, by + 28,
                 new Act("checkbox", q.id(), q.tasks().get(0).id(), 0, "", tr("simplebooks.quest.tick"))));
         float tx = x + 44;
@@ -231,9 +294,7 @@ final class QuestSlots {
         }
         boolean wait = waiting(q);
         float right = x + w - (wait ? 40 : 4);
-        Component title = Texts.of(q.title());
-        if (q.optional()) title = title.copy().append(" ").append(tr("simplebooks.quest.optional"));
-        s.text(Component.literal(fit(title, right - tx)), tx, y + rh / 2 - 19, 1, ink);
+        titled(q, tx, y + rh / 2 - 19, right - tx, ink);
         Component sub = sub(qb, q, qs, status);
         int subCol = s.color(wait ? "$claim" : locked ? "$locked" : "$soft");
         s.text(Component.literal(fit(sub, right - tx)), tx, y + rh / 2 + 2, 1, subCol);
@@ -251,9 +312,21 @@ final class QuestSlots {
             case "locked" -> {
                 List<String> need = new ArrayList<>();
                 for (String d : q.depends()) {
-                    if (str(st(d), "s").equals("complete")) continue;
+                    int hash = d.indexOf('#'), tier = 0;
+                    if (hash > 0) {
+                        try {
+                            tier = Integer.parseInt(d.substring(hash + 1));
+                        } catch (NumberFormatException e) {
+                            tier = 0;
+                        }
+                        d = d.substring(0, hash);
+                    }
+                    JsonObject ds = st(d);
+                    if (str(ds, "s").equals("complete") || tier > 0 && tierOf(ds) >= tier || tier == 0 && ds.has("claimed")) continue;
                     QuestDefs.Quest dq = qb.quests().get(d);
-                    need.add(dq == null || str(st(d), "s").equals("hidden") ? tr("simplebooks.quest.hidden_dep").getString() : Texts.of(dq.title()).getString());
+                    if (dq == null || str(ds, "s").equals("hidden")) need.add(tr("simplebooks.quest.hidden_dep").getString());
+                    else if (tier > 0 && tier <= dq.tiers().size()) need.add(Texts.of(dq.title()).getString() + " (" + tierName(dq, tier - 1).getString() + ")");
+                    else need.add(Texts.of(dq.title()).getString());
                 }
                 QuestDefs.Quest prev = qb.storyPrev(q);
                 if (need.isEmpty() && prev != null && !str(st(prev.id()), "s").equals("complete"))
@@ -263,9 +336,15 @@ final class QuestSlots {
             }
             case "complete" -> {
                 if (waiting(q)) return tr("simplebooks.quest.rewards_waiting");
-                return tr("simplebooks.quest.done");
+                Component r = repeatLine(q, qs);
+                return r != null ? r : tr("simplebooks.quest.done");
             }
             default -> {
+                if (waiting(q)) return tr("simplebooks.quest.rewards_waiting");
+                if (!q.tiers().isEmpty() && tierOf(qs) > 0) {
+                    QuestDefs.Task t = q.tasks().get(0);
+                    return tr("simplebooks.quest.tier_progress", tierName(q, tierOf(qs) - 1), count(qs, t.id()) + "/" + target(q, t));
+                }
                 if (!q.subtitle().isEmpty() && status.equals("available")) return Texts.of(q.subtitle());
                 int done = 0;
                 for (QuestDefs.Task t : q.tasks()) if (count(qs, t.id()) >= target(q, t)) done++;
@@ -522,9 +601,7 @@ final class QuestSlots {
             s.slotItem(icon, x, y, 44);
             tx += 56;
         }
-        Component title = Texts.of(q.title());
-        if (q.optional()) title = title.copy().append(" ").append(tr("simplebooks.quest.optional"));
-        s.text(Component.literal(fit(title, x + w - tx)), tx, y + 2, 1, s.color("$ink"));
+        titled(q, tx, y + 2, x + w - tx, s.color("$ink"));
         s.text(Component.literal(fit(sub(qb, q, qs, status), x + w - tx)), tx, y + 24, 1,
                 s.color(waiting(q) ? "$claim" : status.equals("locked") ? "$locked" : status.equals("complete") ? "$done" : "$soft"));
         y += 60;
@@ -661,8 +738,21 @@ final class QuestSlots {
             case "available" -> tr("simplebooks.quest.state.available");
             default -> sub(qb, q, qs, "locked");
         };
+        Component rep = repeatLine(q, qs);
+        if (rep != null && !status.equals("locked")) state = state.copy().append(", ").append(rep);
         s.text(Component.literal(fit(state, w)), x, y, 1, s.color(status.equals("complete") ? "$done" : status.equals("locked") ? "$locked" : "$soft"));
         y += 30;
+        List<Component> notes = new ArrayList<>();
+        if (q.optional()) notes.add(tr("simplebooks.quest.side_note"));
+        if (q.repeat() != null) notes.add(tr(q.repeat().limit() > 0 ? "simplebooks.quest.repeat_limit" : "simplebooks.quest.repeat_every",
+                dur(q.repeat().cooldown()), q.repeat().limit()));
+        for (Component n : notes) {
+            s.text(Component.literal(fit(n, w - 22)), x + 22, y - 4, 1, s.color("$soft"));
+            if (q.optional() && n == notes.get(0)) dashed(x, y - 2, x + 12, y + 10, s.color("$page"));
+            else s.fill(x + 3, y + 2, x + 9, y + 8, s.color("$soft"));
+            y += 22;
+        }
+        if (!notes.isEmpty()) y += 8;
         Component head = tr(q.tasks().size() > 1 && q.taskMode().equals("any") ? "simplebooks.quest.tasks_any" : "simplebooks.quest.tasks");
         s.text(head, x, y, 1, s.color("$head"));
         s.rule(x, x + w, y + 20);
@@ -699,6 +789,10 @@ final class QuestSlots {
             Component label = taskLabel(t, of);
             s.text(Component.literal(fit(label, right - tx)), tx, y + 6, 1, s.color(done ? "$done" : "$ink"));
             if (!t.type().equals("checkbox")) bar(tx, y + 30, right - tx, Math.min(n, of), of);
+            for (int i = 0; i + 1 < q.tiers().size(); i++) {
+                float mx0 = tx + (right - tx) * Math.min(1, q.tiers().get(i).count() / (float) of);
+                s.fill(mx0 - 1, y + 27, mx0 + 2, y + 39, s.color(n >= q.tiers().get(i).count() ? "$page" : "$ink"));
+            }
             y += 50;
             String who = shares(qs, t.id());
             if (!who.isEmpty() && y + 20 <= end) {
@@ -741,7 +835,28 @@ final class QuestSlots {
             s.text(tr("simplebooks.quest.no_rewards"), x, y + 8, 1, s.color("$soft"));
             return;
         }
-        for (QuestDefs.Reward r : q.rewards()) {
+        boolean tiered = !q.tiers().isEmpty();
+        int ct = tiersClaimed(qs), reached = tierOf(qs);
+        if (tiered) for (int i = 0; i < q.tiers().size(); i++) {
+            QuestDefs.Tier t = q.tiers().get(i);
+            if (y + 80 > end) return;
+            boolean got = i < ct, ready = !got && i < reached;
+            Component head = tierName(q, i).copy().append("  ").append(tr("simplebooks.quest.tier", t.count()));
+            Component tag = got ? tr("simplebooks.quest.tier_claimed") : ready ? tr("simplebooks.quest.tier_ready") : Component.empty();
+            s.text(Component.literal(fit(head, w - s.textW(tag, 1) - 12)), x, y, 1, s.color(got ? "$done" : ready ? "$claim" : "$head"));
+            s.text(tag, x + w - s.textW(tag, 1), y, 1, s.color(got ? "$done" : "$claim"));
+            s.rule(x, x + w, y + 20);
+            y += 30;
+            List<QuestDefs.Reward> rs = new ArrayList<>(t.rewards());
+            if (i == q.tiers().size() - 1) rs.addAll(q.rewards());
+            for (QuestDefs.Reward r : rs) {
+                if (y + 50 > end) return;
+                reward(r, x, y, w);
+                y += 52;
+            }
+            y += 6;
+        }
+        else for (QuestDefs.Reward r : q.rewards()) {
             if (y + 50 > end) return;
             reward(r, x, y, w);
             y += 52;
@@ -762,19 +877,6 @@ final class QuestSlots {
                 }
                 reward(q.chooseOne().get(i), x, y, w);
                 if (!claimed) s.hits.add(new Spread.Hit(x - 6, y - 4, x + w, y + 48, new Act("select", quest, "", i, "", tr("simplebooks.quest.pick"))));
-                y += 52;
-            }
-        }
-        for (QuestDefs.Tier t : q.tiers()) {
-            if (t.rewards().isEmpty() || y + 80 > end) continue;
-            y += 10;
-            Component head = t.title() != null ? Texts.of(t.title()) : tr("simplebooks.quest.tier", t.count());
-            s.text(head, x, y, 1, s.color("$head"));
-            s.rule(x, x + w, y + 20);
-            y += 30;
-            for (QuestDefs.Reward r : t.rewards()) {
-                if (y + 50 > end) return;
-                reward(r, x, y, w);
                 y += 52;
             }
         }
@@ -816,20 +918,22 @@ final class QuestSlots {
         QuestDefs.Quest q = def(quest);
         if (q == null || !hasRewards(q)) return;
         JsonObject qs = st(quest);
-        boolean done = str(qs, "s").equals("complete");
-        boolean claimed = qs.has("claimed") && qs.get("claimed").getAsBoolean();
-        Component lb = tr("simplebooks.quest.claim");
+        boolean done = qs.has("claimed");
+        boolean claimed = done && qs.get("claimed").getAsBoolean();
+        int tiers = q.tiers().size(), next = tiersClaimed(qs);
+        boolean tiered = tiers > 0;
+        Component lb = tiered && next < tiers ? tr("simplebooks.quest.claim_tier", tierName(q, next)) : tr("simplebooks.quest.claim");
         float bw = Math.max(240, buttonW(lb)), bx = x + (w - bw) / 2, by = y + (h - 52) / 2;
-        if (claimed) {
+        if (claimed && (!tiered || next >= tiers)) {
             s.ctext(tr("simplebooks.quest.claimed"), x + w / 2, by + 18, 1, s.color("$done"));
             return;
         }
-        if (!done) {
-            button(bx, by, bw, 52, lb, null, tr("simplebooks.quest.claim_later"));
+        if (!done || claimed) {
+            button(bx, by, bw, 52, lb, null, tr(tiered ? "simplebooks.quest.claim_tier_later" : "simplebooks.quest.claim_later"));
             return;
         }
         int pick = chosen.getOrDefault(quest, -1);
-        if (!q.chooseOne().isEmpty() && (pick < 0 || pick >= q.chooseOne().size())) {
+        if (!q.chooseOne().isEmpty() && (!tiered || next == tiers - 1) && (pick < 0 || pick >= q.chooseOne().size())) {
             button(bx, by, bw, 52, lb, null, tr("simplebooks.quest.pick_first"));
             return;
         }

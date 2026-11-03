@@ -17,6 +17,7 @@ public final class QuestClientStore {
     private static volatile QuestDefs defs = QuestDefs.EMPTY;
     private static volatile JsonObject state = new JsonObject();
     private static volatile int version;
+    private static volatile long stateAt;
     /** Set by the client entrypoint: shows a toast, opens a book. */
     public static Consumer<JsonObject> toasts = o -> {};
     public static Consumer<JsonObject> opens = o -> {};
@@ -25,6 +26,11 @@ public final class QuestClientStore {
     /** Team and quest progress; see QuestEngine.state for the shape. */
     public static JsonObject state() {
         return state;
+    }
+
+    /** Seconds since the last state arrived, for counting down cooldowns. */
+    public static long stateAge() {
+        return (System.currentTimeMillis() - stateAt) / 1000;
     }
 
     /** Goes up whenever defs or state change, so screens know to redraw. */
@@ -51,6 +57,7 @@ public final class QuestClientStore {
         switch (p.kind()) {
             case "state" -> {
                 state = o;
+                stateAt = System.currentTimeMillis();
                 version++;
             }
             case "toast" -> toasts.accept(o);
