@@ -1,0 +1,21 @@
+{
+  "pool": "bounties",
+  "title": "Log run",
+  "icon": "minecraft:oak_log",
+  "text": "The mill wants logs.",
+  "tasks": [
+    {
+      "id": "l",
+      "type": "item",
+      "item": "#minecraft:logs",
+      "count": 8,
+      "consume": true
+    }
+  ],
+  "rewards": [
+    {
+      "item": "minecraft:emerald",
+      "count": 2
+    }
+  ]
+}

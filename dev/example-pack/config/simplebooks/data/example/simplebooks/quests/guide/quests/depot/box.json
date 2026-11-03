@@ -1,0 +1,14 @@
+{
+  "chapter": "depot",
+  "sort": 1,
+  "title": "Build a hand-in box",
+  "icon": "simplebooks:hand_in_box",
+  "text": "Hoppers and pipes can feed a hand-in box. It only takes what an open quest still needs.",
+  "tasks": [
+    {
+      "id": "b",
+      "type": "craft",
+      "item": "simplebooks:hand_in_box"
+    }
+  ]
+}

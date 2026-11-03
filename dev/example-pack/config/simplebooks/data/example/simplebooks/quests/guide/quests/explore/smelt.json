@@ -1,0 +1,15 @@
+{
+  "chapter": "explore",
+  "sort": 2,
+  "title": "Hot metal",
+  "icon": "minecraft:iron_ingot",
+  "text": "Smelt iron in a furnace. Counting starts when the quest opens.",
+  "tasks": [
+    {
+      "id": "s",
+      "type": "smelt",
+      "item": "minecraft:iron_ingot",
+      "count": 4
+    }
+  ]
+}

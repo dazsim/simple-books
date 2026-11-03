@@ -1,0 +1,7 @@
+{
+  "title": "Supply Depot",
+  "icon": "minecraft:hopper",
+  "sort": 9,
+  "layout": "checklist",
+  "text": "Big hand-ins. Feed them by hand or with hoppers into a hand-in box."
+}

@@ -1,0 +1,16 @@
+{
+  "chapter": "explore",
+  "sort": 8,
+  "title": "Your own pile",
+  "icon": "minecraft:spruce_log",
+  "text": "With team_total false one member must hold all of it.",
+  "tasks": [
+    {
+      "id": "l",
+      "type": "item",
+      "item": "#minecraft:logs",
+      "count": 32,
+      "team_total": false
+    }
+  ]
+}

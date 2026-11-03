@@ -1,0 +1,21 @@
+{
+  "pool": "bounties",
+  "title": "Warm wool",
+  "icon": "minecraft:white_wool",
+  "text": "Winter is coming.",
+  "tasks": [
+    {
+      "id": "w",
+      "type": "item",
+      "item": "#minecraft:wool",
+      "count": 4,
+      "consume": true
+    }
+  ],
+  "rewards": [
+    {
+      "item": "minecraft:emerald",
+      "count": 2
+    }
+  ]
+}

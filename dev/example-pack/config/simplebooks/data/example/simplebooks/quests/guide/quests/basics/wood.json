@@ -1,0 +1,25 @@
+{
+  "chapter": "basics",
+  "sort": 2,
+  "title": "Gather wood",
+  "subtitle": "Punch a few trees",
+  "icon": "minecraft:oak_log",
+  "text": "Logs are the start of everything. Any kind of log counts, and the whole team's logs add up.",
+  "tasks": [
+    {
+      "id": "logs",
+      "type": "item",
+      "item": "#minecraft:logs",
+      "count": 16
+    }
+  ],
+  "rewards": [
+    {
+      "item": "minecraft:torch",
+      "count": 8
+    },
+    {
+      "xp": 10
+    }
+  ]
+}

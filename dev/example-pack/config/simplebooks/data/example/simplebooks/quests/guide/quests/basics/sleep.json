@@ -1,0 +1,20 @@
+{
+  "chapter": "basics",
+  "sort": 6,
+  "title": "A quiet place",
+  "icon": "minecraft:red_bed",
+  "visibility": "hidden",
+  "depends": [
+    "look"
+  ],
+  "text": "Sleep in a bed. This quest stays hidden until you read the guide.",
+  "tasks": [
+    {
+      "id": "s",
+      "type": "stat",
+      "stat": "minecraft:custom",
+      "value": "minecraft:sleep_in_bed",
+      "count": 1
+    }
+  ]
+}

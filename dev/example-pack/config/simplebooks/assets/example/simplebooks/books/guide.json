@@ -1,0 +1,85 @@
+{
+  "title": "book.example.guide.title",
+  "default_template": "simplebooks:text",
+  "tabs": true,
+  "sections": [
+    "contents",
+    {
+      "id": "welcome",
+      "title": "Welcome",
+      "icon": "minecraft:book"
+    },
+    {
+      "id": "basics",
+      "quests": "basics",
+      "title": "First Steps",
+      "icon": "minecraft:oak_sapling"
+    },
+    {
+      "id": "explore",
+      "quests": "explore",
+      "title": "Out and About",
+      "icon": "minecraft:compass"
+    },
+    {
+      "id": "mining",
+      "quests": "mining",
+      "title": "Into the Ground",
+      "icon": "minecraft:iron_pickaxe"
+    },
+    {
+      "id": "crafting",
+      "quests": "crafting",
+      "title": "Crafting Tree",
+      "icon": "minecraft:crafting_table"
+    },
+    {
+      "id": "workshop",
+      "quests": "workshop",
+      "title": "Workshop",
+      "icon": "minecraft:smithing_table"
+    },
+    {
+      "id": "tale",
+      "quests": "tale",
+      "title": "The Old Mine",
+      "icon": "minecraft:writable_book"
+    },
+    {
+      "id": "vault",
+      "quests": "vault",
+      "title": "The Vault",
+      "icon": "minecraft:ender_chest"
+    },
+    {
+      "id": "camp",
+      "quests": "camp",
+      "title": "Camp Life",
+      "icon": "minecraft:campfire"
+    },
+    {
+      "id": "depot",
+      "quests": "depot",
+      "title": "Supply Depot",
+      "icon": "minecraft:hopper"
+    },
+    {
+      "id": "paths",
+      "quests": "paths",
+      "title": "Crossroads",
+      "icon": "minecraft:oak_sign"
+    },
+    {
+      "id": "bounties",
+      "quests": "bounties",
+      "title": "Bounty Board",
+      "icon": "minecraft:writable_book"
+    },
+    {
+      "id": "team",
+      "team_page": true,
+      "title": "simplebooks.team.title",
+      "icon": "minecraft:player_head"
+    }
+  ]
+}

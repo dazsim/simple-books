@@ -1,0 +1,15 @@
+{
+  "chapter": "explore",
+  "sort": 3,
+  "title": "Light the way",
+  "icon": "minecraft:torch",
+  "text": "Place torches anywhere.",
+  "tasks": [
+    {
+      "id": "p",
+      "type": "place",
+      "block": "minecraft:torch",
+      "count": 10
+    }
+  ]
+}

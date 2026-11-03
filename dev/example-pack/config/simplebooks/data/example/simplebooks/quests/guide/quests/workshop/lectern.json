@@ -1,0 +1,21 @@
+{
+  "chapter": "workshop",
+  "sort": 6,
+  "pos": [
+    1,
+    3
+  ],
+  "title": "Lectern",
+  "icon": "minecraft:lectern",
+  "depends": [
+    "anvil",
+    "smithing_table"
+  ],
+  "tasks": [
+    {
+      "id": "c",
+      "type": "craft",
+      "item": "minecraft:lectern"
+    }
+  ]
+}

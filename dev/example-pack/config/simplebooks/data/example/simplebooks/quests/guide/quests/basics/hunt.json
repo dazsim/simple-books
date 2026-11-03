@@ -1,0 +1,31 @@
+{
+  "chapter": "basics",
+  "sort": 5,
+  "title": "Night watch",
+  "icon": "minecraft:zombie_head",
+  "text": "Zombies come out at night. Deal with a few of them, then pick one reward.",
+  "tasks": [
+    {
+      "id": "z",
+      "type": "kill",
+      "entity": "minecraft:zombie",
+      "count": 3
+    }
+  ],
+  "rewards": [
+    {
+      "xp": 25
+    }
+  ],
+  "choose_one": [
+    {
+      "item": "minecraft:iron_sword"
+    },
+    {
+      "item": "minecraft:shield"
+    },
+    {
+      "item": "minecraft:bow"
+    }
+  ]
+}

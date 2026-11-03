@@ -1,0 +1,25 @@
+{
+  "chapter": "camp",
+  "sort": 2,
+  "title": "Daily catch",
+  "icon": "minecraft:cod",
+  "text": "Fresh fish for the camp, once every twenty minutes. Repeat quests hand items in, so they are not counted twice.",
+  "repeat": {
+    "cooldown": "20m"
+  },
+  "tasks": [
+    {
+      "id": "f",
+      "type": "item",
+      "item": "minecraft:cod",
+      "count": 3,
+      "consume": true
+    }
+  ],
+  "rewards": [
+    {
+      "item": "minecraft:cooked_cod",
+      "count": 2
+    }
+  ]
+}

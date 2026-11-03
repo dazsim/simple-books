@@ -1,0 +1,19 @@
+{
+  "pool": "bounties",
+  "title": "Dragon sighting",
+  "icon": "minecraft:dragon_head",
+  "text": "Only veterans get this one.",
+  "tasks": [
+    {
+      "id": "c",
+      "type": "checkbox",
+      "text": "Scout the mountain"
+    }
+  ],
+  "rewards": [
+    {
+      "item": "minecraft:emerald",
+      "count": 6
+    }
+  ]
+}

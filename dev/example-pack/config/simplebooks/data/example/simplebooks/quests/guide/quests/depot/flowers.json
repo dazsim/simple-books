@@ -1,0 +1,17 @@
+{
+  "chapter": "depot",
+  "sort": 4,
+  "title": "Flowers for the gate",
+  "icon": "minecraft:dandelion",
+  "text": "By hand only, so the box leaves it alone.",
+  "tasks": [
+    {
+      "id": "f",
+      "type": "item",
+      "item": "minecraft:dandelion",
+      "count": 4,
+      "consume": true,
+      "hand_in": "hand"
+    }
+  ]
+}

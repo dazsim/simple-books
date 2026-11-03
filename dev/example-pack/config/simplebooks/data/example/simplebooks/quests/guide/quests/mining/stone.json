@@ -1,0 +1,21 @@
+{
+  "chapter": "mining",
+  "sort": 1,
+  "title": "Break stone",
+  "icon": "minecraft:cobblestone",
+  "text": "Stone is everywhere once you dig down.",
+  "tasks": [
+    {
+      "id": "s",
+      "type": "break",
+      "block": "minecraft:stone",
+      "count": 32
+    }
+  ],
+  "rewards": [
+    {
+      "item": "minecraft:bread",
+      "count": 4
+    }
+  ]
+}

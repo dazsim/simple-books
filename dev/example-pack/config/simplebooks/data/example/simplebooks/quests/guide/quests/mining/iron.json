@@ -1,0 +1,43 @@
+{
+  "chapter": "mining",
+  "sort": 3,
+  "title": "Hand in iron",
+  "icon": "minecraft:iron_ingot",
+  "depends": [
+    "furnace"
+  ],
+  "text": "Bring iron to the team. Everyone's hand-ins count towards the total. Coal only has to be held.",
+  "tasks": [
+    {
+      "id": "i",
+      "type": "item",
+      "item": "minecraft:iron_ingot",
+      "count": 8,
+      "consume": true
+    },
+    {
+      "id": "c",
+      "type": "item",
+      "item": "minecraft:coal",
+      "count": 16
+    }
+  ],
+  "rewards": [
+    {
+      "xp": 30
+    },
+    {
+      "command": "effect give @s minecraft:haste 60 1",
+      "label": "A minute of haste",
+      "icon": "minecraft:golden_pickaxe"
+    }
+  ],
+  "choose_one": [
+    {
+      "item": "minecraft:iron_pickaxe"
+    },
+    {
+      "item": "minecraft:iron_axe"
+    }
+  ]
+}

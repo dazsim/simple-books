@@ -1,0 +1,21 @@
+{
+  "section": "welcome",
+  "title": "Welcome",
+  "subtitle": "An example quest book",
+  "text": "This book shows every kind of quest Simple Books has. Each chapter is one style: a checklist, two trees, a story, chores that repeat, a supply depot, paths that split and a bounty board.\nThe last tab is your team. Make one there and invite friends to share progress.",
+  "right_title": "Getting started",
+  "steps": [
+    {
+      "kind": "text",
+      "text": "Open First Steps and tick the first box."
+    },
+    {
+      "kind": "text",
+      "text": "Quests unlock as you finish the ones they depend on. Locked quests say what they need."
+    },
+    {
+      "kind": "text",
+      "text": "Finished quests have rewards to claim. Every player claims their own."
+    }
+  ]
+}

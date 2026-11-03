@@ -1,0 +1,18 @@
+{
+  "chapter": "crafting",
+  "sort": 4,
+  "title": "Wooden pickaxe",
+  "icon": "minecraft:wooden_pickaxe",
+  "depends": [
+    "sticks"
+  ],
+  "text": "Craft wooden pickaxe.",
+  "tasks": [
+    {
+      "id": "c",
+      "type": "craft",
+      "item": "minecraft:wooden_pickaxe",
+      "count": 1
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "chapter": "explore",
+  "sort": 5,
+  "title": "Feathers",
+  "icon": "minecraft:feather",
+  "text": "Pick up feathers. With from_stats, ones picked up before the quest opened count too.",
+  "tasks": [
+    {
+      "id": "f",
+      "type": "pickup",
+      "item": "minecraft:feather",
+      "count": 5,
+      "from_stats": true
+    }
+  ]
+}

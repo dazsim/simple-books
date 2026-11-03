@@ -1,0 +1,20 @@
+{
+  "pool": "bounties",
+  "title": "Bone collector",
+  "icon": "minecraft:bone",
+  "text": "The healer grinds bones into meal.",
+  "tasks": [
+    {
+      "id": "b",
+      "type": "item",
+      "item": "minecraft:bone",
+      "count": 6,
+      "consume": true
+    }
+  ],
+  "rewards": [
+    {
+      "item": "minecraft:emerald"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "chapter": "tale",
+  "sort": 1,
+  "title": "A light in the dark",
+  "icon": "minecraft:torch",
+  "text": "Old Tam said the mine was closed after the lamps went out. Nobody goes down without a light.",
+  "page": {
+    "steps": [
+      {
+        "kind": "text",
+        "text": "Torches burn forever and light up a good circle around them."
+      },
+      {
+        "kind": "craft_shaped",
+        "pattern": [
+          "C",
+          "S"
+        ],
+        "key": {
+          "C": "minecraft:coal",
+          "S": "minecraft:stick"
+        },
+        "output": "minecraft:torch",
+        "title": "Torch"
+      }
+    ]
+  },
+  "tasks": [
+    {
+      "id": "t",
+      "type": "craft",
+      "item": "minecraft:torch",
+      "count": 4
+    }
+  ],
+  "rewards": [
+    {
+      "item": "minecraft:bread",
+      "count": 3
+    }
+  ]
+}

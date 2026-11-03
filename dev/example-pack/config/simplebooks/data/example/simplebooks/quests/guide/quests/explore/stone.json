@@ -1,0 +1,14 @@
+{
+  "chapter": "explore",
+  "sort": 1,
+  "title": "Stone Age",
+  "icon": "minecraft:cobblestone",
+  "text": "An advancement task. Done when any member has the advancement.",
+  "tasks": [
+    {
+      "id": "a",
+      "type": "advancement",
+      "advancement": "minecraft:story/mine_stone"
+    }
+  ]
+}

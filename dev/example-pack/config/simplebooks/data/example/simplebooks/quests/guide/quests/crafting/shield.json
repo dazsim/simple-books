@@ -1,0 +1,18 @@
+{
+  "chapter": "crafting",
+  "sort": 11,
+  "title": "Shield",
+  "icon": "minecraft:shield",
+  "depends": [
+    "ipick"
+  ],
+  "text": "Craft shield.",
+  "tasks": [
+    {
+      "id": "c",
+      "type": "craft",
+      "item": "minecraft:shield",
+      "count": 1
+    }
+  ]
+}

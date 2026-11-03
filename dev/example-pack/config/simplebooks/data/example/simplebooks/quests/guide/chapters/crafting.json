@@ -1,0 +1,10 @@
+{
+  "title": "Crafting Tree",
+  "icon": "minecraft:crafting_table",
+  "sort": 4,
+  "layout": "tree",
+  "depends": [
+    "basics/look"
+  ],
+  "text": "Each skill opens the ones after it. Click a skill to read it."
+}

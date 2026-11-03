@@ -1,0 +1,14 @@
+{
+  "chapter": "explore",
+  "sort": 7,
+  "title": "Through the portal",
+  "icon": "minecraft:obsidian",
+  "text": "Step into the Nether.",
+  "tasks": [
+    {
+      "id": "n",
+      "type": "dimension",
+      "dimension": "minecraft:the_nether"
+    }
+  ]
+}

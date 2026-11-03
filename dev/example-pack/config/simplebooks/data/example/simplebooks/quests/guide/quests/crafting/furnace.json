@@ -1,0 +1,18 @@
+{
+  "chapter": "crafting",
+  "sort": 8,
+  "title": "Furnace",
+  "icon": "minecraft:furnace",
+  "depends": [
+    "spick"
+  ],
+  "text": "Craft furnace.",
+  "tasks": [
+    {
+      "id": "c",
+      "type": "craft",
+      "item": "minecraft:furnace",
+      "count": 1
+    }
+  ]
+}

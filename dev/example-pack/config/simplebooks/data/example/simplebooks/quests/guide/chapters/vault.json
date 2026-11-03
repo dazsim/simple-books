@@ -1,0 +1,11 @@
+{
+  "title": "The Vault",
+  "icon": "minecraft:ender_chest",
+  "sort": 7,
+  "layout": "checklist",
+  "depends": [
+    "tale"
+  ],
+  "visibility": "hidden",
+  "text": "Only those who finished the story find this."
+}

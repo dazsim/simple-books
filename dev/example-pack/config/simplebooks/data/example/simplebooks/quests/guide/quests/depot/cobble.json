@@ -1,0 +1,22 @@
+{
+  "chapter": "depot",
+  "sort": 3,
+  "title": "Cobble for the wall",
+  "icon": "minecraft:cobblestone",
+  "text": "Hand in by button or through the box, both count.",
+  "tasks": [
+    {
+      "id": "c",
+      "type": "item",
+      "item": "minecraft:cobblestone",
+      "count": 1000,
+      "consume": true
+    }
+  ],
+  "rewards": [
+    {
+      "item": "minecraft:stone_bricks",
+      "count": 64
+    }
+  ]
+}

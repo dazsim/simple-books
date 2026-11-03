@@ -1,0 +1,20 @@
+{
+  "chapter": "vault",
+  "sort": 1,
+  "title": "The key",
+  "icon": "minecraft:tripwire_hook",
+  "text": "This chapter stayed hidden until the story was done.",
+  "tasks": [
+    {
+      "id": "c",
+      "type": "checkbox",
+      "text": "Turn the key"
+    }
+  ],
+  "rewards": [
+    {
+      "item": "minecraft:emerald",
+      "count": 5
+    }
+  ]
+}

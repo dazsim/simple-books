@@ -1,0 +1,20 @@
+{
+  "chapter": "explore",
+  "sort": 6,
+  "title": "Sand and sun",
+  "icon": "minecraft:sand",
+  "text": "Visit a desert, or any badlands.",
+  "task_mode": "any",
+  "tasks": [
+    {
+      "id": "d",
+      "type": "biome",
+      "biome": "minecraft:desert"
+    },
+    {
+      "id": "b",
+      "type": "biome",
+      "biome": "#minecraft:is_badlands"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "chapter": "mining",
+  "sort": 4,
+  "title": "Diamonds!",
+  "icon": "minecraft:diamond",
+  "depends": [
+    "iron"
+  ],
+  "tasks": [
+    {
+      "id": "d",
+      "type": "item",
+      "item": "minecraft:diamond",
+      "count": 3
+    }
+  ],
+  "rewards": [
+    {
+      "item": "minecraft:diamond"
+    }
+  ]
+}

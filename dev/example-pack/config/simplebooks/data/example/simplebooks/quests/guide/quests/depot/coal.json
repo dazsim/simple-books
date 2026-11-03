@@ -1,0 +1,26 @@
+{
+  "chapter": "depot",
+  "sort": 2,
+  "title": "Coal drive",
+  "icon": "minecraft:coal",
+  "depends": [
+    "box"
+  ],
+  "text": "Box only: this one can only be fed through a hand-in box.",
+  "tasks": [
+    {
+      "id": "coal",
+      "type": "item",
+      "item": "minecraft:coal",
+      "count": 256,
+      "consume": true,
+      "hand_in": "box"
+    }
+  ],
+  "rewards": [
+    {
+      "item": "minecraft:torch",
+      "count": 32
+    }
+  ]
+}

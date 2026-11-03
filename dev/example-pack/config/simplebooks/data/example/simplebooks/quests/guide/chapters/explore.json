@@ -1,0 +1,7 @@
+{
+  "title": "Out and About",
+  "icon": "minecraft:compass",
+  "sort": 2,
+  "layout": "checklist",
+  "text": "Every built-in task type, one quest each."
+}

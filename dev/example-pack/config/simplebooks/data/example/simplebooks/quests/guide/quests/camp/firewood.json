@@ -1,0 +1,26 @@
+{
+  "chapter": "camp",
+  "sort": 1,
+  "title": "Firewood",
+  "icon": "minecraft:oak_log",
+  "text": "The fire needs feeding. Hand in logs again once it burns down, up to three times.",
+  "repeat": {
+    "cooldown": "40s",
+    "limit": 3
+  },
+  "toast": "both",
+  "tasks": [
+    {
+      "id": "l",
+      "type": "item",
+      "item": "#minecraft:logs",
+      "count": 8,
+      "consume": true
+    }
+  ],
+  "rewards": [
+    {
+      "item": "minecraft:bread"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "chapter": "paths",
+  "sort": 4,
+  "title": "Race to the east tower",
+  "icon": "minecraft:feather",
+  "text": "Whoever reaches a tower first claims it for the team.",
+  "exclusive": {
+    "group": "race",
+    "lock_on": "complete"
+  },
+  "tasks": [
+    {
+      "id": "c",
+      "type": "checkbox",
+      "text": "Reach the east tower"
+    }
+  ],
+  "rewards": [
+    {
+      "item": "minecraft:bread"
+    }
+  ]
+}

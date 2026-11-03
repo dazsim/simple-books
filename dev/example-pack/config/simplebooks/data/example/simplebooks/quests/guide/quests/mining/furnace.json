@@ -1,0 +1,16 @@
+{
+  "chapter": "mining",
+  "sort": 2,
+  "title": "Build a furnace",
+  "icon": "minecraft:furnace",
+  "depends": [
+    "stone"
+  ],
+  "tasks": [
+    {
+      "id": "f",
+      "type": "craft",
+      "item": "minecraft:furnace"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "title": "Crossroads",
+  "icon": "minecraft:oak_sign",
+  "sort": 10,
+  "layout": "checklist",
+  "text": "Some roads split. The team owner picks which one the team walks."
+}
