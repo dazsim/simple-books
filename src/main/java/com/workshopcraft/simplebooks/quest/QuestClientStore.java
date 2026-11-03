@@ -20,6 +20,7 @@ public final class QuestClientStore {
     /** Set by the client entrypoint: shows a toast, opens a book. */
     public static Consumer<JsonObject> toasts = o -> {};
     public static Consumer<JsonObject> opens = o -> {};
+    public static Consumer<JsonObject> boxes = o -> {};
 
     /** Team and quest progress; see QuestEngine.state for the shape. */
     public static JsonObject state() {
@@ -54,6 +55,7 @@ public final class QuestClientStore {
             }
             case "toast" -> toasts.accept(o);
             case "open" -> opens.accept(o);
+            case "box" -> boxes.accept(o);
             default -> {}
         }
     }

@@ -76,14 +76,14 @@ final class QuestSlots {
 
     // ---------- lookups ----------
 
-    private static QuestDefs.@Nullable Book bookOf(String id) {
+    static QuestDefs.@Nullable Book bookOf(String id) {
         for (QuestDefs.Book b : QuestClientStore.defs().books().values()) {
             if (id.startsWith(b.id() + "/")) return b;
         }
         return null;
     }
 
-    private static QuestDefs.@Nullable Quest def(String id) {
+    static QuestDefs.@Nullable Quest def(String id) {
         QuestDefs.Book b = bookOf(id);
         return b == null ? null : b.quests().get(id);
     }
@@ -306,7 +306,7 @@ final class QuestSlots {
         return tr("simplebooks.quest.tag", named("tag.item", id));
     }
 
-    private static @Nullable ItemRef taskIcon(QuestDefs.Task t) {
+    static @Nullable ItemRef taskIcon(QuestDefs.Task t) {
         if (!t.items().isEmpty()) return new ItemRef(t.items(), null, 0, null);
         String id = switch (t.type()) {
             case "kill" -> t.entity() != null && ItemRef.known(t.entity() + "_spawn_egg") ? t.entity() + "_spawn_egg" : "minecraft:iron_sword";
@@ -397,9 +397,13 @@ final class QuestSlots {
         JsonObject m = null;
         if (qs.has("g") && qs.getAsJsonObject("g").has(task)) m = qs.getAsJsonObject("g").getAsJsonObject(task);
         else if (qs.has("sh") && qs.getAsJsonObject("sh").has(task)) m = qs.getAsJsonObject("sh").getAsJsonObject(task);
-        if (m == null || m.size() < 1 || teamSize() < 2) return "";
+        if (m == null || m.size() < 1 || teamSize() < 2 && !m.has(com.workshopcraft.simplebooks.quest.HandInBoxes.CREDIT)) return "";
         List<String> parts = new ArrayList<>();
-        for (var e : m.entrySet()) if (e.getValue().getAsLong() > 0) parts.add(e.getKey() + " " + e.getValue().getAsLong());
+        for (var e : m.entrySet()) {
+            if (e.getValue().getAsLong() <= 0) continue;
+            String who = e.getKey().equals(com.workshopcraft.simplebooks.quest.HandInBoxes.CREDIT) ? Language.getInstance().getOrDefault("simplebooks.box.credit") : e.getKey();
+            parts.add(who + " " + e.getValue().getAsLong());
+        }
         return String.join(", ", parts);
     }
 

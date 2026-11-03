@@ -86,5 +86,11 @@
   "simplebooks.toast.rewards_one": "1 quest to claim",
   "simplebooks.toast.rewards_many": "%s quests to claim",
   "simplebooks.quest.tag": "any %s",
-  "simplebooks.team.solo": "Playing on your own"
+  "simplebooks.team.solo": "Playing on your own",
+  "simplebooks.box.any": "Any quest",
+  "simplebooks.box.any_hint": "Fills open tasks in book order",
+  "simplebooks.box.team": "Team: %s",
+  "simplebooks.box.no_team": "No team",
+  "simplebooks.box.idle": "Nothing to hand in",
+  "simplebooks.box.credit": "Hand-in box"
 }

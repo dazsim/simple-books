@@ -3,6 +3,7 @@ package com.workshopcraft.simplebooks.fabric;
 import com.workshopcraft.simplebooks.SimpleBooks;
 import com.workshopcraft.simplebooks.client.BookRegistry;
 import com.workshopcraft.simplebooks.client.BookStandRenderer;
+import com.workshopcraft.simplebooks.client.HandInBoxRenderer;
 import com.workshopcraft.simplebooks.client.SimpleBooksClient;
 import com.workshopcraft.simplebooks.quest.QuestActionPacket;
 import com.workshopcraft.simplebooks.quest.QuestClientStore;
@@ -61,6 +62,7 @@ public class SimpleBooksFabricClient implements ClientModInitializer {
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> QuestClientStore.clear());
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, ctx) -> dispatcher.register(SimpleBooksClient.command()));
         BlockEntityRendererRegistry.register(SimpleBooksContent.STAND_ENTITY, BookStandRenderer::new);
+        BlockEntityRendererRegistry.register(SimpleBooksContent.HAND_IN_BOX_ENTITY, HandInBoxRenderer::new);
     }
 
     //? if <26.1 {

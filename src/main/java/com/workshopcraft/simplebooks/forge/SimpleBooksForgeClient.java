@@ -3,6 +3,7 @@ package com.workshopcraft.simplebooks.forge;
 import com.workshopcraft.simplebooks.SimpleBooks;
 import com.workshopcraft.simplebooks.client.BookRegistry;
 import com.workshopcraft.simplebooks.client.BookStandRenderer;
+import com.workshopcraft.simplebooks.client.HandInBoxRenderer;
 import com.workshopcraft.simplebooks.client.SimpleBooksClient;
 import com.workshopcraft.simplebooks.registry.SimpleBooksContent;
 import net.minecraftforge.client.event.EntityRenderersEvent;
@@ -22,6 +23,7 @@ final class SimpleBooksForgeClient {
                 com.workshopcraft.simplebooks.quest.QuestClientStore.clear());
         modBus.addListener((RegisterClientReloadListenersEvent e) -> e.registerReloadListener(new BookRegistry()));
         modBus.addListener((EntityRenderersEvent.RegisterRenderers e) -> e.registerBlockEntityRenderer(SimpleBooksContent.STAND_ENTITY, BookStandRenderer::new));
+        modBus.addListener((EntityRenderersEvent.RegisterRenderers e) -> e.registerBlockEntityRenderer(SimpleBooksContent.HAND_IN_BOX_ENTITY, HandInBoxRenderer::new));
         MinecraftForge.EVENT_BUS.addListener((RegisterClientCommandsEvent e) -> e.getDispatcher().register(SimpleBooksClient.command()));
     }
 }

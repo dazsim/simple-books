@@ -3,6 +3,7 @@ package com.workshopcraft.simplebooks.neoforge;
 import com.workshopcraft.simplebooks.SimpleBooks;
 import com.workshopcraft.simplebooks.client.BookRegistry;
 import com.workshopcraft.simplebooks.client.BookStandRenderer;
+import com.workshopcraft.simplebooks.client.HandInBoxRenderer;
 import com.workshopcraft.simplebooks.client.SimpleBooksClient;
 import com.workshopcraft.simplebooks.registry.SimpleBooksContent;
 import net.neoforged.api.distmarker.Dist;
@@ -33,6 +34,7 @@ public class SimpleBooksNeoForgeClient {
         modBus.addListener((RegisterClientReloadListenersEvent e) -> e.registerReloadListener(new BookRegistry()));
         *///?}
         modBus.addListener((EntityRenderersEvent.RegisterRenderers e) -> e.registerBlockEntityRenderer(SimpleBooksContent.STAND_ENTITY, BookStandRenderer::new));
+        modBus.addListener((EntityRenderersEvent.RegisterRenderers e) -> e.registerBlockEntityRenderer(SimpleBooksContent.HAND_IN_BOX_ENTITY, HandInBoxRenderer::new));
         NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent.LoggingOut e) ->
                 com.workshopcraft.simplebooks.quest.QuestClientStore.clear());
         NeoForge.EVENT_BUS.addListener((RegisterClientCommandsEvent e) -> e.getDispatcher().register(SimpleBooksClient.command()));
