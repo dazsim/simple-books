@@ -859,6 +859,7 @@ public final class QuestEngine {
         if (r == null) return false;
         Map<String, Prog> m = prog(t);
         Prog p = m.computeIfAbsent(quest, k -> new Prog("in_progress"));
+        if (p.complete()) return false;
         for (Task task : r.quest().tasks()) p.tasks.put(task.id(), target(r.quest(), task));
         complete(t, r.quest(), p);
         refresh(t);

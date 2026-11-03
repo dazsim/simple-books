@@ -235,12 +235,19 @@ public final class QuestCommands {
         Team t = team(c);
         if (t == null) return 0;
         String ref = IdentifierArgument.getId(c, "quest").toString();
-        int n = 0;
+        int n = 0, found = 0;
         for (Book b : QuestManager.defs().books().values())
             for (Quest q : b.quests().values())
-                if (q.id().equals(ref) || ref.equals(q.chapter()) || ref.equals(b.id())) if (op.apply(t, q)) n++;
+                if (q.id().equals(ref) || ref.equals(q.chapter()) || ref.equals(b.id())) {
+                    found++;
+                    if (op.apply(t, q)) n++;
+                }
+        if (found == 0) {
+            c.getSource().sendFailure(Component.literal("No quest, chapter or book " + ref));
+            return 0;
+        }
         if (n == 0) {
-            c.getSource().sendFailure(Component.literal("Nothing to change for " + ref));
+            c.getSource().sendFailure(Component.literal("Nothing to change for " + ref + ", already in that state"));
             return 0;
         }
         ok(c, verb + " " + n + " quest" + (n == 1 ? "" : "s") + " for " + label(t));
@@ -300,7 +307,11 @@ public final class QuestCommands {
         String quest = IdentifierArgument.getId(c, "quest").toString(), task = StringArgumentType.getString(c, "task");
         long v = LongArgumentType.getLong(c, "value");
         QuestEngine.Ref r = QuestEngine.find(quest);
-        if (r == null || r.quest().tasks().stream().noneMatch(x -> x.id().equals(task))) {
+        if (r == null) {
+            c.getSource().sendFailure(Component.literal("No quest " + quest));
+            return 0;
+        }
+        if (r.quest().tasks().stream().noneMatch(x -> x.id().equals(task))) {
             c.getSource().sendFailure(Component.literal("No task " + task + " in " + quest));
             return 0;
         }
