@@ -73,6 +73,8 @@ final class QuestSlots {
             case "quest_info" -> info(x, y, w, h);
             case "quest_lock" -> lock(x, y, w, h);
             case "team_list" -> team(slot.has("show") ? slot.get("show").getAsString() : "members", x, y, w, h);
+            case "quest_board" -> board(slot, x, y, w, h);
+            case "board_info" -> boardInfo(x, y, w, h);
             default -> {}
         }
     }
@@ -278,12 +280,13 @@ final class QuestSlots {
     private void row(QuestDefs.Book qb, QuestDefs.Quest q, float x, float y, float w, float rh) {
         JsonObject qs = st(q.id());
         String status = str(qs, "s");
-        boolean done = status.equals("complete"), locked = status.equals("locked");
-        int ink = s.color(done ? "$done" : locked ? "$locked" : "$ink");
+        boolean done = status.equals("complete"), closed = status.equals("closed"), locked = status.equals("locked") || closed;
+        int ink = s.color(done ? "$done" : closed ? "$closed" : locked ? "$locked" : "$ink");
         float by = y + (rh - 28) / 2;
-        boolean tick = !done && !locked && q.tasks().size() == 1 && q.tasks().get(0).type().equals("checkbox");
+        boolean tick = !done && !locked && !qs.has("pick") && q.tasks().size() == 1 && q.tasks().get(0).type().equals("checkbox");
         if (tick && over(x, by, x + 28, by + 28)) s.fill(x - 3, by - 3, x + 31, by + 31, s.color("$rule"));
         box(x, by, 28, done, ink);
+        if (closed) s.fill(x + 6, by + 12, x + 22, by + 16, ink);
         if (q.optional()) dashed(x - 4, by - 4, x + 32, by + 32, s.color("$page"));
         if (tick) s.hits.add(new Spread.Hit(x, by, x + 28, by + 28,
                 new Act("checkbox", q.id(), q.tasks().get(0).id(), 0, "", tr("simplebooks.quest.tick"))));
@@ -296,8 +299,9 @@ final class QuestSlots {
         float right = x + w - (wait ? 40 : 4);
         titled(q, tx, y + rh / 2 - 19, right - tx, ink);
         Component sub = sub(qb, q, qs, status);
-        int subCol = s.color(wait ? "$claim" : locked ? "$locked" : "$soft");
+        int subCol = s.color(wait ? "$claim" : closed ? "$closed" : locked ? "$locked" : "$soft");
         s.text(Component.literal(fit(sub, right - tx)), tx, y + rh / 2 + 2, 1, subCol);
+        if (closed) s.fill(tx, y + rh / 2 - 10, tx + Math.min(right - tx, s.textW(Texts.of(q.title()), 1)), y + rh / 2 - 8, ink);
         if (wait) {
             float bx = x + w - 30, cy = y + (rh - 26) / 2;
             s.roundRect(bx, cy, bx + 26, cy + 26, 13, s.color("$claim"));
@@ -307,7 +311,18 @@ final class QuestSlots {
         s.hits.add(new Spread.Hit(x, y, x + w, y + rh, QuestBook.detailId(q.id())));
     }
 
+    private static boolean owner() {
+        JsonObject st = QuestClientStore.state();
+        return st.has("team") && st.getAsJsonObject("team").has("owner_is_me") && st.getAsJsonObject("team").get("owner_is_me").getAsBoolean();
+    }
+
     private Component sub(QuestDefs.Book qb, QuestDefs.Quest q, JsonObject qs, String status) {
+        if (status.equals("closed")) return tr("simplebooks.quest.closed");
+        if (qs.has("pick") && !status.equals("locked")) return tr(owner() ? "simplebooks.quest.pick_path" : "simplebooks.quest.owner_picks");
+        if (q.pool() != null && status.equals("complete") && qs.has("again")) {
+            long left = againLeft(qs);
+            if (!waiting(q)) return left > 0 ? tr("simplebooks.board.new_in", dur(left)) : left < 0 ? tr("simplebooks.board.stays") : tr("simplebooks.board.new_soon");
+        }
         switch (status) {
             case "locked" -> {
                 List<String> need = new ArrayList<>();
@@ -731,19 +746,22 @@ final class QuestSlots {
         if (q == null) return;
         JsonObject qs = st(quest);
         String status = str(qs, "s");
-        boolean open = status.equals("available") || status.equals("in_progress");
+        boolean open = (status.equals("available") || status.equals("in_progress")) && !qs.has("pick");
         Component state = switch (status) {
+            case "available" -> qs.has("pick") ? tr(owner() ? "simplebooks.quest.pick_path" : "simplebooks.quest.owner_picks") : tr("simplebooks.quest.state.available");
+            case "closed" -> tr("simplebooks.quest.state.closed");
             case "complete" -> tr("simplebooks.quest.state.complete");
             case "in_progress" -> tr("simplebooks.quest.state.in_progress");
-            case "available" -> tr("simplebooks.quest.state.available");
             default -> sub(qb, q, qs, "locked");
         };
         Component rep = repeatLine(q, qs);
         if (rep != null && !status.equals("locked")) state = state.copy().append(", ").append(rep);
-        s.text(Component.literal(fit(state, w)), x, y, 1, s.color(status.equals("complete") ? "$done" : status.equals("locked") ? "$locked" : "$soft"));
+        s.text(Component.literal(fit(state, w)), x, y, 1, s.color(status.equals("complete") ? "$done" : status.equals("closed") ? "$closed" : status.equals("locked") ? "$locked" : "$soft"));
         y += 30;
         List<Component> notes = new ArrayList<>();
         if (q.optional()) notes.add(tr("simplebooks.quest.side_note"));
+        if (q.exclusive() != null && q.pool() == null)
+            notes.add(tr(q.exclusive().lockOn().equals("choose") ? "simplebooks.quest.path_note" : "simplebooks.quest.race_note"));
         if (q.repeat() != null) notes.add(tr(q.repeat().limit() > 0 ? "simplebooks.quest.repeat_limit" : "simplebooks.quest.repeat_every",
                 dur(q.repeat().cooldown()), q.repeat().limit()));
         for (Component n : notes) {
@@ -916,8 +934,22 @@ final class QuestSlots {
     private void buttons(float x, float y, float w, float h) {
         String quest = str(page, "quest");
         QuestDefs.Quest q = def(quest);
-        if (q == null || !hasRewards(q)) return;
+        if (q == null) return;
         JsonObject qs = st(quest);
+        if (qs.has("pick") && !str(qs, "s").equals("locked")) {
+            float by = y + (h - 52) / 2;
+            if (!owner()) {
+                s.ctext(tr("simplebooks.quest.owner_picks"), x + w / 2, by + 18, 1, s.color("$soft"));
+                return;
+            }
+            String key = "path:" + quest;
+            boolean conf = confirming.contains(key);
+            Component lb = tr(conf ? "simplebooks.quest.take_confirm" : "simplebooks.quest.take_path");
+            float bw = Math.max(240, buttonW(lb));
+            button(x + (w - bw) / 2, by, bw, 52, lb, conf ? new Act("choose", quest, "", 0, "", null) : new Act("confirm", "", "", 0, key, null), null);
+            return;
+        }
+        if (!hasRewards(q)) return;
         boolean done = qs.has("claimed");
         boolean claimed = done && qs.get("claimed").getAsBoolean();
         int tiers = q.tiers().size(), next = tiersClaimed(qs);
@@ -938,6 +970,90 @@ final class QuestSlots {
             return;
         }
         button(bx, by, bw, 52, lb, new Act("claim", quest, "", pick, "", null), null);
+    }
+
+    // ---------- board ----------
+
+    static List<String> offers(String pool) {
+        JsonObject st = QuestClientStore.state();
+        List<String> out = new ArrayList<>();
+        if (st.has("pools") && st.getAsJsonObject("pools").has(pool))
+            for (JsonElement e : st.getAsJsonObject("pools").getAsJsonArray(pool)) out.add(e.getAsString());
+        return out;
+    }
+
+    /** Done pool quests no longer offered whose rewards are still waiting. */
+    static List<QuestDefs.Quest> unclaimed(QuestDefs.Book qb, String pool) {
+        List<String> on = offers(pool);
+        List<QuestDefs.Quest> out = new ArrayList<>();
+        for (QuestDefs.Quest q : qb.quests().values())
+            if (pool.equals(q.pool()) && !on.contains(q.id()) && waiting(q)) out.add(q);
+        out.sort(java.util.Comparator.comparing(QuestDefs.Quest::id));
+        return out;
+    }
+
+    private void board(JsonObject slot, float x, float y, float w, float h) {
+        String pool = str(page, "pool");
+        QuestDefs.Book qb = bookOf(pool);
+        if (qb == null) return;
+        if (page.has("locked")) {
+            lock(x, y, w, h);
+            return;
+        }
+        float rh = rowHeight(slot);
+        List<String> on = offers(pool);
+        s.text(tr("simplebooks.board.offers"), x, y, 1, s.color("$head"));
+        s.rule(x, x + w, y + 20);
+        y += 34;
+        if (on.isEmpty()) {
+            s.text(tr("simplebooks.board.empty"), x, y + 8, 1, s.color("$soft"));
+            return;
+        }
+        for (int i = 0; i < on.size() && (i + 1) * rh <= h - 34; i++) {
+            QuestDefs.Quest q = qb.quests().get(on.get(i));
+            if (q == null) continue;
+            float ry = y + i * rh;
+            s.fill(x, ry + 4, x + w, ry + rh - 4, s.color("$line") & 0x60FFFFFF);
+            row(qb, q, x + 10, ry, w - 20, rh);
+        }
+    }
+
+    private void boardInfo(float x, float y, float w, float h) {
+        String pool = str(page, "pool");
+        QuestDefs.Book qb = bookOf(pool);
+        QuestDefs.Pool p = qb == null ? null : qb.pools().get(pool);
+        if (p == null || page.has("locked")) return;
+        float end = y + h;
+        s.para(p.refresh() > 0 ? tr("simplebooks.board.refresh", dur(p.refresh())) : tr("simplebooks.board.no_refresh"), x, y + 4, w, 1, s.color("$soft"), 20, "left");
+        y += 56;
+        if (p.rerollAllowed()) {
+            List<String> parts = new ArrayList<>();
+            for (QuestDefs.Reward c : p.rerollCost()) {
+                if (c.kind().equals("item") && c.item() != null) parts.add(tr("simplebooks.count", c.count(), ref(c.item()).name()).getString());
+                else if (c.kind().equals("xp_levels")) parts.add(tr("simplebooks.reward.levels", c.count()).getString());
+            }
+            Component lb = tr("simplebooks.board.reroll");
+            float bw = Math.max(200, buttonW(lb));
+            boolean any = false;
+            for (String id : offers(pool)) if (!str(st(id), "s").equals("complete")) any = true;
+            button(x, y, bw, 48, lb, any ? new Act("reroll", pool, "", 0, "", null) : null, tr("simplebooks.board.empty"));
+            Component note = parts.isEmpty() ? tr("simplebooks.board.reroll_free") : tr("simplebooks.board.reroll_cost", String.join(", ", parts));
+            s.para(note, x + bw + 18, y + 4, w - bw - 18, 1, s.color("$soft"), 20, "left");
+            y += 80;
+        } else {
+            s.text(tr("simplebooks.board.no_reroll"), x, y, 1, s.color("$soft"));
+            y += 40;
+        }
+        List<QuestDefs.Quest> wait = unclaimed(qb, pool);
+        if (wait.isEmpty()) return;
+        s.text(tr("simplebooks.board.waiting"), x, y, 1, s.color("$head"));
+        s.rule(x, x + w, y + 20);
+        y += 30;
+        for (QuestDefs.Quest q : wait) {
+            if (y + 58 > end) break;
+            row(qb, q, x, y, w, 58);
+            y += 58;
+        }
     }
 
     // ---------- team ----------

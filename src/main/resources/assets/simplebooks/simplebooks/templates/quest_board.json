@@ -1,0 +1,16 @@
+{
+  "extends": "simplebooks:recipe",
+  "slots": {
+    "left.need": null,
+    "left.steps": null,
+    "left.turn": null,
+    "left.text": { "type": "text", "box": [0, 100, 644, 60], "bind": "text", "style": "note", "optional": true },
+    "left.offers": { "type": "quest_board", "box": [0, 172, 644, 696], "row_height": 72 },
+    "right.title": { "bind": "right_title" },
+    "right.subtitle": null,
+    "right.rule": null,
+    "right.steps": null,
+    "right.links": null,
+    "right.board": { "type": "board_info", "box": [0, 18, 644, 850] }
+  }
+}
