@@ -712,7 +712,7 @@ public class Spread {
             }
             case "rule" -> rule(x, x + w, y);
             case "quest_list", "task_list", "reward_list", "quest_buttons", "team_list", "quest_graph", "quest_info", "quest_lock" -> {
-                Float above = slot.has("below") ? bottoms.get(slot.get("below").getAsString()) : null;
+                Float above = below(slot);
                 if (above != null) {
                     float ny = above + num(slot, "gap", 14);
                     h += y - ny;
@@ -729,7 +729,7 @@ public class Spread {
             }
             case "step_rows" -> {
                 // start under the slot named in "below" when it drew something, like a need list of any length
-                Float above = slot.has("below") ? bottoms.get(slot.get("below").getAsString()) : null;
+                Float above = below(slot);
                 if (above != null) {
                     float ny = above + num(slot, "gap", 14);
                     h += y - ny;
@@ -746,7 +746,10 @@ public class Spread {
                 Float need = null;
                 for (var o : bottoms.entrySet())
                     if (o.getKey().startsWith(left ? "left." : "right.") && o.getKey().endsWith(".need")) need = o.getValue();
-                if (stepRows(slot, x, y, w, h, above == null && need != null ? y - need - 14 : 0)) body[sd] = true;
+                if (stepRows(slot, x, y, w, h, above == null && need != null ? y - need - 14 : 0)) {
+                    body[sd] = true;
+                    bottoms.put(name, stepsEnd);
+                }
             }
             case "link_list" -> {
                 if (val != null && val.isJsonArray() && !val.getAsJsonArray().isEmpty()) {
@@ -922,6 +925,20 @@ public class Spread {
     // ---------- steps ----------
 
     /** Lays steps out from the cursor; spare is room above the box that a step could have used. Returns true when any were placed. */
+    private float stepsEnd;
+
+    /** Bottom of the lowest drawn slot named in "below", one name or a list. */
+    private @Nullable Float below(JsonObject slot) {
+        if (!slot.has("below")) return null;
+        JsonElement b = slot.get("below");
+        Float out = null;
+        for (JsonElement e : b.isJsonArray() ? b.getAsJsonArray() : List.of(b)) {
+            Float v = bottoms.get(e.getAsString());
+            if (v != null && (out == null || v > out)) out = v;
+        }
+        return out;
+    }
+
     private boolean stepRows(JsonObject slot, float x, float y, float w, float h, float spare) {
         String bind = slot.get("bind").getAsString();
         JsonElement list = bound(page.json(), bind);
@@ -975,6 +992,7 @@ public class Spread {
             i++;
         }
         if (i >= a.size()) roomLeft = Math.max(0, bottom - yy);
+        stepsEnd = yy;
         cursors.put(bind, i);
         return placed;
     }

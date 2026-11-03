@@ -176,12 +176,15 @@ final class QuestBook {
                 for (int i = 0; i < qs.size(); i++) {
                     QuestDefs.Quest q = qs.get(i);
                     JsonObject pj = new JsonObject();
+                    if (q.page() != null && !status(q.id()).equals("locked"))
+                        for (var pe : q.page().entrySet())
+                            if (!Set.of("template", "section", "sort", "contents", "quest", "chapter", "id", "title", "right_title").contains(pe.getKey())) pj.add(pe.getKey(), pe.getValue());
                     pj.addProperty("template", DETAIL.toString());
                     pj.addProperty("section", sec);
                     pj.addProperty("title", q.title());
                     if (!q.subtitle().isEmpty()) pj.addProperty("subtitle", q.subtitle());
                     if (!q.icon().isEmpty()) pj.addProperty("icon", q.icon());
-                    if (!q.text().isEmpty()) pj.addProperty("text", q.text());
+                    if (!q.text().isEmpty() && !pj.has("text")) pj.addProperty("text", q.text());
                     pj.addProperty("right_title", "simplebooks.quest.rewards");
                     pj.addProperty("quest", q.id());
                     pj.addProperty("sort", -90000 + i);
