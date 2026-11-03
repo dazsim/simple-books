@@ -289,6 +289,13 @@ public final class QuestCommands {
                 if (p != null && !s.equals("complete"))
                     for (QuestDefs.Task task : q.tasks())
                         line.append(" ").append(task.id()).append("=").append(p.count(task.id())).append("/").append(QuestEngine.target(q, task));
+                if (p != null && !q.tiers().isEmpty()) line.append(" tier ").append(p.tier).append("/").append(q.tiers().size());
+                if (p != null && q.repeat() != null) {
+                    long left = QuestEngine.cooldownLeft(q, p);
+                    line.append(" done ").append(QuestEngine.lastCycle(p) + 1).append("x");
+                    if (left > 0) line.append(", again in ").append(left).append("s");
+                    else if (left < 0) line.append(", limit reached");
+                }
                 String text = line.toString();
                 c.getSource().sendSuccess(() -> Component.literal(text).withStyle(s.equals("complete") ? ChatFormatting.GREEN : ChatFormatting.WHITE), false);
                 n++;

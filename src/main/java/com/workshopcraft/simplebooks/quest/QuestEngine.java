@@ -392,8 +392,40 @@ public final class QuestEngine {
     }
 
     static boolean questComplete(Team t, String quest) {
-        Prog p = prog(t).get(quest);
-        return p != null && p.complete();
+        return done(prog(t).get(quest));
+    }
+
+    /** Done for depends: complete now, an earlier repeat cycle done, or the first tier reached. */
+    static boolean done(@Nullable Prog p) {
+        return p != null && (p.complete() || p.cycle > 0 || p.tier >= 1);
+    }
+
+    /** The newest finished cycle, or -1 if none. */
+    static int lastCycle(Prog p) {
+        return p.complete() ? p.cycle : p.cycle - 1;
+    }
+
+    /** Seconds until a repeat quest opens again; 0 when not waiting, -1 when the limit is used up. */
+    static long cooldownLeft(Quest q, Prog p) {
+        if (q.repeat() == null || !p.complete()) return 0;
+        if (q.repeat().limit() > 0 && p.cycle + 1 >= q.repeat().limit()) return -1;
+        return Math.max(0, p.completedAt + q.repeat().cooldown() - now());
+    }
+
+    /** A repeat quest whose cooldown ran out starts a new cycle. */
+    static boolean reopen(Team t, Quest q, Prog p) {
+        if (q.repeat() == null || !p.complete() || cooldownLeft(q, p) != 0) return false;
+        p.cycle++;
+        p.state = "in_progress";
+        p.openAt = now();
+        p.tasks.clear();
+        p.given.clear();
+        Map<String, Map<String, Long>> s = shares.get(t.id);
+        if (s != null) s.keySet().removeIf(k -> k.startsWith(q.id() + "|"));
+        changed(t);
+        if (q.toast().equals("unlock") || q.toast().equals("both"))
+            for (ServerPlayer o : online(t)) toast(o, "again", q.id(), 0);
+        return true;
     }
 
     static boolean chapterDone(Team t, Book b, String chapter) {
@@ -424,7 +456,7 @@ public final class QuestEngine {
                 }
             }
             Prog p = b.quests().containsKey(base) ? prog(t).get(base) : null;
-            boolean met = p != null && (p.complete() || tier > 0 && p.tier >= tier);
+            boolean met = tier > 0 ? p != null && (p.complete() || p.tier >= tier) : done(p);
             if (any && met) return true;
             if (!any && !met) return false;
         }
@@ -496,6 +528,10 @@ public final class QuestEngine {
             boolean more = false;
             for (Book b : defs().books().values())
                 for (Quest q : b.quests().values()) {
+                    if (q.repeat() != null) {
+                        Prog old = prog(t).get(q.id());
+                        if (old != null) reopen(t, q, old);
+                    }
                     Prog p = openProg(t, b, q);
                     if (p == null) continue;
                     if (!on.isEmpty()) poll(t, b, q, p, on);
@@ -520,8 +556,12 @@ public final class QuestEngine {
         int n = 0;
         for (var tier : q.tiers()) if (c >= tier.count()) n++;
         if (n > p.tier) {
+            int was = p.tier;
             p.tier = n;
             changed(t);
+            if (n >= q.tiers().size() || q.toast().equals("none")) return;
+            String kind = was == 0 && q.visibility().equals("secret") ? "secret" : "tier";
+            for (ServerPlayer o : online(t)) toast(o, kind, q.id(), n);
         }
     }
 
@@ -624,12 +664,14 @@ public final class QuestEngine {
     }
 
     private static void complete(Team t, Quest q, Prog p) {
+        int was = p.tier;
         p.state = "complete";
         p.completedAt = now();
         tier(t, q, p);
         changed(t);
-        boolean toast = q.toast().equals("complete") || q.toast().equals("both");
-        for (ServerPlayer o : online(t)) if (toast) toast(o, "complete", q.id(), 0);
+        boolean secret = q.visibility().equals("secret") && p.cycle == 0 && was == 0;
+        boolean toast = secret ? !q.toast().equals("none") : q.toast().equals("complete") || q.toast().equals("both");
+        for (ServerPlayer o : online(t)) if (toast) toast(o, secret ? "secret" : "complete", q.id(), 0);
     }
 
     static @Nullable Ref find(String quest) {
@@ -788,15 +830,29 @@ public final class QuestEngine {
         Quest q = r.quest();
         Team t = team(player);
         Prog p = prog(t).get(quest);
-        if (p == null || !p.complete()) return Result.no("That quest is not complete");
+        if (p == null || !done(p)) return Result.no("That quest is not complete");
         Map<String, QuestSave.Claim> mine = world.claims(player.getUUID().toString());
         QuestSave.Claim c = mine.get(quest);
-        if (c != null && c.cycle() == p.cycle) return Result.no("Already claimed");
-        if (!q.chooseOne().isEmpty() && (choice < 0 || choice >= q.chooseOne().size())) return Result.no("Pick one reward first");
-        List<Reward> give = new ArrayList<>(q.rewards());
-        for (int i = 0; i < Math.min(p.tier, q.tiers().size()); i++) give.addAll(q.tiers().get(i).rewards());
-        if (!q.chooseOne().isEmpty()) give.add(q.chooseOne().get(choice));
-        mine.put(quest, new QuestSave.Claim(p.cycle, p.tier, q.chooseOne().isEmpty() ? -1 : choice));
+        List<Reward> give = new ArrayList<>();
+        boolean pick = !q.chooseOne().isEmpty();
+        if (!q.tiers().isEmpty()) {
+            int next = (c == null ? 0 : c.tier()) + 1;
+            if (p.tier < next) return Result.no("Already claimed");
+            boolean last = next >= q.tiers().size();
+            pick &= last;
+            if (pick && (choice < 0 || choice >= q.chooseOne().size())) return Result.no("Pick one reward first");
+            give.addAll(q.tiers().get(next - 1).rewards());
+            if (last) give.addAll(q.rewards());
+            if (pick) give.add(q.chooseOne().get(choice));
+            mine.put(quest, new QuestSave.Claim(0, next, pick ? choice : -1));
+        } else {
+            int last = lastCycle(p);
+            if (c != null && c.cycle() == last) return Result.no("Already claimed");
+            if (pick && (choice < 0 || choice >= q.chooseOne().size())) return Result.no("Pick one reward first");
+            give.addAll(q.rewards());
+            if (pick) give.add(q.chooseOne().get(choice));
+            mine.put(quest, new QuestSave.Claim(last, 0, pick ? choice : -1));
+        }
         changed(t);
         for (Reward w : give) reward(player, w);
         flush();
@@ -841,11 +897,15 @@ public final class QuestEngine {
         for (Book b : defs().books().values())
             for (Quest q : b.quests().values()) {
                 Prog p = prog(t).get(q.id());
-                if (p == null || !p.complete() || !hasRewards(q)) continue;
-                QuestSave.Claim c = mine.get(q.id());
-                if (c == null || c.cycle() != p.cycle) n++;
+                if (p != null && hasRewards(q) && claimable(q, p, mine.get(q.id()))) n++;
             }
         return n;
+    }
+
+    static boolean claimable(Quest q, Prog p, QuestSave.@Nullable Claim c) {
+        if (!q.tiers().isEmpty()) return p.tier > (c == null ? 0 : c.tier());
+        int last = lastCycle(p);
+        return last >= 0 && (c == null || c.cycle() != last);
     }
 
     static boolean hasRewards(Quest q) {
@@ -881,7 +941,7 @@ public final class QuestEngine {
 
     public static boolean adminUncomplete(Team t, String quest) {
         Prog p = prog(t).get(quest);
-        if (p == null || !p.complete()) return false;
+        if (p == null || !p.complete() && p.tier == 0) return false;
         p.state = "in_progress";
         p.completedAt = 0;
         p.tasks.clear();
@@ -996,20 +1056,25 @@ public final class QuestEngine {
             for (Quest q : b.quests().values()) {
                 JsonObject qo = new JsonObject();
                 String st = status(t, b, q);
-                if (q.visibility().equals("secret") && !st.equals("complete")) st = "hidden";
-                qo.addProperty("s", st);
                 Prog p = prog(t).get(q.id());
+                if (q.visibility().equals("secret") && !done(p)) st = "hidden";
+                qo.addProperty("s", st);
                 if (p != null) {
                     JsonObject tasks = new JsonObject();
                     p.tasks.forEach(tasks::addProperty);
                     qo.add("t", tasks);
                     if (p.tier > 0) qo.addProperty("tier", p.tier);
                     if (!p.given.isEmpty()) qo.add("g", byName(p.given));
-                    if (p.complete()) {
-                        QuestSave.Claim c = claims.get(q.id());
-                        boolean claimed = c != null && c.cycle() == p.cycle;
-                        qo.addProperty("claimed", claimed);
-                        if (claimed && c.choice() >= 0) qo.addProperty("choice", c.choice());
+                    QuestSave.Claim c = claims.get(q.id());
+                    if (done(p)) {
+                        qo.addProperty("claimed", !claimable(q, p, c));
+                        if (c != null && c.choice() >= 0 && !claimable(q, p, c)) qo.addProperty("choice", c.choice());
+                    }
+                    if (!q.tiers().isEmpty()) qo.addProperty("ct", c == null ? 0 : c.tier());
+                    if (q.repeat() != null) {
+                        qo.addProperty("runs", lastCycle(p) + 1);
+                        long left = cooldownLeft(q, p);
+                        if (left != 0) qo.addProperty("again", left);
                     }
                 }
                 Map<String, Map<String, Long>> sh = new LinkedHashMap<>();
