@@ -24,7 +24,9 @@ import java.util.Set;
  */
 final class QuestBook {
     static final Identifier LIST = SimpleBooks.id("quest_list"), DETAIL = SimpleBooks.id("quest"), TEAM = SimpleBooks.id("team"),
-            TREE = SimpleBooks.id("quest_tree"), STORY = SimpleBooks.id("quest_story");
+            TREE = SimpleBooks.id("quest_tree"), STORY = SimpleBooks.id("quest_story"), BOARD = SimpleBooks.id("quest_board"),
+            MORE = SimpleBooks.id("quest_more");
+    private static final int MORE_MAX = 8;
 
     private static final Map<Identifier, Book> cache = new HashMap<>();
     private static final Set<Identifier> none = new HashSet<>();
@@ -98,7 +100,7 @@ final class QuestBook {
             if (!qb.chapters().containsKey(chapter)) continue;
             int done = 0, total = 0;
             for (QuestDefs.Quest q : visible(qb, chapter)) {
-                if (q.optional()) continue;
+                if (q.optional() || status(q.id()).equals("closed")) continue;
                 total++;
                 if (status(q.id()).equals("complete")) done++;
             }
@@ -156,8 +158,21 @@ final class QuestBook {
                             pj, lt, new ArrayList<>(lt.errors())));
                     qs = List.of();
                 } else if (ch.layout().equals("story")) {
-                    story(pages, sec, ch, qs);
+                    story(pages, sec, ch, qs, id, json, base);
                     qs = List.of();
+                } else if (ch.layout().equals("board")) {
+                    Template bt = BookRegistry.template(BOARD);
+                    JsonObject pj = listPage(sec, ch, cid, 0);
+                    pj.addProperty("template", BOARD.toString());
+                    pj.addProperty("right_title", "simplebooks.board.title");
+                    if (ch.pool() != null) pj.addProperty("pool", ch.pool());
+                    pages.add(new Book.Page(SimpleBooks.of(id.getNamespace(), prefix + sec + "/board"), "(quest board " + cid + ")",
+                            pj, bt, new ArrayList<>(bt.errors())));
+                    qs = new ArrayList<>();
+                    if (ch.pool() != null) {
+                        for (String o : QuestSlots.offers(ch.pool())) if (qb.quests().containsKey(o)) qs.add(qb.quests().get(o));
+                        qs.addAll(QuestSlots.unclaimed(qb, ch.pool()));
+                    }
                 } else if (ch.layout().equals("tree")) {
                     Template tt = BookRegistry.template(TREE);
                     JsonObject pj = listPage(sec, ch, cid, 0);
@@ -166,7 +181,7 @@ final class QuestBook {
                             pj, tt, new ArrayList<>(tt.errors())));
                 }
                 int per = rowsPerSpread(lt), parts = Math.max(1, (qs.size() + per - 1) / per);
-                boolean listed = cst.equals("open") && !ch.layout().equals("tree") && !ch.layout().equals("story");
+                boolean listed = cst.equals("open") && !ch.layout().equals("tree") && !ch.layout().equals("story") && !ch.layout().equals("board");
                 for (int p = 0; p < parts && listed; p++) {
                     JsonObject pj = listPage(sec, ch, cid, p);
                     pj.addProperty("from", p * per);
@@ -187,9 +202,9 @@ final class QuestBook {
                     if (!q.text().isEmpty() && !pj.has("text")) pj.addProperty("text", q.text());
                     pj.addProperty("right_title", "simplebooks.quest.rewards");
                     pj.addProperty("quest", q.id());
-                    pj.addProperty("sort", -90000 + i);
+                    pj.addProperty("sort", -90000 + i * 10);
                     pj.addProperty("contents", false);
-                    pages.add(new Book.Page(detailId(q.id()), "(quest " + q.id() + ")", pj, dt, new ArrayList<>(dt.errors())));
+                    flowOn(pages, new Book.Page(detailId(q.id()), "(quest " + q.id() + ")", pj, dt, new ArrayList<>(dt.errors())), id, json, base);
                 }
             }
             if (so.has("team_page") && so.get("team_page").getAsBoolean()) {
@@ -222,7 +237,7 @@ final class QuestBook {
     }
 
     /** One spread per quest; a locked one keeps its page content back. */
-    private static void story(List<Book.Page> pages, String sec, QuestDefs.Chapter ch, List<QuestDefs.Quest> qs) {
+    private static void story(List<Book.Page> pages, String sec, QuestDefs.Chapter ch, List<QuestDefs.Quest> qs, Identifier bookId, JsonObject bookJson, @Nullable Book base) {
         Template t = BookRegistry.template(STORY);
         for (int i = 0; i < qs.size(); i++) {
             QuestDefs.Quest q = qs.get(i);
@@ -242,11 +257,87 @@ final class QuestBook {
             pj.addProperty("rewards_head", "simplebooks.quest.rewards");
             pj.addProperty("quest", q.id());
             pj.addProperty("chapter", ch.id());
-            pj.addProperty("sort", -100000 + i);
+            pj.addProperty("sort", -100000 + i * 10);
             if (i == 0) pj.addProperty("contents_title", ch.title().isEmpty() ? q.title() : ch.title());
             else pj.addProperty("contents", false);
-            pages.add(new Book.Page(detailId(q.id()), "(story " + q.id() + ")", pj, t, new ArrayList<>(t.errors())));
+            flowOn(pages, new Book.Page(detailId(q.id()), "(story " + q.id() + ")", pj, t, new ArrayList<>(t.errors())), bookId, bookJson, base);
         }
+    }
+
+    /**
+     * Adds the page, and when its text or steps run past the left page, moves the rest onto
+     * continuation spreads that follow it.
+     */
+    private static void flowOn(List<Book.Page> pages, Book.Page page, Identifier bookId, JsonObject bookJson, @Nullable Book base) {
+        Template more = BookRegistry.template(MORE);
+        Map<String, String> vars = base != null ? base.vars() : new HashMap<>();
+        net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
+        Book.Page cur = page;
+        for (int n = 1; n <= MORE_MAX; n++) {
+            JsonObject pj = cur.json();
+            String restText = null;
+            if (pj.has("text") && pj.get("text").isJsonPrimitive()) {
+                List<String> chunks = chunks(pj.get("text").getAsString());
+                int k = chunks.size();
+                while (k > 1 && measure(cur, bookId, bookJson, vars, font).overflows("left.text")) {
+                    k--;
+                    pj.addProperty("text", String.join("", chunks.subList(0, k)).strip());
+                }
+                if (k < chunks.size()) restText = String.join("", chunks.subList(k, chunks.size())).strip();
+            }
+            Spread m = measure(cur, bookId, bookJson, vars, font);
+            JsonArray restSteps = null;
+            if (pj.has("steps") && pj.get("steps").isJsonArray()) {
+                JsonArray a = pj.getAsJsonArray("steps");
+                int c = m.cursorState().getOrDefault("steps", a.size());
+                if (c < a.size() && (c > 0 || restText != null || cur != page)) {
+                    JsonArray keep = new JsonArray(), rest = new JsonArray();
+                    for (int i = 0; i < a.size(); i++) (i < c ? keep : rest).add(a.get(i));
+                    pj.add("steps", keep);
+                    restSteps = rest;
+                } else if (c < a.size() && c == 0) {
+                    restSteps = a;
+                    pj.remove("steps");
+                }
+            }
+            pages.add(cur);
+            if (restText == null && restSteps == null) return;
+            JsonObject nj = new JsonObject();
+            nj.addProperty("template", MORE.toString());
+            nj.addProperty("section", pj.get("section").getAsString());
+            String title = page.json().get("title").getAsString();
+            nj.addProperty("title", net.minecraft.network.chat.Component.translatable("simplebooks.quest.more",
+                    net.minecraft.network.chat.Component.translatable(title)).getString());
+            if (page.json().has("icon")) nj.add("icon", page.json().get("icon"));
+            if (restText != null) nj.addProperty("text", restText);
+            if (restSteps != null) {
+                nj.add("steps", restSteps);
+                nj.addProperty("first_step", m.stepCount() + 1);
+            }
+            nj.addProperty("sort", page.json().get("sort").getAsInt() + n);
+            nj.addProperty("contents", false);
+            cur = new Book.Page(SimpleBooks.of(page.id().getNamespace(), page.id().getPath() + "/more" + n), page.file(), nj, more, new ArrayList<>(more.errors()));
+        }
+        pages.add(cur);
+    }
+
+    private static Spread measure(Book.Page p, Identifier bookId, JsonObject bookJson, Map<String, String> vars, net.minecraft.client.gui.Font font) {
+        Spread m = new Spread(null, font, new Book(bookId, bookJson, vars, List.of(p), List.of(), Set.of()), p, 0);
+        m.measure();
+        return m;
+    }
+
+    /** Text split after paragraphs, or after sentences when it is one paragraph. */
+    private static List<String> chunks(String text) {
+        List<String> out = new ArrayList<>();
+        String sep = text.contains("\n") ? "\n" : ". ";
+        int from = 0;
+        for (int i = text.indexOf(sep); i >= 0; i = text.indexOf(sep, i + sep.length())) {
+            out.add(text.substring(from, i + sep.length()));
+            from = i + sep.length();
+        }
+        if (from < text.length()) out.add(text.substring(from));
+        return out;
     }
 
     /** "open", "locked" or "hidden"; open until the server says otherwise. */

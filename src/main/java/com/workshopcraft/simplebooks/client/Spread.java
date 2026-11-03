@@ -569,7 +569,16 @@ public class Spread {
         return true;
     }
 
-    Map<String, Integer> cursorState() {
+    /** True when a drawn slot ran past the bottom of its box. */
+    boolean overflows(String slot) {
+        Float b = bottoms.get(slot);
+        JsonObject sl = page == null || page.template() == null ? null : page.template().slots().get(slot);
+        if (b == null || sl == null || !sl.has("box")) return false;
+        JsonArray box = sl.getAsJsonArray("box");
+        return b > PT + box.get(1).getAsFloat() + box.get(3).getAsFloat() + 4;
+    }
+
+        Map<String, Integer> cursorState() {
         return Map.copyOf(cursors);
     }
 
@@ -711,7 +720,7 @@ public class Spread {
                 if (type.equals("text")) body[sd] = true;
             }
             case "rule" -> rule(x, x + w, y);
-            case "quest_list", "task_list", "reward_list", "quest_buttons", "team_list", "quest_graph", "quest_info", "quest_lock" -> {
+            case "quest_list", "task_list", "reward_list", "quest_buttons", "team_list", "quest_graph", "quest_info", "quest_lock", "quest_board", "board_info" -> {
                 Float above = below(slot);
                 if (above != null) {
                     float ny = above + num(slot, "gap", 14);

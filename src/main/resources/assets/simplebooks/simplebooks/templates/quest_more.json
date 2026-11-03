@@ -1,0 +1,16 @@
+{
+  "extends": "simplebooks:recipe",
+  "slots": {
+    "left.need": null,
+    "left.steps": null,
+    "left.turn": null,
+    "left.text": { "type": "text", "box": [0, 100, 644, 760], "bind": "text", "style": "body", "optional": true },
+    "left.more_steps": { "type": "step_rows", "box": [0, 100, 644, 768], "bind": "steps", "row_height": 92, "below": "left.text", "gap": 16, "optional": true },
+    "right.title": null,
+    "right.icon": null,
+    "right.subtitle": null,
+    "right.rule": null,
+    "right.links": null,
+    "right.steps": { "type": "step_rows", "box": [0, 18, 644, 850], "bind": "steps", "row_height": 92, "optional": true }
+  }
+}
