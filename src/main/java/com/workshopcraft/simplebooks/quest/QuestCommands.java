@@ -131,6 +131,14 @@ public final class QuestCommands {
                 }));
     }
 
+    private static int devAction(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, String text) {
+        ServerPlayer p = c.getSource().getServer().getPlayerList().getPlayerByName(StringArgumentType.getString(c, "name"));
+        if (p == null) return 0;
+        new QuestActionPacket(StringArgumentType.getString(c, "action"), StringArgumentType.getString(c, "quest"),
+                StringArgumentType.getString(c, "task"), IntegerArgumentType.getInteger(c, "number"), text).handle(p);
+        return 1;
+    }
+
     private static LiteralArgumentBuilder<CommandSourceStack> dev() {
         return Commands.literal("dev").requires(s -> SimpleBooks.dev)
                 .then(Commands.literal("join").then(Commands.argument("name", StringArgumentType.word())
@@ -156,13 +164,16 @@ public final class QuestCommands {
                                 .then(Commands.argument("quest", StringArgumentType.string())
                                         .then(Commands.argument("task", StringArgumentType.string())
                                                 .then(Commands.argument("number", IntegerArgumentType.integer())
-                                                        .executes(c -> {
-                                                            ServerPlayer p = c.getSource().getServer().getPlayerList().getPlayerByName(StringArgumentType.getString(c, "name"));
-                                                            if (p == null) return 0;
-                                                            new QuestActionPacket(StringArgumentType.getString(c, "action"), StringArgumentType.getString(c, "quest"),
-                                                                    StringArgumentType.getString(c, "task"), IntegerArgumentType.getInteger(c, "number"), "").handle(p);
-                                                            return 1;
-                                                        })))))))
+                                                        .executes(c -> devAction(c, ""))
+                                                        .then(Commands.argument("text", StringArgumentType.greedyString())
+                                                                .executes(c -> devAction(c, StringArgumentType.getString(c, "text"))))))))))
+                .then(Commands.literal("use").then(Commands.argument("name", StringArgumentType.word())
+                        .then(Commands.argument("pos", net.minecraft.commands.arguments.coordinates.BlockPosArgument.blockPos()).executes(c -> {
+                            ServerPlayer p = c.getSource().getServer().getPlayerList().getPlayerByName(StringArgumentType.getString(c, "name"));
+                            if (p == null) return 0;
+                            com.workshopcraft.simplebooks.box.HandInBoxBlock.use(p, net.minecraft.commands.arguments.coordinates.BlockPosArgument.getLoadedBlockPos(c, "pos"));
+                            return 1;
+                        }))))
                 .then(Commands.literal("stat").then(Commands.argument("name", StringArgumentType.word())
                         .then(Commands.argument("type", IdentifierArgument.id()).then(Commands.argument("value", IdentifierArgument.id())
                                 .then(Commands.argument("amount", IntegerArgumentType.integer(1)).executes(c -> {
