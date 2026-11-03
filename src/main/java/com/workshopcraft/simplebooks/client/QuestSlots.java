@@ -1068,6 +1068,7 @@ final class QuestSlots {
         boolean owner = t.has("owner_is_me") && t.get("owner_is_me").getAsBoolean();
         boolean solo = t.has("solo") && t.get("solo").getAsBoolean();
         boolean board = t.has("scoreboard_mode") && t.get("scoreboard_mode").getAsBoolean();
+        String mode = t.has("mode") ? t.get("mode").getAsString() : "scoreboard";
         String me = myName();
         Set<String> members = new HashSet<>();
         JsonArray ms = t.has("members") ? t.getAsJsonArray("members") : new JsonArray();
@@ -1075,7 +1076,7 @@ final class QuestSlots {
         float end = y + h;
         if (show.equals("players")) {
             if (board) {
-                s.para(tr("simplebooks.team.scoreboard"), x, y + 8, w, 1, s.color("$soft"), 20, "left");
+                s.para(mode.equals("scoreboard") ? tr("simplebooks.team.scoreboard") : tr("simplebooks.team.external", mode), x, y + 8, w, 1, s.color("$soft"), 20, "left");
                 return;
             }
             Set<String> invited = new HashSet<>();
@@ -1124,7 +1125,7 @@ final class QuestSlots {
             y += 48;
         }
         if (board) {
-            s.para(tr("simplebooks.team.scoreboard_note"), x, Math.max(y + 10, end - 110), w, 1, s.color("$soft"), 20, "left");
+            s.para(mode.equals("scoreboard") ? tr("simplebooks.team.scoreboard_note") : tr("simplebooks.team.external_note", mode), x, Math.max(y + 10, end - 110), w, 1, s.color("$soft"), 20, "left");
             return;
         }
         List<String> inv = new ArrayList<>();

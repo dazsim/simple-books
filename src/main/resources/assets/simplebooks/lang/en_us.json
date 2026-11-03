@@ -97,6 +97,8 @@
   "simplebooks.team.owner_invites": "Only the owner can invite players.",
   "simplebooks.team.scoreboard": "Teams on this server come from the scoreboard. Ask an operator to change them.",
   "simplebooks.team.scoreboard_note": "Scoreboard teams are set by operators.",
+  "simplebooks.team.external": "Teams on this server come from %s.",
+  "simplebooks.team.external_note": "Teams are set through %s.",
   "simplebooks.toast.complete": "Quest complete!",
   "simplebooks.toast.unlock": "Quest unlocked",
   "simplebooks.toast.rewards": "Rewards waiting",

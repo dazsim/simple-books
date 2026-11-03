@@ -17,7 +17,6 @@ import java.util.Set;
 /** config/simplebooks.json, read on every server start. */
 public record SimpleBooksConfig(String teamSource, String firstJoinBook, boolean handInBox, int commandRewardPermission) {
     public static final SimpleBooksConfig DEFAULT = new SimpleBooksConfig("simplebooks", "", true, 2);
-    public static final Set<String> TEAM_SOURCES = Set.of("simplebooks", "scoreboard");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static SimpleBooksConfig current = DEFAULT;
 
@@ -54,8 +53,9 @@ public record SimpleBooksConfig(String teamSource, String firstJoinBook, boolean
             if (!Set.of("team_source", "first_join_book", "hand_in_box", "command_reward_permission").contains(k))
                 SimpleBooks.LOG.warn("simplebooks.json: unknown key {}", k);
         String team = str(o, "team_source", DEFAULT.teamSource);
-        if (!TEAM_SOURCES.contains(team)) {
-            SimpleBooks.LOG.warn("simplebooks.json: team_source {} is not one of {}, using simplebooks", team, TEAM_SOURCES);
+        if (!team.equals("simplebooks") && com.workshopcraft.simplebooks.api.SimpleBooksApi.teamSource(team) == null) {
+            SimpleBooks.LOG.warn("simplebooks.json: team_source {} is not simplebooks or one of {}, using simplebooks", team,
+                    com.workshopcraft.simplebooks.api.SimpleBooksApi.teamSources());
             team = DEFAULT.teamSource;
         }
         boolean box = DEFAULT.handInBox;

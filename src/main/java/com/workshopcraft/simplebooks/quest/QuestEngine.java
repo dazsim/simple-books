@@ -2,6 +2,7 @@ package com.workshopcraft.simplebooks.quest;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.workshopcraft.simplebooks.api.TeamSource;
 import com.workshopcraft.simplebooks.GuideItem;
 import com.workshopcraft.simplebooks.SimpleBooks;
 import com.workshopcraft.simplebooks.SimpleBooksConfig;
@@ -194,15 +195,21 @@ public final class QuestEngine {
 
     // ---- teams ----
 
-    static boolean scoreboard() {
-        return SimpleBooksConfig.get().teamSource().equals("scoreboard");
+    /** True when teams come from a team source (scoreboard or a plugin) instead of our own. */
+    static boolean external() {
+        return source() != null;
     }
 
-    /** The player's team, made on first sight. In scoreboard mode this follows the player's scoreboard team. */
+    static @Nullable TeamSource source() {
+        String id = SimpleBooksConfig.get().teamSource();
+        return id.equals("simplebooks") ? null : com.workshopcraft.simplebooks.api.SimpleBooksApi.teamSource(id);
+    }
+
+    /** The player's team, made on first sight. With a team source (scoreboard or a plugin) this follows that source. */
     public static Team team(ServerPlayer p) {
         String uuid = p.getUUID().toString();
         Team cur = world.teamOf(uuid);
-        if (!scoreboard()) {
+        if (!external()) {
             if (cur == null) {
                 cur = world.newTeam(UUID.randomUUID().toString(), "", uuid, "simplebooks");
                 world.add(cur, uuid, now());
@@ -210,20 +217,22 @@ public final class QuestEngine {
             }
             return cur;
         }
-        String sb = QuestMc.scoreboardTeam(p);
-        String want = sb == null ? null : "scoreboard:" + sb;
-        if (cur != null && (want == null ? !cur.id.startsWith("scoreboard:") : cur.id.equals(want))) return cur;
+        String src = SimpleBooksConfig.get().teamSource();
+        TeamSource ts = source();
+        String sb = ts.teamOf(p);
+        String want = sb == null ? null : src + ":" + sb;
+        if (cur != null && (want == null ? !cur.id.contains(":") : cur.id.equals(want))) return cur;
         Team next;
         if (want == null && cur == null) {
-            next = world.newTeam(UUID.randomUUID().toString(), "", uuid, "scoreboard");
+            next = world.newTeam(UUID.randomUUID().toString(), "", uuid, src);
             world.add(next, uuid, now());
         } else if (want == null) {
-            // left the scoreboard team: keep a copy of what it had
-            next = world.splitOff(cur, uuid, now(), "scoreboard");
+            // left the source team: keep a copy of what it had
+            next = world.splitOff(cur, uuid, now(), src);
         } else {
             next = world.teams.get(want);
             if (next == null) {
-                next = world.newTeam(want, sb, uuid, "scoreboard");
+                next = world.newTeam(want, ts.name(sb), uuid, src);
                 if (cur != null) copyProgress(cur, next);
             }
             world.add(next, uuid, now());
@@ -264,12 +273,13 @@ public final class QuestEngine {
         }
     }
 
-    private static Result scoreboardOnly() {
-        return Result.no("Teams follow scoreboard teams on this server, use /team");
+    private static Result externalOnly() {
+        String src = SimpleBooksConfig.get().teamSource();
+        return Result.no(src.equals("scoreboard") ? "Teams follow scoreboard teams on this server, use /team" : "Teams come from " + src + " on this server");
     }
 
     public static Result create(ServerPlayer p, String name) {
-        if (scoreboard()) return scoreboardOnly();
+        if (external()) return externalOnly();
         if (!TEAM_NAME.matcher(name).matches()) return Result.no("Team names are 1 to 32 letters, digits, _ or -");
         if (world.byName(name) != null) return Result.no("There is already a team called " + name);
         Team t = team(p);
@@ -280,7 +290,7 @@ public final class QuestEngine {
     }
 
     public static Result invite(ServerPlayer p, String who) {
-        if (scoreboard()) return scoreboardOnly();
+        if (external()) return externalOnly();
         Team t = team(p);
         if (t.solo()) return Result.no("Make a team first with /sbteam create <name>");
         if (!t.owner.equals(p.getUUID().toString())) return Result.no("Only the team owner can invite");
@@ -299,7 +309,7 @@ public final class QuestEngine {
     }
 
     public static Result join(ServerPlayer p, String name, boolean confirm) {
-        if (scoreboard()) return scoreboardOnly();
+        if (external()) return externalOnly();
         Team t = world.byName(name);
         String uuid = p.getUUID().toString();
         if (t == null) return Result.no("No team called " + name);
@@ -316,7 +326,7 @@ public final class QuestEngine {
     }
 
     public static Result leave(ServerPlayer p) {
-        if (scoreboard()) return scoreboardOnly();
+        if (external()) return externalOnly();
         Team t = team(p);
         if (t.solo()) return Result.no("You are not in a team");
         if (t.members.size() == 1) {
@@ -330,7 +340,7 @@ public final class QuestEngine {
     }
 
     public static Result kick(ServerPlayer p, String who) {
-        if (scoreboard()) return scoreboardOnly();
+        if (external()) return externalOnly();
         Team t = team(p);
         if (!t.owner.equals(p.getUUID().toString())) return Result.no("Only the team owner can kick");
         String id = member(t, who);
@@ -379,7 +389,7 @@ public final class QuestEngine {
     public static List<String> info(ServerPlayer p) {
         Team t = team(p);
         List<String> out = new ArrayList<>();
-        out.add(t.solo() ? "You are on your own" : "Team " + t.name + (t.id.startsWith("scoreboard:") ? " (scoreboard)" : ""));
+        out.add(t.solo() ? "You are on your own" : "Team " + t.name + (t.id.contains(":") ? " (" + t.id.substring(0, t.id.indexOf(':')) + ")" : ""));
         for (String m : t.members) {
             boolean on = server != null && QuestMc.player(server, UUID.fromString(m)) != null;
             out.add("  " + name(m) + (m.equals(t.owner) ? " (owner)" : "") + (on ? "" : " (offline)"));
@@ -1310,9 +1320,10 @@ public final class QuestEngine {
         team.addProperty("name", t.name);
         team.addProperty("owner", name(t.owner));
         team.addProperty("owner_is_me", t.owner.equals(me));
-        team.addProperty("source", t.id.startsWith("scoreboard:") ? "scoreboard" : "simplebooks");
+        team.addProperty("source", t.id.contains(":") ? t.id.substring(0, t.id.indexOf(':')) : "simplebooks");
+        team.addProperty("mode", SimpleBooksConfig.get().teamSource());
         team.addProperty("solo", t.solo());
-        team.addProperty("scoreboard_mode", scoreboard());
+        team.addProperty("scoreboard_mode", external());
         JsonArray members = new JsonArray();
         for (String m : t.members) {
             JsonObject mo = new JsonObject();

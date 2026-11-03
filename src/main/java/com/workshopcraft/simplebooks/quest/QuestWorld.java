@@ -30,7 +30,7 @@ public final class QuestWorld {
         }
 
         public boolean solo() {
-            return name.isEmpty() && !id.startsWith("scoreboard:");
+            return name.isEmpty() && !id.contains(":");
         }
     }
 
