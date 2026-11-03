@@ -8,9 +8,8 @@
     "left.offers": { "type": "quest_board", "box": [0, 172, 644, 696], "row_height": 72 },
     "right.title": { "bind": "right_title" },
     "right.subtitle": null,
-    "right.rule": null,
     "right.steps": null,
     "right.links": null,
-    "right.board": { "type": "board_info", "box": [0, 18, 644, 850] }
+    "right.board": { "type": "board_info", "box": [0, 100, 644, 768] }
   }
 }

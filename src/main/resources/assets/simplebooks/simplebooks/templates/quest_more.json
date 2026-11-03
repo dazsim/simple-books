@@ -11,6 +11,7 @@
     "right.subtitle": null,
     "right.rule": null,
     "right.links": null,
-    "right.steps": { "type": "step_rows", "box": [0, 18, 644, 850], "bind": "steps", "row_height": 92, "optional": true }
+    "right.steps": null,
+    "right.more_steps": { "type": "step_rows", "box": [0, 18, 644, 850], "bind": "steps", "row_height": 92, "optional": true }
   }
 }
