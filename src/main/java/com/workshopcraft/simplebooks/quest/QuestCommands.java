@@ -45,6 +45,10 @@ public final class QuestCommands {
         }
         return SharedSuggestionProvider.suggest(ids, b);
     };
+    private static final SuggestionProvider<CommandSourceStack> GROUPS =
+            (c, b) -> SharedSuggestionProvider.suggest(QuestEngine.groups(), b);
+    private static final SuggestionProvider<CommandSourceStack> POOLS =
+            (c, b) -> SharedSuggestionProvider.suggest(QuestEngine.poolIds(), b);
     private static final SuggestionProvider<CommandSourceStack> BOOKS =
             (c, b) -> SharedSuggestionProvider.suggest(QuestManager.defs().books().keySet(), b);
     private static final SuggestionProvider<CommandSourceStack> PLAYERS =
@@ -114,6 +118,32 @@ public final class QuestCommands {
                                 .executes(c -> open(c, 0))
                                 .then(Commands.argument("spread", IntegerArgumentType.integer(0))
                                         .executes(c -> open(c, IntegerArgumentType.getInteger(c, "spread")))))))
+                .then(Commands.literal("path").then(Commands.literal("reset").then(Commands.argument("who", StringArgumentType.word()).suggests(TEAMS)
+                        .then(Commands.argument("group", IdentifierArgument.id()).suggests(GROUPS)
+                                .executes(c -> {
+                                    Team t = team(c);
+                                    if (t == null) return 0;
+                                    String g = IdentifierArgument.getId(c, "group").toString();
+                                    if (!QuestEngine.adminPathReset(t, g)) {
+                                        c.getSource().sendFailure(Component.literal(label(t) + " has not taken a path in " + g));
+                                        return 0;
+                                    }
+                                    ok(c, "Reset the path " + g + " for " + label(t));
+                                    return 1;
+                                })))))
+                .then(Commands.literal("pool").then(Commands.literal("reroll").then(Commands.argument("who", StringArgumentType.word()).suggests(TEAMS)
+                        .then(Commands.argument("pool", IdentifierArgument.id()).suggests(POOLS)
+                                .executes(c -> {
+                                    Team t = team(c);
+                                    if (t == null) return 0;
+                                    String pl = IdentifierArgument.getId(c, "pool").toString();
+                                    if (!QuestEngine.adminReroll(t, pl)) {
+                                        c.getSource().sendFailure(Component.literal("No open board " + pl + " for " + label(t)));
+                                        return 0;
+                                    }
+                                    ok(c, "Rerolled " + pl + " for " + label(t));
+                                    return 1;
+                                })))))
                 .then(Commands.literal("team").then(Commands.literal("owner")
                         .then(Commands.argument("who", StringArgumentType.word()).suggests(TEAMS)
                                 .then(Commands.argument("player", StringArgumentType.word()).suggests(PLAYERS)
@@ -134,8 +164,9 @@ public final class QuestCommands {
     private static int devAction(com.mojang.brigadier.context.CommandContext<CommandSourceStack> c, String text) {
         ServerPlayer p = c.getSource().getServer().getPlayerList().getPlayerByName(StringArgumentType.getString(c, "name"));
         if (p == null) return 0;
-        new QuestActionPacket(StringArgumentType.getString(c, "action"), StringArgumentType.getString(c, "quest"),
+        QuestEngine.Result r = new QuestActionPacket(StringArgumentType.getString(c, "action"), StringArgumentType.getString(c, "quest"),
                 StringArgumentType.getString(c, "task"), IntegerArgumentType.getInteger(c, "number"), text).handle(p);
+        if (r != null && !r.message().isEmpty()) ok(c, (r.ok() ? "ok: " : "no: ") + r.message());
         return 1;
     }
 
