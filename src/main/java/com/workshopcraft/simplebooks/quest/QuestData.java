@@ -2,6 +2,7 @@ package com.workshopcraft.simplebooks.quest;
 
 import com.workshopcraft.simplebooks.SimpleBooks;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.MinecraftServer;
@@ -9,6 +10,9 @@ import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.storage.LevelResource;
 import org.jspecify.annotations.Nullable;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -27,6 +31,7 @@ public class QuestData extends SavedData {
     public static final String NAME = "simplebooks_quests";
     private QuestWorld world = QuestWorld.of(QuestSave.Data.EMPTY);
     private @Nullable String bad;
+    private static @Nullable MinecraftServer checked;
 
     //? if >=1.21.5 {
     public static final SavedDataType<QuestData> TYPE = new SavedDataType<>(SimpleBooks.id("quests"), QuestData::new,
@@ -47,6 +52,10 @@ public class QuestData extends SavedData {
     //?}
 
     public static QuestData get(MinecraftServer server) {
+        if (checked != server) {
+            checked = server;
+            checkFile(server);
+        }
         //? if >=1.21.5 {
         QuestData d = server.getDataStorage().computeIfAbsent(TYPE);
         //?} else if >=1.20.5 {
@@ -69,6 +78,30 @@ public class QuestData extends SavedData {
         //?} else {
         /*return data.resolve(NAME + ".dat");
         *///?}
+    }
+
+    // vanilla drops a save it cannot parse and overwrites it later, so set it aside first
+    private static void checkFile(MinecraftServer server) {
+        Path file = file(server);
+        if (!Files.isRegularFile(file)) return;
+        try {
+            byte[] b = Files.readAllBytes(file);
+            if (b.length > 1 && (b[0] & 0xff) == 0x1f && (b[1] & 0xff) == 0x8b) {
+                //? if >=1.20.2 {
+                NbtIo.readCompressed(new ByteArrayInputStream(b), net.minecraft.nbt.NbtAccounter.unlimitedHeap());
+                //?} else {
+                /*NbtIo.readCompressed(new ByteArrayInputStream(b));
+                *///?}
+            } else {
+                NbtIo.read(new DataInputStream(new ByteArrayInputStream(b)));
+            }
+        } catch (Exception | StackOverflowError e) {
+            backup(server, "could not be read (" + e + ")");
+            try {
+                Files.delete(file);
+            } catch (IOException ignored) {
+            }
+        }
     }
 
     private static void backup(MinecraftServer server, String why) {
