@@ -667,6 +667,14 @@ public final class QuestParser {
             if (!q.tiers.isEmpty() && q.tasks.size() == 1 && q.tasks.get(0).json().has("count") && !trusted)
                 warn("/tasks/0/count", "ignored, the tier counts are used");
         }
+        if (q.repeat != null) {
+            if (!q.tiers.isEmpty()) error("/repeat", "a quest cannot have both repeat and tiers");
+            for (int i = 0; i < q.tasks.size(); i++) {
+                Task t = q.tasks.get(i);
+                if (t.fromStats()) error("/tasks/" + i + "/from_stats", "cannot be used in a repeat quest");
+                else if (t.type().equals("advancement") && !trusted) warn("/tasks/" + i, "an advancement stays done, so every cycle completes at once");
+            }
+        }
 
         JsonObject ex = r.obj("exclusive");
         if (ex != null) {
