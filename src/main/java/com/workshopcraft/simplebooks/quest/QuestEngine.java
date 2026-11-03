@@ -434,7 +434,15 @@ public final class QuestEngine {
     public static boolean open(Team t, Book b, Quest q) {
         if (q.chapter() == null) return false;
         Chapter c = b.chapters().get(q.chapter());
-        return c != null && chapterOpen(t, b, c) && depsMet(t, b, q);
+        if (c == null || !chapterOpen(t, b, c) || !depsMet(t, b, q)) return false;
+        Quest prev = b.storyPrev(q);
+        return prev == null || questComplete(t, prev.id());
+    }
+
+    /** open, locked or hidden; hidden only for a chapter with visibility hidden that is not open yet. */
+    static String chapterStatus(Team t, Book b, Chapter c) {
+        if (chapterOpen(t, b, c)) return "open";
+        return c.visibility().equals("hidden") || c.visibility().equals("secret") ? "hidden" : "locked";
     }
 
     public static String status(Team t, Book b, Quest q) {
@@ -1012,6 +1020,10 @@ public final class QuestEngine {
                 quests.add(q.id(), qo);
             }
         o.add("quests", quests);
+        JsonObject chapters = new JsonObject();
+        for (Book b : defs().books().values())
+            for (Chapter c : b.chapters().values()) chapters.addProperty(c.id(), chapterStatus(t, b, c));
+        o.add("chapters", chapters);
         return o;
     }
 

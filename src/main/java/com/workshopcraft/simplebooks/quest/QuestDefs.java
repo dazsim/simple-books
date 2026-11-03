@@ -19,7 +19,23 @@ public record QuestDefs(Map<String, Book> books) {
     }
 
     public record Book(String id, Map<String, Chapter> chapters, Map<String, Quest> quests, Map<String, Pool> pools,
-                       Map<String, String> broken) {}
+                       Map<String, String> broken) {
+        /** In a story chapter, the quest a reader must finish first: the closest earlier quest that is not optional. */
+        public @Nullable Quest storyPrev(Quest q) {
+            Chapter c = q.chapter() == null ? null : chapters.get(q.chapter());
+            if (c == null || !c.layout().equals("story")) return null;
+            Quest best = null;
+            for (Quest o : quests.values()) {
+                if (o == q || o.optional() || !q.chapter().equals(o.chapter()) || order(o, q) >= 0) continue;
+                if (best == null || order(o, best) > 0) best = o;
+            }
+            return best;
+        }
+
+        private static int order(Quest a, Quest b) {
+            return a.sort() != b.sort() ? Integer.compare(a.sort(), b.sort()) : a.id().compareTo(b.id());
+        }
+    }
 
     public record Chapter(String id, String title, String icon, int sort, String layout, List<String> depends,
                           String visibility, String text, @Nullable String pool, JsonObject json) {}

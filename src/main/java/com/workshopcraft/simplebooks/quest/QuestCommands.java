@@ -286,6 +286,11 @@ public final class QuestCommands {
                 c.getSource().sendSuccess(() -> Component.literal(text).withStyle(s.equals("complete") ? ChatFormatting.GREEN : ChatFormatting.WHITE), false);
                 n++;
             }
+        for (Book b : QuestManager.defs().books().values())
+            for (QuestDefs.Chapter ch : b.chapters().values()) {
+                String s = QuestEngine.chapterStatus(t, b, ch);
+                if (!s.equals("open")) c.getSource().sendSuccess(() -> Component.literal("chapter " + ch.id() + " " + s).withStyle(ChatFormatting.GRAY), false);
+            }
         return n;
     }
 
