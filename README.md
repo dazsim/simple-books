@@ -378,15 +378,311 @@ Your book is plain resources, so a mod with a book needs no code changes and sti
 
 Anything in `config/simplebooks/` is loaded as an always-on pack called "Simple Books (pack config)" on both the server and the client, with no pack.mcmeta needed. Put books in `config/simplebooks/assets/<namespace>/simplebooks/books/` and data in `config/simplebooks/data/<namespace>/...`, the same layout as inside a mod jar. It sits above mod packs and below world data packs and player resource packs, so those can still override it. Handy for modpacks that want a book without KubeJS or a loader mod.
 
-## Quests (in progress)
+## Quests
 
-Quest support is being built in stages. Simple Books reads and checks quest files, tracks progress per team and shows quests in the book. Quests for the book `mypack:journal` live in `data/mypack/simplebooks/quests/journal/`: `chapters/*.json`, `quests/**/*.json` and `pools/*.json`. Problems are logged on load with the file and the field, and ops can run `/sbquests validate [book]` to check the files again without reloading. Progress will be saved in the world, and server options live in `config/simplebooks.json` (`team_source`, `first_join_book`, `hand_in_box`, `command_reward_permission`), which is written with defaults on first start.
+Simple Books can turn a book into a quest book: checklists, skill trees, story chapters, repeatable chores, milestones, branching paths, bounty boards and big team hand-ins. Quests are data files, so a modpack needs no code. Progress lives on the team, rewards are claimed per player, and everything is checked on the server. Quests need Simple Books on both the server and the client.
 
-Repeatable quests (`"repeat": { "cooldown": "20m", "limit": 0 }`) open again once the cooldown has passed in real time, counted from when they were finished. Item tasks in a repeatable quest should use `"consume": true` so the items are handed in: an item task without consume only checks what the team holds, so it would complete again the moment the quest reopens. The validator warns about this.
+A complete example that uses every quest style is in `dev/example-pack/config/` (book `example:guide`). Copy its `simplebooks` folder and `simplebooks.json` into a game's `config/` folder to try it. `/sbquests validate example:guide` reports 0 errors and 0 warnings.
 
-Branching paths use `"exclusive": { "group": "starter_path", "lock_on": "choose" }` on each rival quest. With `choose`, only the team owner can take a path (with a confirm step) and the server refuses anyone else; once taken, the rivals show as closed for the whole team. With `complete`, the first rival finished closes the rest and anyone can do it. A player who leaves a team keeps a copy of the team's path choices. Ops can undo a choice with `/sbquests path reset <team> <group>`.
+### File layout
 
-A bounty board is a pool file such as `pools/bounties.json`: `{ "offers": 3, "refresh": { "cooldown": "1h" }, "reroll": { "allowed": true, "cost": [{ "item": "minecraft:emerald", "count": 2 }] }, "quests": [{ "quest": "bounties/rats", "weight": 2, "depends": ["..."] }] }`. Quest refs in a pool are written like `depends`, relative to the book's quest folder, so a quest in `quests/bounties/rats.json` is `bounties/rats`. Pool quests only appear on the board, which is a chapter with `"layout": "board"` (it uses the pool with the same name as the chapter file unless it sets `"pool"`). Each team gets its own offers, which are saved with the world; a finished offer stays until its refresh cooldown has passed in real time and is then replaced. Any member can reroll the unfinished offers by paying the cost, and ops can run `/sbquests pool reroll <team> <pool>` for free.
+Quests are server data. A pack ships them in a data pack, a mod jar, or the always-on config pack:
+
+```
+config/simplebooks.json                                              server options
+config/simplebooks/data/mypack/simplebooks/quests/journal/chapters/<chapter>.json
+config/simplebooks/data/mypack/simplebooks/quests/journal/quests/<any/path>.json
+config/simplebooks/data/mypack/simplebooks/quests/journal/pools/<pool>.json
+config/simplebooks/assets/mypack/simplebooks/books/journal.json      the book look (optional)
+config/simplebooks/assets/mypack/lang/en_us.json                     lang keys (optional)
+```
+
+The quest book id is `mypack:journal`. Ids follow the file paths: the chapter `chapters/stone_age.json` is `stone_age` (full id `mypack:journal/stone_age`), the quest `quests/stone_age/iron.json` is `stone_age/iron`. The same layout works inside a mod jar (`data/<modid>/simplebooks/quests/...`) or a world data pack.
+
+Refs in `depends` and pools can be short: a ref is looked up next to the file first (`iron` from another file in `quests/stone_age/`), then from the book's quest folder (`stone_age/iron`), or written in full (`mypack:journal/stone_age/iron`). `"miner#2"` means tier 2 of the milestone quest `miner`.
+
+The book file is optional. Without one, a default book is made with a contents spread, one tab per chapter in `sort` order and a team tab. With one, every quest chapter is a section with `quests`, and `team_page` adds the team spread. Normal pages can sit next to quest chapters:
+
+```json
+{
+  "title": "book.mypack.journal.title",
+  "tabs": true,
+  "sections": [
+    "contents",
+    { "id": "welcome", "title": "Welcome" },
+    { "id": "stone_age", "quests": "stone_age", "title": "Stone Age", "icon": "minecraft:stone_pickaxe" },
+    { "id": "bounties", "quests": "bounties", "title": "Bounty Board" },
+    { "id": "team", "team_page": true, "title": "simplebooks.team.title" }
+  ]
+}
+```
+
+Hand the book out with `first_join_book` (below), a `/give` (see [Optional integration](#optional-integration)) or a `simplebooks:guide` recipe. Any text field can be a lang key or literal text.
+
+### Chapters
+
+`chapters/stone_age.json`:
+
+```json
+{ "title": "Stone Age", "icon": "minecraft:stone_pickaxe", "sort": 1, "layout": "tree", "depends": ["basics/look"], "visibility": "locked", "text": "Get off the ground." }
+```
+
+| Field | Use |
+| --- | --- |
+| `title`, `icon`, `text` | heading, tab icon and intro line |
+| `sort` | order in the contents and default book |
+| `layout` | `checklist` (default): a list with tick boxes. `tree`: a skill tree, lines follow `depends`. `story`: one spread per quest in `sort` order, each unlocked by the one before. `board`: a bounty board, see below |
+| `depends` | chapter or quest refs; until they are done the chapter is locked |
+| `visibility` | `locked` (default, shown greyed out with what it needs), `visible`, or `hidden` (no tab or contents entry until unlocked) |
+| `pool` | board chapters only: the pool to show. Default is the pool with the chapter's file name |
+| `requires`, `disabled` | see [Requires and overrides](#requires-and-overrides) |
+
+### Quests
+
+`quests/stone_age/iron.json`, with most fields:
+
+```json
+{
+  "chapter": "stone_age",
+  "sort": 4,
+  "pos": [3, 1],
+  "title": "Iron Age",
+  "subtitle": "Better tools",
+  "icon": "minecraft:iron_pickaxe",
+  "text": "Smelt some iron and make a pickaxe.",
+  "depends": ["furnace", "stone_tools"],
+  "depends_mode": "all",
+  "visibility": "locked",
+  "tasks": [
+    { "id": "smelt", "type": "smelt", "item": "minecraft:iron_ingot", "count": 8 },
+    { "id": "pick", "type": "craft", "item": "minecraft:iron_pickaxe" }
+  ],
+  "task_mode": "all",
+  "rewards": [{ "item": "minecraft:torch", "count": 16 }, { "xp": 50 }],
+  "choose_one": [{ "item": "minecraft:iron_sword" }, { "item": "minecraft:shield" }],
+  "toast": "complete"
+}
+```
+
+| Field | Use |
+| --- | --- |
+| `chapter` | the chapter it is in. Required unless `pool` is set |
+| `pool` | a bounty pool instead of a chapter; the quest is then only offered on the board |
+| `sort` | order in checklists; story chapters need a different `sort` on every quest |
+| `pos` | `[column, row]` in a tree. Without it, tree nodes are placed by depth |
+| `title`, `subtitle`, `icon`, `text` | shown in lists and on the quest's spread |
+| `page` | normal page content drawn on the quest spread, for example `{ "steps": [ { "kind": "craft_shaped", ... } ] }` with any [step kind](#pages). Shown once the quest is unlocked |
+| `depends`, `depends_mode` | quest refs that must be done first; `all` (default) or `any` |
+| `visibility` | `locked` (default, greyed out with what it needs), `visible`, `hidden` (not shown until unlocked) or `secret` (not shown at all until done, then a "Secret found" toast) |
+| `optional` | `true` for a side quest: dashed border, not counted in the chapter total |
+| `tasks`, `task_mode` | what to do; `all` (default) or `any` task finishes the quest |
+| `rewards`, `choose_one` | given on claim; the player picks one entry of `choose_one` |
+| `repeat` | `{ "cooldown": "20m", "limit": 0 }`, see [Repeatable quests](#repeatable-quests) |
+| `tiers` | milestones, see [Milestones](#milestones) |
+| `exclusive` | `{ "group": "starter_path", "lock_on": "choose" }`, see [Branching paths](#branching-paths) |
+| `toast` | `complete` (default), `unlock`, `both` or `none` |
+| `requires`, `disabled` | see [Requires and overrides](#requires-and-overrides) |
+
+Quest states, per team: hidden, locked, available, in progress, complete, and closed for a rival path that was not taken. On top of complete each player has their own claimable or claimed.
+
+### Tasks
+
+Every task can have `id` (progress is saved by id, so set one; the default is the list index), `type`, `count` (default 1, counting types only), `text` (replaces the line shown in the book) and `requires`. Item references are an id, a tag (`#minecraft:logs`) or a list in `items`. All counts are 64-bit, so a task for a million items works.
+
+| Type | Fields | Done when |
+| --- | --- | --- |
+| `item` | `item`/`items`, `count`, `match`, `consume`, `hand_in`, `team_total` | the team holds the items (or hands them in, with `consume`) |
+| `craft` | `item`/`items`, `count`, `match`, `from_stats` | crafted after the quest opened |
+| `smelt` | `item`/`items`, `count`, `match`, `from_stats` | taken out of a furnace, smoker or blast furnace |
+| `pickup` | `item`/`items`, `count`, `match`, `from_stats` | picked up |
+| `use` | `item`/`items`, `count`, `match`, `from_stats` | used: right click, eat, drink, throw (vanilla also counts placing a block item, use `place` for blocks) |
+| `place`, `break` | `block` (id or tag), `count`, `from_stats` | blocks placed or mined |
+| `kill` | `entity` (id or tag), `count`, `from_stats` | mobs killed by any member |
+| `stat` | `stat`, `value`, `count`, `from_stats` | a vanilla or modded stat, for example `"stat": "minecraft:custom", "value": "minecraft:jump"` |
+| `advancement` | `advancement` | any member has the advancement |
+| `dimension` | `dimension` | a member stands in the dimension |
+| `biome` | `biome` (id or tag) | a member stands in the biome |
+| `checkbox` | `text` (needed) | a member ticks it in the book |
+| `<modid>:<name>` | the mod's own fields | added by a mod, see [Custom task types](#custom-task-types) |
+
+- Counting tasks count from when the quest becomes available, added up over the team. `"from_stats": true` uses the player's vanilla stats instead, so things done earlier count too (not allowed in repeatable quests).
+- `item` tasks add up what every online member holds in their main inventory and offhand. `"team_total": false` makes one member hold the full count.
+- `"consume": true` turns an item task into a hand-in: the book shows a Hand in button that takes what the task still needs, and every member's hand-ins add up. `hand_in` picks how: `both` (default) for the button and the hand-in box, `hand` for the button only, `box` for the box only. Handed-in items are gone for good.
+- `match` checks item data: `components` on 1.21.1 and later, `nbt` on 1.20.1.
+
+### Rewards
+
+Each entry in `rewards` or `choose_one` is one of:
+
+| Entry | Gives |
+| --- | --- |
+| `{ "item": "minecraft:iron_ingot", "count": 8, "components": { ... } }` | items (no tags; `nbt` instead of `components` on 1.20.1). A full inventory drops them at the player's feet |
+| `{ "xp": 100 }` | experience points |
+| `{ "xp_levels": 5 }` | experience levels |
+| `{ "command": "effect give @s minecraft:speed 60 1", "label": "Speed for a minute", "icon": "minecraft:sugar" }` | runs a command as the claiming player (`@s`), output hidden, at `command_reward_permission` |
+| `{ "loot_table": "mypack:rewards/stone_age" }` | one roll of the loot table |
+
+Every player claims each finished quest once, even after changing teams, and a late joiner can claim what the team already did. The book, tabs and the guide tooltip show rewards waiting.
+
+### Repeatable quests
+
+`"repeat": { "cooldown": "20m", "limit": 3 }` opens the quest again once the cooldown has passed, counted from when it was finished. Cooldowns are real time on the server clock (`90s`, `20m`, `6h`, `1h30m`), so sleeping or `/time set` does nothing, and the timer keeps running while the server is off. `limit` is how many times the team can do it; 0 or left out means no limit. A player who missed several cycles still gets one claim.
+
+Item tasks in a repeatable quest need `"consume": true`, otherwise items still held would finish every cycle at once. Advancement tasks and `from_stats` do not work in repeatable quests for the same reason.
+
+### Milestones
+
+One counting task and a list of tiers:
+
+```json
+{
+  "chapter": "camp", "title": "Stone breaker",
+  "tasks": [{ "id": "b", "type": "break", "block": "minecraft:stone" }],
+  "tiers": [
+    { "count": 10, "title": "Bronze", "rewards": [{ "item": "minecraft:copper_ingot", "count": 4 }] },
+    { "count": 50, "title": "Silver", "rewards": [{ "item": "minecraft:iron_ingot", "count": 4 }] },
+    { "count": 100, "title": "Gold", "rewards": [{ "item": "minecraft:gold_ingot", "count": 4 }] }
+  ]
+}
+```
+
+Tier counts must go up, and the task's own `count` is ignored. Each tier is claimed on its own; quest `rewards` come with the last tier. The quest counts as done for `depends` at the first tier, and `"camp/miner#2"` waits for tier 2.
+
+### Branching paths
+
+Give each rival quest the same `"exclusive": { "group": "starter_path", "lock_on": "choose" }`. With `choose`, the team owner takes a path with a button and a confirm step, and the rivals close for the whole team. With `complete`, the first rival finished closes the rest and anyone can do it. A group needs at least two quests. A quest after the split can depend on all rivals with `"depends_mode": "any"`. Ops undo a choice with `/sbquests path reset <team> <group>`.
+
+### Bounty board
+
+A pool file, `pools/bounties.json`:
+
+```json
+{
+  "offers": 3,
+  "refresh": { "cooldown": "1h" },
+  "reroll": { "allowed": true, "cost": [{ "item": "minecraft:emerald", "count": 2 }] },
+  "quests": [
+    { "quest": "bounties/rats", "weight": 3 },
+    { "quest": "bounties/dragon", "weight": 1, "depends": ["paths/veteran"] }
+  ]
+}
+```
+
+Each pool quest has `"pool": "bounties"` instead of `chapter`, and is shown on a chapter with `"layout": "board"` (chapter file `bounties.json`, or any name with `"pool": "bounties"`). Each team gets its own random offers, picked by `weight` and saved with the world. A finished offer stays until its refresh cooldown has passed, then a new one takes its place. Any member can reroll the unfinished offers by paying the cost (items or `xp_levels`). An entry's `depends` keeps it off the board until the team is ready. Pool quests cannot use `repeat` or `exclusive`, because the board brings them back.
+
+### Hand-in box
+
+The block `simplebooks:hand_in_box` (crafted from iron, a book, a hopper and a chest) takes items from hoppers, droppers, pipes and other mods' item transfer, and hands them in to the owning team's open `consume` tasks that allow the box (`hand_in` `both` or `box`). It only accepts what a task still needs and refuses anything else, so items stay in the hopper. It stores nothing: accepted items are counted and voided. The box belongs to the placer's team; in its screen the team can aim it at one quest. A label above it shows the progress, and a comparator reads how full the target task is. `"hand_in": "box"` makes a task that can only be filled by automation, good for 100,000 iron.
+
+### Teams
+
+Every player is in exactly one team; a new player is a team of one. Team members share quest progress. Players manage teams in the book's team spread or with `/sbteam`:
+
+- `/sbteam create <name>`, `/sbteam invite <player>` (owner), `/sbteam join <name> [confirm]` (needs an invite; `confirm` is asked for when joining would replace your own progress with the team's)
+- `/sbteam leave`, `/sbteam kick <player>` (owner), `/sbteam owner <player>`, `/sbteam list`, `/sbteam info [team]`
+
+A player who leaves or is kicked becomes a team named after them and keeps a copy of everything the team had done. Their claims stay with them, so they can never claim the same reward twice. If the owner leaves, the member who joined first becomes owner.
+
+### Server options
+
+`config/simplebooks.json`, written with defaults on first start and read again with `/sbquests reload-config`:
+
+```json
+{ "team_source": "simplebooks", "first_join_book": "", "hand_in_box": true, "command_reward_permission": 2 }
+```
+
+| Key | Use |
+| --- | --- |
+| `team_source` | `simplebooks` (default): the teams above. `scoreboard`: follow vanilla `/team` teams; `/sbteam create`, `invite`, `join`, `leave` and `kick` are then turned off. A mod can add more sources, see [Team sources](#team-sources). An unknown source falls back to `simplebooks` with a warning |
+| `first_join_book` | a book id such as `mypack:journal`. Every player gets it once on their first join with this set. Empty turns it off |
+| `hand_in_box` | `false` makes hand-in boxes accept nothing |
+| `command_reward_permission` | permission level for `command` rewards (default 2) |
+
+### Requires and overrides
+
+`requires` (a list of mod ids) works on chapters, quests, tasks and reward entries: the thing is skipped unless every mod is loaded. A quest that depends on a skipped quest treats it as done, so an optional mod never blocks a quest line. A task of a custom type from a mod that is not installed skips its quest quietly. A data pack with the same file path replaces a quest; `{ "disabled": true }` removes it. Other mods can add quests to your book by shipping files in its folder.
+
+### Validating and admin commands
+
+Quest files are checked on every load and `/reload`; problems are logged with the file and the JSON field. A broken quest is skipped and the rest of the book keeps working. Run `/sbquests validate [book]` after every change: it checks the files as they are now, prints the counts of errors and warnings, and lists each problem.
+
+Admin commands (permission level 2). A player name means that player's team.
+
+- `/sbquests validate [book]`
+- `/sbquests complete <player|team> <quest>` and `/sbquests uncomplete <player|team> <quest>`
+- `/sbquests reset <player|team> [book|chapter|quest]`
+- `/sbquests claims reset <player> [quest]`
+- `/sbquests progress <player>`: every open quest and its counts
+- `/sbquests path reset <team> <group>`, `/sbquests pool reroll <team> <pool>`
+- `/sbquests team owner <team> <player>`
+- `/sbquests open <player> <book> [spread]`
+- `/sbquests prune`: drops saved progress of quests that no longer exist (it is kept otherwise, so removing a mod for a while loses nothing)
+- `/sbquests reload-config`
+
+### Common mistakes
+
+- Leaving out task `id`s: progress is saved by id, so reordering tasks without ids resets their counts.
+- An `item` task without `consume` in a repeatable quest: it finishes again as soon as it reopens.
+- A `checkbox` without `text`, or a quest with no tasks (it is done as soon as it unlocks).
+- Depending on an `optional` quest. Side quests should be dead ends.
+- A story chapter where two quests share a `sort`, or one has none.
+- Two tree quests on the same `pos`.
+- Setting `count` on a milestone task (the tiers set the counts), or tier counts that do not go up.
+- `hand_in` without `consume`, or item fields on a task that is not item based.
+- An `exclusive` group with one quest, or `depends` on two rivals of one group with `depends_mode` `all` (it can never unlock).
+- A pool quest that its pool does not list, or a board chapter that also has normal quests.
+- Tags in item rewards (rewards need one item id), or `nbt` on 1.21.1 and later (use `components`).
+- `cooldown` text in days: only `s`, `m` and `h` are read.
+- Expecting offline members' items to count towards a team item task. Only online members count.
+
+### Custom task types
+
+Mods can add task types with their own JSON fields. The API is in `com.workshopcraft.simplebooks.api` and uses plain string ids on every version. Register on both sides, so the book can show the task:
+
+```java
+public final class SimpleBooksCompat implements SimpleBooksPlugin {
+    @Override
+    public void register() {
+        SimpleBooksApi.registerTaskType("mymod:power_produced", new TaskType() {
+            @Override
+            public TaskSpec parse(JsonObject json, TaskProblems problems) {
+                TaskSpec spec = TaskSpec.of(json);
+                if (spec.count() < 1) problems.error("count", "must be at least 1");
+                return spec;
+            }
+
+            @Override
+            public Display display(TaskSpec spec) {
+                return new Display("mymod:generator", "Produce " + spec.count() + " FE");
+            }
+        });
+    }
+
+    // called by the mod's generator code, on the server thread
+    public static void produced(ServerPlayer owner, BlockState state, long fe) {
+        SimpleBooksApi.progress(owner, "mymod:power_produced", fe, spec -> spec.matchesBlock("machine", state));
+    }
+}
+```
+
+The quest then uses `{ "id": "p", "type": "mymod:power_produced", "machine": "#mymod:generators", "count": 500000 }`. For a state rather than an event ("own 5 golems"), override `poll(ServerPlayer, TaskSpec)` instead: it is called once a second while the task is open, added up over online members. `progressTeam(server, uuid, type, amount, filter)` credits whatever team a player is in, online or not, for machines that run while nobody is near.
+
+Keep Simple Books optional: compile against it `compileOnly` (`modCompileOnly` with Loom on 1.20.1 and 1.21.1 Fabric), keep every call in one class like the one above, and let Simple Books load that class only when it is installed:
+
+- Fabric: `"entrypoints": { "simplebooks": ["com.example.mymod.SimpleBooksCompat"] }` in `fabric.mod.json`.
+- Forge and NeoForge: in `InterModEnqueueEvent`, `InterModComms.sendTo("simplebooks", "plugin", () -> "com.example.mymod.SimpleBooksCompat")`.
+
+Calls from your own code (such as `produced` above) must check that Simple Books is loaded first. With no code at all, a mod can register a custom stat or fire an advancement, and packs use the `stat` or `advancement` task.
+
+### Team sources
+
+A party or teams mod can provide the teams with `api.TeamSource`, registered from the same plugin:
+
+```java
+SimpleBooksApi.registerTeamSource("myparties", player -> Parties.partyIdOf(player));
+```
+
+`teamOf(player)` returns a team id or null for no team, and the optional `name(team)` gives the name shown in the book. Packs pick it with `"team_source": "myparties"`. Simple Books asks once a second per online player, so no membership callbacks are needed; joining and leaving follow the same rules as its own teams.
 
 ## Commands (client side)
 
@@ -396,8 +692,8 @@ A bounty board is a pool file such as `pools/bounties.json`: `{ "offers": 3, "re
 
 ## Development
 
-`dev/example-pack` is an example resource pack with a deliberately broken book (`simplebooks:broken_test`) and the blueprint sample (`simplebooks:blueprints`). The More Foods cookbook now ships inside More Foods; most of its pages are made by `dev/cookbook_gen.py` from the More Foods recipe files and written straight into that repo (`python3 dev/cookbook_gen.py <more foods repo> <vanilla en_us.json>`); `pizza.json` and `pizza_2.json` are written by hand. `runClient` copies it into the run folder and enables it; it is never packed into the jar. If `dev/morefood-fabric.jar` or `dev/morefood-neoforge.jar` exist (More Foods 2.0 alpha jars, not in git), they are put on the dev client's classpath so the cookbook shows real items.
+`dev/example-pack` is an example resource pack with a deliberately broken book (`simplebooks:broken_test`) and the blueprint sample (`simplebooks:blueprints`). Its `config/` folder is the example quest pack (`example:guide`), laid out as a pack ships it; copy it into a run folder's `config/` to try it. `dev/quest-fixtures/config/simplebooks` holds the quest test books (`cfgtest:journal` with deliberately broken files and `sbdemo:guide`), copied the same way. The More Foods cookbook now ships inside More Foods; most of its pages are made by `dev/cookbook_gen.py` from the More Foods recipe files and written straight into that repo (`python3 dev/cookbook_gen.py <more foods repo> <vanilla en_us.json>`); `pizza.json` and `pizza_2.json` are written by hand. `runClient` copies it into the run folder and enables it; it is never packed into the jar. If `dev/morefood-fabric.jar` or `dev/morefood-neoforge.jar` exist (More Foods 2.0 alpha jars, not in git), they are put on the dev client's classpath so the cookbook shows real items.
 
 The build uses Stonecutter: one source tree in `src/main`, one project per target under `versions/` (for example `1.20.1-forge`, `26.1.2-fabric`). `./gradlew build` builds all of them; `./gradlew :1.21.1-neoforge:runClient` runs one. Files that only differ by format on old versions (recipe, loot table, item model, pack.mcmeta) live in `src/legacy/<version>` and win over `src/main/resources`. Add `-PquickPlay=localhost:25565` to `runClient` to join a server straight away as `Dev`.
 
-Not yet done: grant events, Python preview renderer.
+Not yet done: grant events, Python preview renderer (it does not draw quest spreads either).
