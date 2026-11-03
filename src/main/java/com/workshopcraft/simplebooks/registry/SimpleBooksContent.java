@@ -3,6 +3,8 @@ package com.workshopcraft.simplebooks.registry;
 import com.workshopcraft.simplebooks.GuideItem;
 import com.workshopcraft.simplebooks.GuideRecipe;
 import com.workshopcraft.simplebooks.SimpleBooks;
+import com.workshopcraft.simplebooks.box.HandInBoxBlock;
+import com.workshopcraft.simplebooks.box.HandInBoxBlockEntity;
 import com.workshopcraft.simplebooks.stand.BookStandBlock;
 import com.workshopcraft.simplebooks.stand.BookStandBlockEntity;
 import net.minecraft.core.Registry;
@@ -41,6 +43,9 @@ public final class SimpleBooksContent {
     public static Item STAND_ITEM;
     public static Block STAND;
     public static BlockEntityType<BookStandBlockEntity> STAND_ENTITY;
+    public static Item HAND_IN_BOX_ITEM;
+    public static Block HAND_IN_BOX;
+    public static BlockEntityType<HandInBoxBlockEntity> HAND_IN_BOX_ENTITY;
 
     private SimpleBooksContent() {}
 
@@ -57,28 +62,40 @@ public final class SimpleBooksContent {
         props = props.setId(ResourceKey.create(Registries.BLOCK, SimpleBooks.id("book_stand")));
         STAND = new BookStandBlock(props);
         r.accept(SimpleBooks.id("book_stand"), STAND);
+        BlockBehaviour.Properties box = BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(3.0F, 6.0F).sound(SoundType.METAL);
+        //? if >=1.21.2
+        box = box.setId(ResourceKey.create(Registries.BLOCK, SimpleBooks.id("hand_in_box")));
+        HAND_IN_BOX = new HandInBoxBlock(box);
+        r.accept(SimpleBooks.id("hand_in_box"), HAND_IN_BOX);
     }
 
     public static void registerItems(BiConsumer<Identifier, Item> r) {
         Item.Properties guide = new Item.Properties().stacksTo(1);
         Item.Properties stand = new Item.Properties();
+        Item.Properties box = new Item.Properties();
         //? if >=1.21.2 {
         guide = guide.setId(ResourceKey.create(Registries.ITEM, SimpleBooks.id("guide")));
         stand = stand.useBlockDescriptionPrefix().setId(ResourceKey.create(Registries.ITEM, SimpleBooks.id("book_stand")));
+        box = box.useBlockDescriptionPrefix().setId(ResourceKey.create(Registries.ITEM, SimpleBooks.id("hand_in_box")));
         //?}
         GUIDE = new GuideItem(guide);
         r.accept(SimpleBooks.id("guide"), GUIDE);
         STAND_ITEM = new BlockItem(STAND, stand);
         r.accept(SimpleBooks.id("book_stand"), STAND_ITEM);
+        HAND_IN_BOX_ITEM = new BlockItem(HAND_IN_BOX, box);
+        r.accept(SimpleBooks.id("hand_in_box"), HAND_IN_BOX_ITEM);
     }
 
     public static void registerBlockEntities(BiConsumer<Identifier, BlockEntityType<?>> r) {
         //? if >=1.21.2 {
         STAND_ENTITY = new BlockEntityType<>(BookStandBlockEntity::new, java.util.Set.of(STAND));
+        HAND_IN_BOX_ENTITY = new BlockEntityType<>(HandInBoxBlockEntity::new, java.util.Set.of(HAND_IN_BOX));
         //?} else {
         /*STAND_ENTITY = BlockEntityType.Builder.of(BookStandBlockEntity::new, STAND).build(null);
+        HAND_IN_BOX_ENTITY = BlockEntityType.Builder.of(HandInBoxBlockEntity::new, HAND_IN_BOX).build(null);
         *///?}
         r.accept(SimpleBooks.id("book_stand"), STAND_ENTITY);
+        r.accept(SimpleBooks.id("hand_in_box"), HAND_IN_BOX_ENTITY);
     }
 
     public static void registerRecipeSerializers(BiConsumer<Identifier, RecipeSerializer<?>> r) {

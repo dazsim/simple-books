@@ -91,6 +91,7 @@ public final class QuestEngine {
         world = new QuestWorld();
         dirty.clear();
         shares.clear();
+        HandInBoxes.invalidateAll();
     }
 
     public static @Nullable MinecraftServer server() {
@@ -115,6 +116,7 @@ public final class QuestEngine {
         byType = types;
         byStat = stats;
         statCache.clear();
+        HandInBoxes.invalidateAll();
         dirty.addAll(world.teams.keySet());
     }
 
@@ -127,8 +129,18 @@ public final class QuestEngine {
     }
 
     static void changed(Team t) {
+        touched(t);
+        HandInBoxes.invalidate(t.id);
+    }
+
+    /** Progress moved without changing what is open or full: send and save, keep the box lookup. */
+    static void touched(Team t) {
         dirty.add(t.id);
         if (data != null) data.setDirty();
+    }
+
+    static List<Ref> refs(String type) {
+        return byType.getOrDefault(type, List.of());
     }
 
     public static void login(ServerPlayer p) {
@@ -452,7 +464,7 @@ public final class QuestEngine {
         return !any;
     }
 
-    private static @Nullable Prog openProg(Team t, Book b, Quest q) {
+    static @Nullable Prog openProg(Team t, Book b, Quest q) {
         Map<String, Prog> m = prog(t);
         Prog p = m.get(q.id());
         if (p != null && p.complete()) return null;
@@ -494,7 +506,7 @@ public final class QuestEngine {
         changed(t);
     }
 
-    private static void tier(Team t, Quest q, Prog p) {
+    static void tier(Team t, Quest q, Prog p) {
         if (q.tiers().isEmpty() || q.tasks().isEmpty()) return;
         long c = p.count(q.tasks().get(0).id());
         int n = 0;
@@ -691,7 +703,7 @@ public final class QuestEngine {
 
     // ---- player actions ----
 
-    private static @Nullable Task task(Quest q, String id) {
+    static @Nullable Task task(Quest q, String id) {
         for (Task t : q.tasks()) if (t.id().equals(id)) return t;
         return null;
     }

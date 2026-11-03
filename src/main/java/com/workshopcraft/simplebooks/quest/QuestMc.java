@@ -127,6 +127,14 @@ public final class QuestMc {
         return new String[]{t == null ? "" : t.toString(), v == null ? "" : v.toString()};
     }
 
+    public static boolean op(ServerPlayer p) {
+        //? if >=26.1 {
+        return net.minecraft.commands.Commands.hasPermission(net.minecraft.commands.Commands.LEVEL_GAMEMASTERS).test(p.createCommandSourceStack());
+        //?} else {
+        /*return p.hasPermissions(2);
+        *///?}
+    }
+
     public static CommandSourceStack source(ServerPlayer p, int level) {
         //? if >=26.1 {
         return p.createCommandSourceStack().withPermission(

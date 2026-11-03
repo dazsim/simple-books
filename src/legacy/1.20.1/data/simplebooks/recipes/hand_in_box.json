@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": ["IBI", "IHI", "ICI"],
+  "key": { "I": { "item": "minecraft:iron_ingot" }, "B": { "item": "minecraft:book" }, "H": { "item": "minecraft:hopper" }, "C": { "item": "minecraft:chest" } },
+  "result": { "item": "simplebooks:hand_in_box", "count": 1 }
+}

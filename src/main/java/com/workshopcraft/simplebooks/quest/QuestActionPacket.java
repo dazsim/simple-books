@@ -56,6 +56,7 @@ public record QuestActionPacket(String action, String quest, String task, int nu
             case "team_leave" -> QuestEngine.leave(player);
             case "team_kick" -> QuestEngine.kick(player, text);
             case "team_owner" -> QuestEngine.owner(player, text);
+            case "box_target" -> com.workshopcraft.simplebooks.box.HandInBoxBlock.target(player, text, quest);
             default -> null;
         };
         if (r == null) return;
