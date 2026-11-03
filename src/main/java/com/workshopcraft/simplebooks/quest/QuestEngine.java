@@ -319,6 +319,12 @@ public final class QuestEngine {
         if (scoreboard()) return scoreboardOnly();
         Team t = team(p);
         if (t.solo()) return Result.no("You are not in a team");
+        if (t.members.size() == 1) {
+            String was = t.name;
+            t.name = "";
+            changed(t);
+            return Result.ok("You left " + was + " and are on your own now");
+        }
         split(t, p.getUUID().toString());
         return Result.ok("You left " + t.name + " and kept a copy of its progress");
     }
@@ -357,8 +363,17 @@ public final class QuestEngine {
 
     private static void split(Team t, String member) {
         Team n = world.splitOff(t, member, now(), "simplebooks");
+        n.name = freeName(name(member));
         if (world.teams.containsKey(t.id)) changed(t);
         changed(n);
+    }
+
+    /** The name a new team gets by default: the player's name, with a number added if taken. */
+    static String freeName(String base) {
+        if (!TEAM_NAME.matcher(base).matches()) base = "team";
+        String n = base;
+        for (int i = 2; world.byName(n) != null; i++) n = base.substring(0, Math.min(base.length(), 28)) + "_" + i;
+        return n;
     }
 
     public static List<String> info(ServerPlayer p) {
