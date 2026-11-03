@@ -41,6 +41,7 @@ public class SimpleBooksFabric implements ModInitializer {
         ConfigPack.createFolders();
         SimpleBooksContent.registerAllDirect();
         SimpleBooks.dev = FabricLoader.getInstance().isDevelopmentEnvironment();
+        net.fabricmc.fabric.api.transfer.v1.item.ItemStorage.SIDED.registerForBlockEntity((be, side) -> be.handler(BoxStorage::new), SimpleBooksContent.HAND_IN_BOX_ENTITY);
         //? if >=26.1 {
         PayloadTypeRegistry.serverboundPlay().register(PageTurn.TYPE, PageTurn.STREAM_CODEC);
         PayloadTypeRegistry.serverboundPlay().register(QuestActionPacket.TYPE, QuestActionPacket.STREAM_CODEC);
@@ -48,7 +49,10 @@ public class SimpleBooksFabric implements ModInitializer {
         PayloadTypeRegistry.clientboundPlay().register(QuestSyncPacket.TYPE, QuestSyncPacket.STREAM_CODEC);
         ServerPlayNetworking.registerGlobalReceiver(PageTurn.TYPE, (payload, ctx) -> payload.handle(ctx.player()));
         ServerPlayNetworking.registerGlobalReceiver(QuestActionPacket.TYPE, (payload, ctx) -> payload.handle(ctx.player()));
-        CreativeModeTabEvents.modifyOutputEvent(SimpleBooksContent.FUNCTIONAL_TAB).register(e -> e.accept(SimpleBooksContent.STAND_ITEM));
+        CreativeModeTabEvents.modifyOutputEvent(SimpleBooksContent.FUNCTIONAL_TAB).register(e -> {
+            e.accept(SimpleBooksContent.STAND_ITEM);
+            e.accept(SimpleBooksContent.HAND_IN_BOX_ITEM);
+        });
         ResourceLoader.get(PackType.SERVER_DATA).registerReloadListener(QuestReload.ID, new QuestReload());
         //?} else if >=1.20.5 {
         /*PayloadTypeRegistry.playC2S().register(PageTurn.TYPE, PageTurn.STREAM_CODEC);
@@ -57,7 +61,10 @@ public class SimpleBooksFabric implements ModInitializer {
         PayloadTypeRegistry.playS2C().register(QuestSyncPacket.TYPE, QuestSyncPacket.STREAM_CODEC);
         ServerPlayNetworking.registerGlobalReceiver(PageTurn.TYPE, (payload, ctx) -> payload.handle(ctx.player()));
         ServerPlayNetworking.registerGlobalReceiver(QuestActionPacket.TYPE, (payload, ctx) -> payload.handle(ctx.player()));
-        ItemGroupEvents.modifyEntriesEvent(SimpleBooksContent.FUNCTIONAL_TAB).register(e -> e.accept(SimpleBooksContent.STAND_ITEM));
+        ItemGroupEvents.modifyEntriesEvent(SimpleBooksContent.FUNCTIONAL_TAB).register(e -> {
+            e.accept(SimpleBooksContent.STAND_ITEM);
+            e.accept(SimpleBooksContent.HAND_IN_BOX_ITEM);
+        });
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new Quests());
         *///?} else {
         /*ServerPlayNetworking.registerGlobalReceiver(PageTurn.ID, (server, player, handler, buf, sender) -> {
@@ -68,7 +75,10 @@ public class SimpleBooksFabric implements ModInitializer {
             QuestActionPacket p = QuestActionPacket.read(buf);
             server.execute(() -> p.handle(player));
         });
-        ItemGroupEvents.modifyEntriesEvent(SimpleBooksContent.FUNCTIONAL_TAB).register(e -> e.accept(SimpleBooksContent.STAND_ITEM));
+        ItemGroupEvents.modifyEntriesEvent(SimpleBooksContent.FUNCTIONAL_TAB).register(e -> {
+            e.accept(SimpleBooksContent.STAND_ITEM);
+            e.accept(SimpleBooksContent.HAND_IN_BOX_ITEM);
+        });
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new Quests());
         *///?}
         ServerLifecycleEvents.SERVER_STARTED.register(QuestManager::serverStarted);

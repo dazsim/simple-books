@@ -65,8 +65,18 @@ public class SimpleBooksNeoForge {
         modBus.addListener((InterModProcessEvent e) -> QuestPlugins.run(
                 InterModComms.getMessages(SimpleBooks.MOD_ID, "plugin"::equals).map(m -> m.messageSupplier().get()).toList()));
         modBus.addListener((BuildCreativeModeTabContentsEvent e) -> {
-            if (e.getTabKey() == SimpleBooksContent.FUNCTIONAL_TAB) e.accept(SimpleBooksContent.STAND_ITEM);
+            if (e.getTabKey() == SimpleBooksContent.FUNCTIONAL_TAB) {
+                e.accept(SimpleBooksContent.STAND_ITEM);
+                e.accept(SimpleBooksContent.HAND_IN_BOX_ITEM);
+            }
         });
+        modBus.addListener((net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent e) -> e.registerBlockEntity(
+                //? if >=26.1 {
+                net.neoforged.neoforge.capabilities.Capabilities.Item.BLOCK,
+                //?} else {
+                /*net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK,
+                *///?}
+                SimpleBooksContent.HAND_IN_BOX_ENTITY, (be, side) -> be.handler(BoxHandler::new)));
         modBus.addListener((AddPackFindersEvent e) -> {
             if (!e.isTrusted()) e.addRepositorySource(ConfigPack.source(e.getPackType()));
         });

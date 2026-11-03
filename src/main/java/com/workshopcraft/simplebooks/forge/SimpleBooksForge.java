@@ -81,6 +81,7 @@ public class SimpleBooksForge {
         };
         modBus.addListener((InterModProcessEvent e) -> QuestPlugins.run(
                 InterModComms.getMessages(SimpleBooks.MOD_ID, "plugin"::equals).map(m -> m.messageSupplier().get()).toList()));
+        MinecraftForge.EVENT_BUS.addGenericListener(net.minecraft.world.level.block.entity.BlockEntity.class, BoxHandler::attach);
         MinecraftForge.EVENT_BUS.addListener((ServerStoppedEvent e) -> QuestEngine.stop());
         MinecraftForge.EVENT_BUS.addListener((TickEvent.ServerTickEvent e) -> {
             if (e.phase == TickEvent.Phase.END) QuestEngine.tick(e.getServer());
@@ -104,7 +105,10 @@ public class SimpleBooksForge {
             }
         });
         modBus.addListener((BuildCreativeModeTabContentsEvent e) -> {
-            if (e.getTabKey() == SimpleBooksContent.FUNCTIONAL_TAB) e.accept(SimpleBooksContent.STAND_ITEM);
+            if (e.getTabKey() == SimpleBooksContent.FUNCTIONAL_TAB) {
+                e.accept(SimpleBooksContent.STAND_ITEM);
+                e.accept(SimpleBooksContent.HAND_IN_BOX_ITEM);
+            }
         });
         if (FMLEnvironment.dist == Dist.CLIENT) SimpleBooksForgeClient.init(modBus);
     }
