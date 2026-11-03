@@ -3,6 +3,7 @@ package com.workshopcraft.simplebooks.quest;
 import com.workshopcraft.simplebooks.SimpleBooks;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import org.jspecify.annotations.Nullable;
 import net.minecraft.server.level.ServerPlayer;
 //? if >=1.20.5 {
 import io.netty.buffer.ByteBuf;
@@ -44,12 +45,14 @@ public record QuestActionPacket(String action, String quest, String task, int nu
         return new QuestActionPacket(buf.readUtf(), buf.readUtf(), buf.readUtf(), buf.readVarInt(), buf.readUtf());
     }
 
-    public void handle(ServerPlayer player) {
-        if (QuestEngine.server() == null) return;
+    public QuestEngine.@Nullable Result handle(ServerPlayer player) {
+        if (QuestEngine.server() == null) return null;
         QuestEngine.Result r = switch (action) {
             case "checkbox" -> QuestEngine.checkbox(player, quest, task);
             case "hand_in" -> QuestEngine.handIn(player, quest, task);
             case "claim" -> QuestEngine.claim(player, quest, number);
+            case "choose" -> QuestEngine.choose(player, quest);
+            case "reroll" -> QuestEngine.reroll(player, quest);
             case "team_create" -> QuestEngine.create(player, text);
             case "team_invite" -> QuestEngine.invite(player, text);
             case "team_join" -> QuestEngine.join(player, text, number == 1);
@@ -59,9 +62,10 @@ public record QuestActionPacket(String action, String quest, String task, int nu
             case "box_target" -> com.workshopcraft.simplebooks.box.HandInBoxBlock.target(player, text, quest);
             default -> null;
         };
-        if (r == null) return;
-        if (!r.message().isEmpty() && (!r.ok() || action.startsWith("team_") || action.equals("hand_in")))
+        if (r == null) return null;
+        if (!r.message().isEmpty() && (!r.ok() || action.startsWith("team_") || action.equals("hand_in") || action.equals("reroll")))
             player.sendSystemMessage(Component.literal(r.message()));
         QuestEngine.flush();
+        return r;
     }
 }

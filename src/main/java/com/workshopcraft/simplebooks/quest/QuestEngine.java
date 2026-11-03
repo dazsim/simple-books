@@ -238,6 +238,8 @@ public final class QuestEngine {
         world.progress(from.id).forEach((k, v) -> dst.put(k, v.copy()));
         Map<String, String> ex = world.exclusive.get(from.id);
         if (ex != null) world.exclusive.put(to.id, new HashMap<>(ex));
+        Map<String, QuestSave.Pool> po = world.pools.get(from.id);
+        if (po != null) world.pools.put(to.id, new HashMap<>(po));
     }
 
     static List<ServerPlayer> online(Team t) {
@@ -430,7 +432,7 @@ public final class QuestEngine {
 
     static boolean chapterDone(Team t, Book b, String chapter) {
         for (Quest q : b.quests().values())
-            if (chapter.equals(q.chapter()) && !q.optional() && !questComplete(t, q.id())) return false;
+            if (chapter.equals(q.chapter()) && !q.optional() && !closed(t, q) && !questComplete(t, q.id())) return false;
         return true;
     }
 
@@ -444,9 +446,12 @@ public final class QuestEngine {
     }
 
     static boolean depsMet(Team t, Book b, Quest q) {
-        if (q.depends().isEmpty()) return true;
-        boolean any = q.dependsMode().equals("any");
-        for (String d : q.depends()) {
+        return met(t, b, q.depends(), q.dependsMode().equals("any"));
+    }
+
+    static boolean met(Team t, Book b, List<String> deps, boolean any) {
+        if (deps.isEmpty()) return true;
+        for (String d : deps) {
             String base = QuestParser.base(d);
             int tier = 0;
             if (d.contains("#")) {
@@ -463,7 +468,14 @@ public final class QuestEngine {
         return !any;
     }
 
+    /** Open for progress: reachable, not closed by a rival path and, for a chosen path, taken. */
     public static boolean open(Team t, Book b, Quest q) {
+        return reachable(t, b, q) && !closed(t, q) && !unpicked(t, q);
+    }
+
+    /** Chapter, depends and story order allow it, or the board offers it. */
+    static boolean reachable(Team t, Book b, Quest q) {
+        if (q.pool() != null) return offered(t, q.pool(), q.id()) && boardOpen(t, b, q.pool()) && depsMet(t, b, q);
         if (q.chapter() == null) return false;
         Chapter c = b.chapters().get(q.chapter());
         if (c == null || !chapterOpen(t, b, c) || !depsMet(t, b, q)) return false;
@@ -480,7 +492,10 @@ public final class QuestEngine {
     public static String status(Team t, Book b, Quest q) {
         Prog p = prog(t).get(q.id());
         if (p != null && p.complete()) return "complete";
-        if (open(t, b, q)) return p != null && p.tasks.values().stream().anyMatch(v -> v > 0) ? "in_progress" : "available";
+        if (q.pool() != null && !reachable(t, b, q)) return "hidden";
+        boolean reach = reachable(t, b, q);
+        if (closed(t, q) && (reach || q.visibility().equals("visible") || q.visibility().equals("locked"))) return "closed";
+        if (reach) return p != null && p.tasks.values().stream().anyMatch(v -> v > 0) ? "in_progress" : "available";
         return q.visibility().equals("hidden") || q.visibility().equals("secret") ? "hidden" : "locked";
     }
 
@@ -527,8 +542,10 @@ public final class QuestEngine {
         for (int guard = 0; guard < 64; guard++) {
             boolean more = false;
             for (Book b : defs().books().values())
+                for (QuestDefs.Pool pool : b.pools().values()) more |= roll(t, b, pool, false, Set.of());
+            for (Book b : defs().books().values())
                 for (Quest q : b.quests().values()) {
-                    if (q.repeat() != null) {
+                    if (q.repeat() != null && q.pool() == null) {
                         Prog old = prog(t).get(q.id());
                         if (old != null) reopen(t, q, old);
                     }
@@ -667,6 +684,7 @@ public final class QuestEngine {
         int was = p.tier;
         p.state = "complete";
         p.completedAt = now();
+        if (q.exclusive() != null && q.pool() == null) world.exclusive.computeIfAbsent(t.id, k -> new HashMap<>()).putIfAbsent(q.exclusive().group(), q.id());
         tier(t, q, p);
         changed(t);
         boolean secret = q.visibility().equals("secret") && p.cycle == 0 && was == 0;
@@ -680,6 +698,252 @@ public final class QuestEngine {
             if (q != null) return new Ref(b, q, null);
         }
         return null;
+    }
+
+    // ---- paths ----
+
+    static @Nullable String pathOf(Team t, String group) {
+        Map<String, String> ex = world.exclusive.get(t.id);
+        return ex == null ? null : ex.get(group);
+    }
+
+    /** A rival of this quest was taken, or finished first. */
+    static boolean closed(Team t, Quest q) {
+        if (q.exclusive() == null || q.pool() != null) return false;
+        String c = pathOf(t, q.exclusive().group());
+        return c != null && !c.equals(q.id());
+    }
+
+    /** A "choose" path the owner has not picked yet. */
+    static boolean unpicked(Team t, Quest q) {
+        return q.exclusive() != null && q.pool() == null && q.exclusive().lockOn().equals("choose") && pathOf(t, q.exclusive().group()) == null;
+    }
+
+    public static Result choose(ServerPlayer player, String quest) {
+        Ref r = find(quest);
+        if (r == null) return Result.no("No quest " + quest);
+        Quest q = r.quest();
+        if (q.exclusive() == null || q.pool() != null || !q.exclusive().lockOn().equals("choose")) return Result.no("That quest is not a path to pick");
+        Team t = team(player);
+        if (!t.owner.equals(player.getUUID().toString())) return Result.no("Only the team owner can pick the path");
+        String cur = pathOf(t, q.exclusive().group());
+        if (cur != null) return Result.no(cur.equals(q.id()) ? "You already took this path" : "Your team already took another path");
+        if (!reachable(t, r.book(), q)) return Result.no("That quest is not open yet");
+        world.exclusive.computeIfAbsent(t.id, k -> new HashMap<>()).put(q.exclusive().group(), q.id());
+        changed(t);
+        for (ServerPlayer o : online(t))
+            if (o != player) o.sendSystemMessage(Component.literal(player.getScoreboardName() + " took the path ").append(Component.translatable(q.title())));
+        refresh(t);
+        flush();
+        return Result.ok("Took the path " + q.title());
+    }
+
+    /** Group ids in the loaded books, for suggestions. */
+    public static Set<String> groups() {
+        Set<String> out = new java.util.TreeSet<>();
+        for (Book b : defs().books().values())
+            for (Quest q : b.quests().values()) if (q.exclusive() != null) out.add(q.exclusive().group());
+        return out;
+    }
+
+    public static boolean adminPathReset(Team t, String group) {
+        Map<String, String> ex = world.exclusive.get(t.id);
+        if (ex == null || ex.remove(group) == null) return false;
+        changed(t);
+        refresh(t);
+        flush();
+        return true;
+    }
+
+    // ---- pools ----
+
+    static Map<String, QuestSave.Pool> pools(Team t) {
+        return world.pools.computeIfAbsent(t.id, k -> new HashMap<>());
+    }
+
+    static List<String> offers(Team t, String pool) {
+        QuestSave.Pool s = world.pools.getOrDefault(t.id, Map.of()).get(pool);
+        return s == null ? List.of() : s.offers();
+    }
+
+    static boolean offered(Team t, String pool, String quest) {
+        return offers(t, pool).contains(quest);
+    }
+
+    /** The pool's board chapters: open when any is, or when the pool has none. */
+    static boolean boardOpen(Team t, Book b, String pool) {
+        boolean any = false;
+        for (Chapter c : b.chapters().values()) {
+            if (!pool.equals(c.pool())) continue;
+            if (chapterOpen(t, b, c)) return true;
+            any = true;
+        }
+        return !any;
+    }
+
+    static QuestDefs.@Nullable Pool pool(String id) {
+        for (Book b : defs().books().values()) {
+            QuestDefs.Pool p = b.pools().get(id);
+            if (p != null) return p;
+        }
+        return null;
+    }
+
+    static @Nullable Book bookOf(QuestDefs.Pool pool) {
+        for (Book b : defs().books().values()) if (b.pools().get(pool.id()) == pool) return b;
+        return null;
+    }
+
+    /** Seconds until a done offer is replaced; 0 when it is not done, -1 when the pool never refreshes. */
+    static long offerLeft(QuestDefs.Pool pool, @Nullable Prog p) {
+        if (p == null || !p.complete()) return 0;
+        if (pool.refresh() <= 0) return -1;
+        return Math.max(0, p.completedAt + pool.refresh() - now());
+    }
+
+    /**
+     * Keeps a team's offers up to date: drops offers the pool no longer has, replaces done offers whose
+     * refresh time ran out and fills empty slots. force replaces every offer. Returns true when anything changed.
+     */
+    static boolean roll(Team t, Book b, QuestDefs.Pool pool, boolean force, Set<String> avoid) {
+        if (!boardOpen(t, b, pool.id())) return false;
+        QuestSave.Pool s = pools(t).get(pool.id());
+        List<String> offers = s == null ? new ArrayList<>() : new ArrayList<>(s.offers());
+        boolean ch = s == null;
+        Set<String> gone = new HashSet<>(avoid);
+        for (var it = offers.iterator(); it.hasNext(); ) {
+            String id = it.next();
+            Prog p = prog(t).get(id);
+            boolean known = pool.entries().stream().anyMatch(e -> e.quest().equals(id)) && b.quests().containsKey(id);
+            if (force || !known || offerLeft(pool, p) == 0 && p != null && p.complete()) {
+                it.remove();
+                gone.add(id);
+                if (p != null && !p.complete()) drop(t, id, p);
+                ch = true;
+            }
+        }
+        while (offers.size() < pool.offers()) {
+            String pick = pick(t, b, pool, offers, gone);
+            if (pick == null) pick = pick(t, b, pool, offers, Set.of());
+            if (pick == null) break;
+            offers.add(pick);
+            fresh(t, pick);
+            ch = true;
+        }
+        if (!ch) return false;
+        pools(t).put(pool.id(), new QuestSave.Pool(now(), List.copyOf(offers)));
+        changed(t);
+        return true;
+    }
+
+    /** Unfinished progress on an offer that left the board goes. */
+    private static void drop(Team t, String quest, Prog p) {
+        if (p.cycle == 0) prog(t).remove(quest);
+        else {
+            p.tasks.clear();
+            p.given.clear();
+            p.tier = 0;
+        }
+        Map<String, Map<String, Long>> sh = shares.get(t.id);
+        if (sh != null) sh.keySet().removeIf(k -> k.startsWith(quest + "|"));
+    }
+
+    /** A quest coming onto the board starts again; one done before counts as a new cycle so it can be claimed again. */
+    private static void fresh(Team t, String quest) {
+        Prog p = prog(t).get(quest);
+        if (p == null) return;
+        if (p.complete()) p.cycle++;
+        p.state = "in_progress";
+        p.openAt = now();
+        p.tasks.clear();
+        p.given.clear();
+        p.tier = 0;
+    }
+
+    private static @Nullable String pick(Team t, Book b, QuestDefs.Pool pool, List<String> taken, Set<String> avoid) {
+        List<QuestDefs.PoolEntry> can = new ArrayList<>();
+        int total = 0;
+        for (QuestDefs.PoolEntry e : pool.entries()) {
+            Quest q = b.quests().get(e.quest());
+            if (q == null || e.weight() <= 0 || taken.contains(e.quest()) || avoid.contains(e.quest())) continue;
+            if (!met(t, b, e.depends(), false) || !depsMet(t, b, q)) continue;
+            can.add(e);
+            total += e.weight();
+        }
+        if (total <= 0) return null;
+        int r = java.util.concurrent.ThreadLocalRandom.current().nextInt(total);
+        for (QuestDefs.PoolEntry e : can) {
+            r -= e.weight();
+            if (r < 0) return e.quest();
+        }
+        return null;
+    }
+
+    /** Swaps the unfinished offers for new ones, paid for by the player. */
+    public static Result reroll(ServerPlayer player, String poolId) {
+        QuestDefs.Pool pool = pool(poolId);
+        Book b = pool == null ? null : bookOf(pool);
+        if (pool == null || b == null) return Result.no("No board " + poolId);
+        if (!pool.rerollAllowed()) return Result.no("This board can't be rerolled");
+        Team t = team(player);
+        if (!boardOpen(t, b, poolId)) return Result.no("That board is not open yet");
+        List<String> offers = new ArrayList<>(offers(t, poolId)), keep = new ArrayList<>(), out = new ArrayList<>();
+        for (String id : offers) (done(prog(t).get(id)) && prog(t).get(id).complete() ? keep : out).add(id);
+        if (out.isEmpty()) return Result.no("Nothing to reroll, every offer is done");
+        for (Reward c : pool.rerollCost()) {
+            if (c.kind().equals("item") && c.item() != null && count(player, List.of(c.item())) < c.count())
+                return Result.no("A reroll costs " + costText(pool));
+            if (c.kind().equals("xp_levels") && player.experienceLevel < c.count()) return Result.no("A reroll costs " + costText(pool));
+        }
+        for (Reward c : pool.rerollCost()) {
+            if (c.kind().equals("xp_levels")) player.giveExperienceLevels((int) -c.count());
+            if (!c.kind().equals("item") || c.item() == null) continue;
+            long left = c.count();
+            var inv = player.getInventory();
+            for (int i = 0; i < 41 && left > 0; i++) {
+                if (i >= 36 && i != 40) continue;
+                ItemStack st = inv.getItem(i);
+                if (!QuestMc.itemMatches(st, List.of(c.item()))) continue;
+                int n = (int) Math.min(st.getCount(), left);
+                inv.removeItem(i, n);
+                left -= n;
+            }
+        }
+        for (String id : out) {
+            Prog p = prog(t).get(id);
+            if (p != null) drop(t, id, p);
+        }
+        pools(t).put(poolId, new QuestSave.Pool(now(), List.copyOf(keep)));
+        roll(t, b, pool, false, new HashSet<>(out));
+        changed(t);
+        refresh(t);
+        flush();
+        return Result.ok("Rerolled the board");
+    }
+
+    static String costText(QuestDefs.Pool pool) {
+        List<String> parts = new ArrayList<>();
+        for (Reward c : pool.rerollCost()) {
+            if (c.kind().equals("item") && c.item() != null) parts.add(c.count() + " " + c.item());
+            else if (c.kind().equals("xp_levels")) parts.add(c.count() + " levels");
+        }
+        return parts.isEmpty() ? "nothing" : String.join(", ", parts);
+    }
+
+    /** New offers for a team, free; every current offer goes. */
+    public static boolean adminReroll(Team t, String poolId) {
+        QuestDefs.Pool pool = pool(poolId);
+        Book b = pool == null ? null : bookOf(pool);
+        if (pool == null || b == null || !roll(t, b, pool, true, Set.of())) return false;
+        refresh(t);
+        flush();
+        return true;
+    }
+
+    public static Set<String> poolIds() {
+        Set<String> out = new java.util.TreeSet<>();
+        for (Book b : defs().books().values()) out.addAll(b.pools().keySet());
+        return out;
     }
 
     // ---- events ----
@@ -920,6 +1184,8 @@ public final class QuestEngine {
         Map<String, Prog> m = prog(t);
         Prog p = m.computeIfAbsent(quest, k -> new Prog("in_progress"));
         if (p.complete()) return false;
+        Quest q = r.quest();
+        if (q.exclusive() != null && q.pool() == null) world.exclusive.computeIfAbsent(t.id, k -> new HashMap<>()).putIfAbsent(q.exclusive().group(), q.id());
         for (Task task : r.quest().tasks()) p.tasks.put(task.id(), target(r.quest(), task));
         complete(t, r.quest(), p);
         refresh(t);
@@ -1059,6 +1325,12 @@ public final class QuestEngine {
                 Prog p = prog(t).get(q.id());
                 if (q.visibility().equals("secret") && !done(p)) st = "hidden";
                 qo.addProperty("s", st);
+                if (unpicked(t, q) && !st.equals("complete")) qo.addProperty("pick", true);
+                if (q.pool() != null && p != null) {
+                    QuestDefs.Pool pool = b.pools().get(q.pool());
+                    long left = pool == null || !offered(t, q.pool(), q.id()) ? 0 : offerLeft(pool, p);
+                    if (left != 0) qo.addProperty("again", left);
+                }
                 if (p != null) {
                     JsonObject tasks = new JsonObject();
                     p.tasks.forEach(tasks::addProperty);
@@ -1090,6 +1362,17 @@ public final class QuestEngine {
         for (Book b : defs().books().values())
             for (Chapter c : b.chapters().values()) chapters.addProperty(c.id(), chapterStatus(t, b, c));
         o.add("chapters", chapters);
+        JsonObject boards = new JsonObject();
+        for (Book b : defs().books().values())
+            for (QuestDefs.Pool pool : b.pools().values()) {
+                JsonArray a = new JsonArray();
+                for (String id : offers(t, pool.id())) a.add(id);
+                boards.add(pool.id(), a);
+            }
+        o.add("pools", boards);
+        JsonObject paths = new JsonObject();
+        world.exclusive.getOrDefault(t.id, Map.of()).forEach(paths::addProperty);
+        o.add("paths", paths);
         return o;
     }
 
