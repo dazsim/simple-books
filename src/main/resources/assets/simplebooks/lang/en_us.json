@@ -92,5 +92,12 @@
   "simplebooks.box.team": "Team: %s",
   "simplebooks.box.no_team": "No team",
   "simplebooks.box.idle": "Nothing to hand in",
-  "simplebooks.box.credit": "Hand-in box"
+  "simplebooks.box.credit": "Hand-in box",
+  "simplebooks.quest.chapter_locked": "Locked",
+  "simplebooks.quest.chapter_tab_locked": "%s (locked)",
+  "simplebooks.quest.story_after": "Finish %s first",
+  "simplebooks.quest.part": "Part %s of %s",
+  "simplebooks.quest.tree_done": "%s of %s done",
+  "simplebooks.quest.tree_hint": "Point at a quest on the map to see it here. Click it to open its page. Scroll or drag the map to move around it.",
+  "simplebooks.quest.tree_open": "Click the quest to open its page"
 }

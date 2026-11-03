@@ -1,0 +1,25 @@
+{
+  "extends": "simplebooks:recipe",
+  "slots": {
+    "left.need": null,
+    "left.turn": null,
+    "left.rule": null,
+    "left.steps": null,
+    "left.part": { "type": "subtitle", "box": [0, 80, 644, 16], "bind": "part", "style": "subtitle", "optional": true },
+    "left.subtitle": { "box": [0, 102, 644, 18] },
+    "left.text": { "type": "text", "box": [0, 134, 644, 300], "bind": "text", "style": "body", "optional": true },
+    "left.lock": { "type": "quest_lock", "box": [0, 134, 644, 200], "below": "left.text", "gap": 16 },
+    "left.story_steps": { "type": "step_rows", "box": [0, 134, 644, 734], "bind": "steps", "row_height": 92, "below": "left.text", "gap": 16, "optional": true },
+    "right.title": null,
+    "right.icon": null,
+    "right.subtitle": null,
+    "right.rule": null,
+    "right.steps": null,
+    "right.links": { "box": [0, 742, 644, 40] },
+    "right.tasks": { "type": "task_list", "box": [0, 18, 644, 430] },
+    "right.rhead": { "type": "text", "box": [0, 462, 644, 20], "bind": "rewards_head", "style": "heading" },
+    "right.rrule": { "type": "rule", "box": [0, 486, 644, 0] },
+    "right.rewards": { "type": "reward_list", "box": [0, 498, 644, 240] },
+    "right.buttons": { "type": "quest_buttons", "box": [0, 796, 644, 72] }
+  }
+}

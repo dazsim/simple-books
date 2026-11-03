@@ -38,7 +38,7 @@ public class Spread {
             Map.entry("button_tint", "#ffffff"),
             Map.entry("done", "#3c6a2c"), Map.entry("locked", "#9a8a70"), Map.entry("claim", "#802c16"),
             Map.entry("claim_hover", "#a83a1e"), Map.entry("closed", "#b4a07c"), Map.entry("line", "#decea8"),
-            Map.entry("line_done", "#3c6a2c"));
+            Map.entry("line_done", "#3c6a2c"), Map.entry("line_todo", "#b4a07c"), Map.entry("tree_done", "#e0e8c4"));
     public static final int TAB_ROOT = 1556, TAB_OUT = 34, TAB_MARGIN = 48;
     /** Real pixels per spread unit on screen, set by the book screen. */
     public static float renderScale = 1;
@@ -285,6 +285,20 @@ public class Spread {
         else out.addAll(font.split(styled(Component.literal(line)), max));
     }
 
+    void clip(float x0, float y0, float x1, float y1) {
+        if (draw && g != null) g.enableScissor(Math.round(x0), Math.round(y0), Math.round(x1), Math.round(y1));
+    }
+
+    void unclip() {
+        if (draw && g != null) g.disableScissor();
+    }
+
+    /** A click target for a page of this book: a Jump with a tooltip when the page is in it. */
+    Object link(Identifier id, Component label) {
+        int i = book.indexOf(id);
+        return i < 0 ? id : new Jump(i, label);
+    }
+
     void rule(float x0, float x1, float y) {
         fill(x0, y - 1, x1, y + 1, color("$rule"));
     }
@@ -475,7 +489,10 @@ public class Spread {
             Component label = sectionLabel(book, t.section());
             boolean hover = mx >= W - 22 && mx < W - 22 + TAB_OUT + 10 && my >= y && my < y + h;
             float out = TAB_OUT + (i == current || hover ? 10 : 0), x1 = W - 22 + out;
-            int col = color(t.color() != null ? t.color() : palette[i % palette.length].trim());
+            boolean shut = false;
+            for (Book.Page p : book.pages()) if (p.section().equals(t.section()) && p.json().has("locked")) shut = true;
+            if (shut) label = Component.translatable("simplebooks.quest.chapter_tab_locked", label);
+            int col = color(shut ? "$closed" : t.color() != null ? t.color() : palette[i % palette.length].trim());
             fill(TAB_ROOT, y + 2, x1 - 2, y + h - 2, edge);
             fill(TAB_ROOT, y, x1 - 4, y + 2, edge);
             fill(TAB_ROOT, y + h - 2, x1 - 4, y + h, edge);
@@ -483,7 +500,10 @@ public class Spread {
             fill(TAB_ROOT, y + 2, x1 - 4, y + h - 2, col);
             fill(x1 - 4, y + 4, x1 - 2, y + h - 4, col);
             float cx = W - 22 + out / 2;
-            if (t.icon() != null) item(ItemRef.parse(t.icon()), cx - 14, y + h / 2 - 14, 28);
+            if (t.icon() != null) {
+                item(ItemRef.parse(t.icon()), cx - 14, y + h / 2 - 14, 28);
+                if (shut) fill(cx - 14, y + h / 2 - 14, cx + 14, y + h / 2 + 14, col & 0xFFFFFF | 0xAA000000);
+            }
             else if (draw && g != null) {
                 String str = font.plainSubstrByWidth(label.getString(), (int) ((h - 16) / (2 * fs(1))));
                 Component c = styled(Component.literal(str));
@@ -691,7 +711,7 @@ public class Spread {
                 if (type.equals("text")) body[sd] = true;
             }
             case "rule" -> rule(x, x + w, y);
-            case "quest_list", "task_list", "reward_list", "quest_buttons", "team_list" -> {
+            case "quest_list", "task_list", "reward_list", "quest_buttons", "team_list", "quest_graph", "quest_info", "quest_lock" -> {
                 Float above = slot.has("below") ? bottoms.get(slot.get("below").getAsString()) : null;
                 if (above != null) {
                     float ny = above + num(slot, "gap", 14);
@@ -1311,12 +1331,13 @@ public class Spread {
     // ---------- contents ----------
 
     private static String contentTitle(Book.Page p) {
+        if (p.json().has("contents_title")) return p.json().get("contents_title").getAsString();
         return p.json().has("title") ? p.json().get("title").getAsString() : p.id().getPath();
     }
 
     /** "done/total" for a quest chapter's list page, or null. */
     private static @Nullable String progress(Book.Page p) {
-        if (!p.json().has("chapter")) return null;
+        if (!p.json().has("chapter") || p.json().has("locked")) return null;
         int[] dt = QuestBook.progress(p.json().get("chapter").getAsString());
         return dt == null ? null : dt[0] + "/" + dt[1];
     }
@@ -1324,6 +1345,7 @@ public class Spread {
     private Component contentNum(Book.Page p) {
         String pr = progress(p);
         String n = String.valueOf(book.pageNumber(p.id()));
+        if (p.json().has("locked")) return Component.translatable("simplebooks.quest.chapter_locked").append("   " + n);
         return Component.literal(pr == null ? n : pr + "   " + n);
     }
 
@@ -1369,7 +1391,7 @@ public class Spread {
                     float nw = textW(num, 1), maxw = colW - 24 - nw;
                     List<FormattedCharSequence> ls = wrap(label, maxw - 12, 1);
                     cut(label, ls.size(), 2);
-                    int col = p.broken() ? color("$error") : color("$link");
+                    int col = p.broken() ? color("$error") : color(p.json().has("locked") ? "$locked" : "$link");
                     int n = Math.min(2, ls.size());
                     for (int j = 0; j < n; j++) {
                         float tw = Math.min(textW(ls.get(j), 1), maxw);

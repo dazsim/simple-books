@@ -281,16 +281,41 @@ public class BookScreen extends Screen {
     //? if >=1.20.2 {
     @Override
     public boolean mouseScrolled(double x, double y, double sx, double sy) {
-        return scroll(sy);
+        return scroll(x, y, sy);
     }
     //?} else {
     /*@Override
     public boolean mouseScrolled(double x, double y, double sy) {
-        return scroll(sy);
+        return scroll(x, y, sy);
     }
     *///?}
 
-    private boolean scroll(double sy) {
+    //? if >=26.1 {
+    @Override
+    public boolean mouseDragged(net.minecraft.client.input.MouseButtonEvent e, double dx, double dy) {
+        return drag(e.x(), e.y(), dx, dy) || super.mouseDragged(e, dx, dy);
+    }
+    //?} else {
+    /*@Override
+    public boolean mouseDragged(double x, double y, int button, double dx, double dy) {
+        return drag(x, y, dx, dy) || super.mouseDragged(x, y, button, dx, dy);
+    }
+    *///?}
+
+    private QuestSlots.@org.jspecify.annotations.Nullable Pan panAt(double x, double y) {
+        float mx = (float) ((x - ox) / scale), my = (float) ((y - oy) / scale);
+        for (Spread.Hit h : hits) if (h.contains(mx, my) && h.target() instanceof QuestSlots.Pan p) return p;
+        return null;
+    }
+
+    private boolean drag(double x, double y, double dx, double dy) {
+        QuestSlots.Pan p = panAt(x, y);
+        return p != null && QuestSlots.pan(p, -dx / scale, -dy / scale);
+    }
+
+    private boolean scroll(double x, double y, double sy) {
+        QuestSlots.Pan p = panAt(x, y);
+        if (p != null && QuestSlots.pan(p, p.maxY() > 0 ? 0 : -sy * QuestSlots.CELL_W / 2, p.maxY() > 0 ? -sy * QuestSlots.CELL_H / 2 : 0)) return true;
         if (sy < 0 && spread < spreads() - 1) return turn(spread + 1, false);
         if (sy > 0 && spread > 0) return turn(spread - 1, false);
         return false;

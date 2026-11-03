@@ -23,7 +23,8 @@ import java.util.Set;
  * Rebuilt whenever the server sends new definitions or progress.
  */
 final class QuestBook {
-    static final Identifier LIST = SimpleBooks.id("quest_list"), DETAIL = SimpleBooks.id("quest"), TEAM = SimpleBooks.id("team");
+    static final Identifier LIST = SimpleBooks.id("quest_list"), DETAIL = SimpleBooks.id("quest"), TEAM = SimpleBooks.id("team"),
+            TREE = SimpleBooks.id("quest_tree"), STORY = SimpleBooks.id("quest_story");
 
     private static final Map<Identifier, Book> cache = new HashMap<>();
     private static final Set<Identifier> none = new HashSet<>();
@@ -143,21 +144,32 @@ final class QuestBook {
                             List.of(qb == null ? "no quests loaded for this book" : "no chapter " + cid)));
                     continue;
                 }
+                String cst = chapterStatus(cid);
+                if (cst.equals("hidden")) continue;
                 Template lt = BookRegistry.template(LIST);
                 Template dt = BookRegistry.template(DETAIL);
                 List<QuestDefs.Quest> qs = visible(qb, cid);
+                if (cst.equals("locked")) {
+                    JsonObject pj = listPage(sec, ch, cid, 0);
+                    pj.addProperty("locked", true);
+                    pages.add(new Book.Page(SimpleBooks.of(id.getNamespace(), prefix + sec + "/list0"), "(quest list " + cid + ")",
+                            pj, lt, new ArrayList<>(lt.errors())));
+                    qs = List.of();
+                } else if (ch.layout().equals("story")) {
+                    story(pages, sec, ch, qs);
+                    qs = List.of();
+                } else if (ch.layout().equals("tree")) {
+                    Template tt = BookRegistry.template(TREE);
+                    JsonObject pj = listPage(sec, ch, cid, 0);
+                    pj.addProperty("template", TREE.toString());
+                    pages.add(new Book.Page(SimpleBooks.of(id.getNamespace(), prefix + sec + "/tree"), "(quest tree " + cid + ")",
+                            pj, tt, new ArrayList<>(tt.errors())));
+                }
                 int per = rowsPerSpread(lt), parts = Math.max(1, (qs.size() + per - 1) / per);
-                for (int p = 0; p < parts; p++) {
-                    JsonObject pj = new JsonObject();
-                    pj.addProperty("template", LIST.toString());
-                    pj.addProperty("section", sec);
-                    pj.addProperty("title", ch.title().isEmpty() ? "simplebooks.quest.list" : ch.title());
-                    if (!ch.icon().isEmpty()) pj.addProperty("icon", ch.icon());
-                    if (!ch.text().isEmpty() && p == 0) pj.addProperty("text", ch.text());
-                    pj.addProperty("chapter", cid);
+                boolean listed = cst.equals("open") && !ch.layout().equals("tree") && !ch.layout().equals("story");
+                for (int p = 0; p < parts && listed; p++) {
+                    JsonObject pj = listPage(sec, ch, cid, p);
                     pj.addProperty("from", p * per);
-                    pj.addProperty("sort", -100000 + p);
-                    if (p > 0) pj.addProperty("contents", false);
                     pages.add(new Book.Page(SimpleBooks.of(id.getNamespace(), prefix + sec + "/list" + p), "(quest list " + cid + ")",
                             pj, lt, new ArrayList<>(lt.errors())));
                 }
@@ -191,6 +203,55 @@ final class QuestBook {
         BookRegistry.sortPages(pages, sections);
         return new Book(id, json, base != null ? base.vars() : new HashMap<>(), pages,
                 base != null ? base.errors() : List.of(), base != null ? base.hidden() : Set.of());
+    }
+
+    private static JsonObject listPage(String sec, QuestDefs.Chapter ch, String cid, int p) {
+        JsonObject pj = new JsonObject();
+        pj.addProperty("template", LIST.toString());
+        pj.addProperty("section", sec);
+        pj.addProperty("title", ch.title().isEmpty() ? "simplebooks.quest.list" : ch.title());
+        if (!ch.icon().isEmpty()) pj.addProperty("icon", ch.icon());
+        if (!ch.text().isEmpty() && p == 0) pj.addProperty("text", ch.text());
+        pj.addProperty("chapter", cid);
+        pj.addProperty("sort", -100000 + p);
+        if (p > 0) pj.addProperty("contents", false);
+        return pj;
+    }
+
+    /** One spread per quest; a locked one keeps its page content back. */
+    private static void story(List<Book.Page> pages, String sec, QuestDefs.Chapter ch, List<QuestDefs.Quest> qs) {
+        Template t = BookRegistry.template(STORY);
+        for (int i = 0; i < qs.size(); i++) {
+            QuestDefs.Quest q = qs.get(i);
+            JsonObject pj = new JsonObject();
+            boolean open = !status(q.id()).equals("locked");
+            if (open && q.page() != null)
+                for (var e : q.page().entrySet())
+                    if (!Set.of("template", "section", "sort", "contents", "quest", "chapter", "id").contains(e.getKey())) pj.add(e.getKey(), e.getValue());
+            pj.addProperty("template", STORY.toString());
+            pj.addProperty("section", sec);
+            pj.addProperty("title", q.title());
+            if (!q.subtitle().isEmpty()) pj.addProperty("subtitle", q.subtitle());
+            if (!q.icon().isEmpty()) pj.addProperty("icon", q.icon());
+            if (open && !q.text().isEmpty() && !pj.has("text")) pj.addProperty("text", q.text());
+            if (!open) pj.remove("text");
+            pj.addProperty("part", net.minecraft.network.chat.Component.translatable("simplebooks.quest.part", i + 1, qs.size()).getString());
+            pj.addProperty("rewards_head", "simplebooks.quest.rewards");
+            pj.addProperty("quest", q.id());
+            pj.addProperty("chapter", ch.id());
+            pj.addProperty("sort", -100000 + i);
+            if (i == 0) pj.addProperty("contents_title", ch.title().isEmpty() ? q.title() : ch.title());
+            else pj.addProperty("contents", false);
+            pages.add(new Book.Page(detailId(q.id()), "(story " + q.id() + ")", pj, t, new ArrayList<>(t.errors())));
+        }
+    }
+
+    /** "open", "locked" or "hidden"; open until the server says otherwise. */
+    static String chapterStatus(String chapter) {
+        JsonObject st = QuestClientStore.state();
+        if (!st.has("chapters")) return "open";
+        JsonElement e = st.getAsJsonObject("chapters").get(chapter);
+        return e != null && e.isJsonPrimitive() ? e.getAsString() : "open";
     }
 
     static Identifier detailId(String quest) {

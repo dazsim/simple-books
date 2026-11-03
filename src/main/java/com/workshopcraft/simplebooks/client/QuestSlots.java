@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** The quest slot types: quest_list, task_list, reward_list, quest_buttons and team_list. */
+/** The quest slot types: quest_list, quest_graph, quest_info, quest_lock, task_list, reward_list, quest_buttons and team_list. */
 final class QuestSlots {
     /** A button: sent to the server, or for "select" and "confirm" kept on the client. */
     record Act(String action, String quest, String task, int number, String text, @Nullable Component tip) {}
@@ -69,6 +69,9 @@ final class QuestSlots {
             case "task_list" -> taskList(x, y, w, h);
             case "reward_list" -> rewardList(x, y, w, h);
             case "quest_buttons" -> buttons(x, y, w, h);
+            case "quest_graph" -> graph(x, y, w, h);
+            case "quest_info" -> info(x, y, w, h);
+            case "quest_lock" -> lock(x, y, w, h);
             case "team_list" -> team(slot.has("show") ? slot.get("show").getAsString() : "members", x, y, w, h);
             default -> {}
         }
@@ -199,6 +202,10 @@ final class QuestSlots {
                 if (e.getKey().startsWith("left.") && "quest_list".equals(str(e.getValue(), "type")))
                     from += Math.max(1, (int) (e.getValue().getAsJsonArray("box").get(3).getAsFloat() / rowHeight(e.getValue())));
         }
+        if (page.has("locked")) {
+            if (name.startsWith("left.")) lock(x, y, w, h);
+            return;
+        }
         if (qs.isEmpty() && name.startsWith("left.")) {
             s.text(tr("simplebooks.quest.none"), x, y + 8, 1, s.color("$soft"));
             return;
@@ -248,6 +255,9 @@ final class QuestSlots {
                     QuestDefs.Quest dq = qb.quests().get(d);
                     need.add(dq == null || str(st(d), "s").equals("hidden") ? tr("simplebooks.quest.hidden_dep").getString() : Texts.of(dq.title()).getString());
                 }
+                QuestDefs.Quest prev = qb.storyPrev(q);
+                if (need.isEmpty() && prev != null && !str(st(prev.id()), "s").equals("complete"))
+                    return tr("simplebooks.quest.story_after", Texts.of(prev.title()));
                 if (need.isEmpty()) return tr("simplebooks.quest.locked");
                 return tr(q.dependsMode().equals("any") ? "simplebooks.quest.needs_any" : "simplebooks.quest.needs", String.join(", ", need));
             }
@@ -266,6 +276,318 @@ final class QuestSlots {
                 return tr("simplebooks.quest.tasks_done", done, q.tasks().size());
             }
         }
+    }
+
+    // ---------- tree ----------
+
+    /** Wheel and drag target over a quest graph; max is how far it can move. */
+    record Pan(String chapter, float maxX, float maxY) {}
+
+    static final Map<String, float[]> panned = new HashMap<>();
+    static final Map<String, String> focus = new HashMap<>();
+    static final float CELL_W = 124, CELL_H = 112, NODE = 64, PAD = 30;
+
+    /** Moves a graph by (dx, dy) spread units; false when it has nothing to scroll. */
+    static boolean pan(Pan p, double dx, double dy) {
+        if (p.maxX() <= 0 && p.maxY() <= 0) return false;
+        float[] o = panned.computeIfAbsent(p.chapter(), k -> new float[2]);
+        o[0] = Math.max(0, Math.min(p.maxX(), o[0] + (float) dx));
+        o[1] = Math.max(0, Math.min(p.maxY(), o[1] + (float) dy));
+        return true;
+    }
+
+    /** Grid cells [column, row]: pos when given, else column by dependency depth and the first free row. */
+    static Map<String, int[]> layout(QuestDefs.Book qb, String chapter) {
+        List<QuestDefs.Quest> all = new ArrayList<>();
+        for (QuestDefs.Quest q : qb.quests().values()) if (chapter.equals(q.chapter())) all.add(q);
+        all.sort(java.util.Comparator.comparingInt(QuestDefs.Quest::sort).thenComparing(QuestDefs.Quest::id));
+        Map<String, int[]> at = new java.util.LinkedHashMap<>();
+        Set<Long> used = new HashSet<>();
+        for (QuestDefs.Quest q : all)
+            if (q.pos() != null && q.pos().length >= 2) {
+                at.put(q.id(), new int[]{q.pos()[0], q.pos()[1]});
+                used.add(cell(q.pos()[0], q.pos()[1]));
+            }
+        Map<String, Integer> cols = new HashMap<>();
+        java.util.TreeMap<Integer, List<QuestDefs.Quest>> byCol = new java.util.TreeMap<>();
+        for (QuestDefs.Quest q : all)
+            if (!at.containsKey(q.id())) byCol.computeIfAbsent(column(qb, q, chapter, cols, new HashSet<>()), k -> new ArrayList<>()).add(q);
+        for (var e : byCol.entrySet()) {
+            List<QuestDefs.Quest> qs = e.getValue();
+            Map<String, Float> pull = new HashMap<>();
+            for (QuestDefs.Quest q : qs) {
+                float sum = 0;
+                int n = 0;
+                for (String d : q.depends()) {
+                    int[] c = at.get(d);
+                    if (c != null) {
+                        sum += c[1];
+                        n++;
+                    }
+                }
+                pull.put(q.id(), n == 0 ? Float.MAX_VALUE : sum / n);
+            }
+            qs.sort(java.util.Comparator.<QuestDefs.Quest>comparingDouble(q -> pull.get(q.id()))
+                    .thenComparingInt(QuestDefs.Quest::sort).thenComparing(QuestDefs.Quest::id));
+            int row = 0;
+            for (QuestDefs.Quest q : qs) {
+                float want = pull.get(q.id());
+                if (want != Float.MAX_VALUE) row = Math.max(row, Math.round(want));
+                while (used.contains(cell(e.getKey(), row))) row++;
+                at.put(q.id(), new int[]{e.getKey(), row});
+                used.add(cell(e.getKey(), row));
+                row++;
+            }
+        }
+        return at;
+    }
+
+    private static long cell(int c, int r) {
+        return ((long) c << 32) ^ (r & 0xFFFFFFFFL);
+    }
+
+    private static int column(QuestDefs.Book qb, QuestDefs.Quest q, String chapter, Map<String, Integer> cols, Set<String> seen) {
+        if (q.pos() != null && q.pos().length >= 2) return q.pos()[0];
+        Integer c = cols.get(q.id());
+        if (c != null) return c;
+        if (!seen.add(q.id())) return 0;
+        int best = 0;
+        for (String d : q.depends()) {
+            QuestDefs.Quest dq = qb.quests().get(d);
+            if (dq != null && chapter.equals(dq.chapter())) best = Math.max(best, column(qb, dq, chapter, cols, seen) + 1);
+        }
+        cols.put(q.id(), best);
+        return best;
+    }
+
+    private void graph(float x, float y, float w, float h) {
+        String chapter = str(page, "chapter");
+        QuestDefs.Book qb = bookOf(chapter);
+        if (qb == null) return;
+        List<QuestDefs.Quest> vis = QuestBook.visible(qb, chapter);
+        if (vis.isEmpty()) {
+            s.text(tr("simplebooks.quest.none"), x, y + 8, 1, s.color("$soft"));
+            return;
+        }
+        Map<String, int[]> at = layout(qb, chapter);
+        Set<String> shown = new HashSet<>();
+        int minC = Integer.MAX_VALUE, minR = Integer.MAX_VALUE, maxC = 0, maxR = 0;
+        for (QuestDefs.Quest q : vis) {
+            int[] c = at.get(q.id());
+            shown.add(q.id());
+            minC = Math.min(minC, c[0]);
+            minR = Math.min(minR, c[1]);
+            maxC = Math.max(maxC, c[0]);
+            maxR = Math.max(maxR, c[1]);
+        }
+        float gw = (maxC - minC + 1) * CELL_W, gh = (maxR - minR + 1) * CELL_H;
+        float maxX = Math.max(0, gw + 2 * PAD - w), maxY = Math.max(0, gh + 2 * PAD - h);
+        float[] o = panned.computeIfAbsent(chapter, k -> new float[2]);
+        o[0] = Math.min(o[0], maxX);
+        o[1] = Math.min(o[1], maxY);
+        float ox = (maxX > 0 ? x + PAD - o[0] : x + (w - gw) / 2) - minC * CELL_W;
+        float oy = (maxY > 0 ? y + PAD - o[1] : y + PAD) - minR * CELL_H;
+        s.clip(x, y, x + w, y + h);
+        for (QuestDefs.Quest q : vis)
+            for (String d : q.depends())
+                if (shown.contains(d)) link(at.get(d), at.get(q.id()), ox, oy, str(st(d), "s").equals("complete"));
+        int start = s.hits.size();
+        List<Spread.Hit> nodes = new ArrayList<>();
+        for (QuestDefs.Quest q : vis) {
+            int[] c = at.get(q.id());
+            float nx = ox + c[0] * CELL_W + (CELL_W - NODE) / 2, ny = oy + c[1] * CELL_H + (CELL_H - NODE) / 2;
+            boolean in = nx + NODE > x && nx < x + w && ny + NODE > y && ny < y + h;
+            boolean hov = in && over(Math.max(x, nx), Math.max(y, ny), Math.min(x + w, nx + NODE), Math.min(y + h, ny + NODE));
+            if (hov) focus.put(chapter, q.id());
+            node(qb, q, nx, ny, hov);
+            if (in) {
+                Component tip = Texts.of(q.title()).copy().append(": ").append(sub(qb, q, st(q.id()), str(st(q.id()), "s")));
+                nodes.add(new Spread.Hit(Math.max(x, nx), Math.max(y, ny), Math.min(x + w, nx + NODE), Math.min(y + h, ny + NODE),
+                        s.link(QuestBook.detailId(q.id()), tip)));
+            }
+        }
+        s.hits.subList(start, s.hits.size()).clear();
+        s.hits.addAll(nodes);
+        s.unclip();
+        int bar = s.color("$rule");
+        if (maxX > 0) {
+            float k = w / (gw + 2 * PAD);
+            s.fill(x + o[0] * k, y + h - 6, x + (o[0] + w) * k, y + h - 2, bar);
+        }
+        if (maxY > 0) {
+            float k = h / (gh + 2 * PAD);
+            s.fill(x + w - 6, y + o[1] * k, x + w - 2, y + (o[1] + h) * k, bar);
+        }
+        s.hits.add(new Spread.Hit(x, y, x + w, y + h, new Pan(chapter, maxX, maxY)));
+    }
+
+    private void link(int[] a, int[] b, float ox, float oy, boolean done) {
+        int col = s.color(done ? "$line_done" : "$line_todo");
+        float ax = ox + a[0] * CELL_W + CELL_W / 2, ay = oy + a[1] * CELL_H + CELL_H / 2;
+        float bx = ox + b[0] * CELL_W + CELL_W / 2, by = oy + b[1] * CELL_H + CELL_H / 2;
+        float t = 2, e = NODE / 2;
+        if (a[0] < b[0]) {
+            float x0 = ax + e, x1 = bx - e, m = b[0] - a[0] == 1 ? (x0 + x1) / 2 : x1 - (CELL_W - NODE) / 2;
+            s.fill(x0, ay - t, m + t, ay + t, col);
+            s.fill(m - t, Math.min(ay, by) - t, m + t, Math.max(ay, by) + t, col);
+            s.fill(m - t, by - t, x1, by + t, col);
+            arrowHead(x1, by, col);
+        } else if (a[0] == b[0]) {
+            float y0 = ay < by ? ay + e : ay - e, y1 = ay < by ? by - e : by + e;
+            s.fill(ax - t, Math.min(y0, y1), ax + t, Math.max(y0, y1), col);
+            arrowDown(bx, y1, by > ay, col);
+        } else {
+            float y0 = ay + (by >= ay ? e : -e), m = (ay + by) / 2, y1 = by + (by >= ay ? -e : e);
+            s.fill(ax - t, Math.min(y0, m), ax + t, Math.max(y0, m), col);
+            s.fill(Math.min(ax, bx) - t, m - t, Math.max(ax, bx) + t, m + t, col);
+            s.fill(bx - t, Math.min(m, y1), bx + t, Math.max(m, y1), col);
+            arrowDown(bx, y1, by >= ay, col);
+        }
+    }
+
+    private void arrowDown(float x, float y, boolean down, int col) {
+        for (int i = 0; i < 5; i++) {
+            float a = down ? y - 2 - 2 * i : y + 2 * i, b = a + 2;
+            s.fill(x - 2 - 2 * i, a, x + 2 + 2 * i, b, col);
+        }
+    }
+
+    private void arrowHead(float x, float y, int col) {
+        for (int i = 0; i < 5; i++) s.fill(x - 2 - 2 * i, y - 2 - 2 * i, x - 2 * i, y + 2 + 2 * i, col);
+    }
+
+    private void node(QuestDefs.Book qb, QuestDefs.Quest q, float x, float y, boolean hov) {
+        JsonObject qs = st(q.id());
+        String status = str(qs, "s");
+        boolean done = status.equals("complete"), locked = status.equals("locked");
+        int frame = s.color(hov ? "$link" : done ? "$done" : locked ? "$locked" : "$ink");
+        float x1 = x + NODE, y1 = y + NODE;
+        if (q.optional()) {
+            s.fill(x, y, x1, y1, s.color("$page"));
+            for (float d = 0; d < NODE; d += 12) {
+                float e = Math.min(NODE, d + 7);
+                s.fill(x + d, y, x + e, y + 4, frame);
+                s.fill(x + d, y1 - 4, x + e, y1, frame);
+                s.fill(x, y + d, x + 4, y + e, frame);
+                s.fill(x1 - 4, y + d, x1, y + e, frame);
+            }
+        } else {
+            s.roundRect(x, y, x1, y1, 10, frame);
+            s.roundRect(x + 4, y + 4, x1 - 4, y1 - 4, 7, s.color(done ? "$tree_done" : "$page"));
+        }
+        ItemRef icon = !q.icon().isEmpty() ? ref(q.icon()) : !q.tasks().isEmpty() ? taskIcon(q.tasks().get(0)) : null;
+        if (icon == null) icon = ref("minecraft:writable_book");
+        s.item(icon, x + 12, y + 12, 40);
+        if (locked) s.fill(x + 6, y + 6, x1 - 6, y1 - 6, s.color("$page") & 0xFFFFFF | 0xA0000000);
+        if (done) {
+            s.roundRect(x1 - 20, y1 - 20, x1 + 6, y1 + 6, 13, s.color("$done"));
+            int c = s.color("$badge_text");
+            float u = 2, bx = x1 - 20 + 3, by = y1 - 20 + 2;
+            for (int i = 0; i < 3; i++) s.fill(bx + (3 + i) * u, by + (7 + i) * u, bx + (5 + i) * u, by + (9 + i) * u, c);
+            for (int i = 0; i < 6; i++) s.fill(bx + (6 + i) * u, by + (8 - i) * u, bx + (8 + i) * u, by + (10 - i) * u, c);
+        }
+        if (waiting(q)) {
+            s.roundRect(x1 - 20, y - 6, x1 + 6, y + 20, 13, s.color("$claim"));
+            s.ctext(Component.literal("!"), x1 - 7, y - 1, 1, s.color("$badge_text"));
+        }
+        if (status.equals("in_progress") && !q.tasks().isEmpty()) {
+            long n = 0, of = 0;
+            for (QuestDefs.Task t : q.tasks()) {
+                of += target(q, t);
+                n += Math.min(count(qs, t.id()), target(q, t));
+            }
+            bar(x + 4, y1 + 6, NODE - 8, n, of);
+        }
+    }
+
+    /** The left page of a tree: the quest last pointed at, or a hint. */
+    private void info(float x, float y, float w, float h) {
+        String chapter = str(page, "chapter");
+        QuestDefs.Book qb = bookOf(chapter);
+        if (qb == null) return;
+        String id = focus.get(chapter);
+        QuestDefs.Quest q = id == null ? null : qb.quests().get(id);
+        if (q == null || str(st(q.id()), "s").equals("hidden")) {
+            int[] p = QuestBook.progress(chapter);
+            if (p != null) s.text(tr("simplebooks.quest.tree_done", p[0], p[1]), x, y, 1, s.color("$head"));
+            s.para(tr("simplebooks.quest.tree_hint"), x, y + 30, w, 1, s.color("$soft"), 18, "left");
+            return;
+        }
+        JsonObject qs = st(q.id());
+        String status = str(qs, "s");
+        float end = y + h;
+        ItemRef icon = !q.icon().isEmpty() ? ref(q.icon()) : !q.tasks().isEmpty() ? taskIcon(q.tasks().get(0)) : null;
+        float tx = x;
+        if (icon != null) {
+            s.slotItem(icon, x, y, 44);
+            tx += 56;
+        }
+        Component title = Texts.of(q.title());
+        if (q.optional()) title = title.copy().append(" ").append(tr("simplebooks.quest.optional"));
+        s.text(Component.literal(fit(title, x + w - tx)), tx, y + 2, 1, s.color("$ink"));
+        s.text(Component.literal(fit(sub(qb, q, qs, status), x + w - tx)), tx, y + 24, 1,
+                s.color(waiting(q) ? "$claim" : status.equals("locked") ? "$locked" : status.equals("complete") ? "$done" : "$soft"));
+        y += 60;
+        s.rule(x, x + w, y);
+        y += 14;
+        if (!q.text().isEmpty()) {
+            List<net.minecraft.util.FormattedCharSequence> ls = s.wrap(Texts.of(q.text()), w, 1);
+            for (int i = 0; i < Math.min(5, ls.size()) && y + 18 < end - 80; i++, y += 18) s.text(ls.get(i), x, y, 1, s.color("$ink"));
+            y += 12;
+        }
+        for (QuestDefs.Task t : q.tasks()) {
+            if (y + 34 > end - 30) break;
+            long n = count(qs, t.id()), of = target(q, t);
+            boolean done = n >= of || status.equals("complete");
+            ItemRef ti = taskIcon(t);
+            if (ti != null) s.item(ti, x, y, 28);
+            else box(x + 2, y + 2, 24, done, s.color(done ? "$done" : "$ink"));
+            Component prog = Component.literal(Math.min(n, of) + "/" + of);
+            float pw = s.textW(prog, 1);
+            s.text(Component.literal(fit(taskLabel(t, of), w - 52 - pw)), x + 40, y + 6, 1, s.color(done ? "$done" : "$ink"));
+            s.text(prog, x + w - pw, y + 6, 1, s.color(done ? "$done" : "$soft"));
+            y += 36;
+        }
+        s.text(tr("simplebooks.quest.tree_open"), x, end - 18, 1, s.color("$soft"));
+    }
+
+    /** A locked chapter's note, or a locked story spread's. */
+    private void lock(float x, float y, float w, float h) {
+        List<String> need = new ArrayList<>();
+        Component head;
+        if (page.has("locked")) {
+            String chapter = str(page, "chapter");
+            QuestDefs.Book qb = bookOf(chapter);
+            QuestDefs.Chapter ch = qb == null ? null : qb.chapters().get(chapter);
+            if (ch == null) return;
+            for (String d : ch.depends()) {
+                if (qb.quests().containsKey(d)) {
+                    if (!str(st(d), "s").equals("complete")) need.add(Texts.of(qb.quests().get(d).title()).getString());
+                } else if (qb.chapters().containsKey(d)) {
+                    int[] p = QuestBook.progress(d);
+                    if (p == null || p[0] < p[1]) need.add(Texts.of(qb.chapters().get(d).title()).getString());
+                }
+            }
+            head = tr("simplebooks.quest.chapter_locked");
+        } else {
+            String quest = str(page, "quest");
+            QuestDefs.Book qb = bookOf(quest);
+            QuestDefs.Quest q = qb == null ? null : qb.quests().get(quest);
+            if (q == null || !str(st(quest), "s").equals("locked")) return;
+            head = sub(qb, q, st(quest), "locked");
+        }
+        s.fill(x, y, x + w, y + 2, s.color("$rule"));
+        lockIcon(x, y + 18, s.color("$locked"));
+        s.text(head, x + 44, y + 20, 1, s.color("$head"));
+        if (!need.isEmpty()) s.para(tr("simplebooks.quest.needs", String.join(", ", need)), x + 44, y + 44, w - 44, 1, s.color("$soft"), 18, "left");
+    }
+
+    private void lockIcon(float x, float y, int col) {
+        s.fill(x + 6, y, x + 22, y + 4, col);
+        s.fill(x + 6, y, x + 10, y + 14, col);
+        s.fill(x + 18, y, x + 22, y + 14, col);
+        s.fill(x, y + 12, x + 28, y + 34, col);
+        s.fill(x + 12, y + 18, x + 16, y + 28, s.color("$page"));
     }
 
     // ---------- detail ----------
