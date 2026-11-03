@@ -31,12 +31,12 @@ public record QuestDefs(Map<String, Book> books) {
                         @Nullable Repeat repeat, List<Tier> tiers, @Nullable Exclusive exclusive, String toast,
                         JsonObject json) {}
 
-    /** Custom (namespaced) types keep their fields in json for the phase 1 task API. */
+    /** Custom (namespaced) types keep their fields in json; spec is what their TaskType parsed (null on a client without it). */
     public record Task(String id, String type, List<String> items, long count, boolean consume, String handIn,
                        boolean teamTotal, boolean fromStats, @Nullable JsonElement match, @Nullable String block,
                        @Nullable String entity, @Nullable String dimension, @Nullable String biome,
                        @Nullable String advancement, @Nullable String stat, @Nullable String value,
-                       @Nullable String text, JsonObject json) {}
+                       @Nullable String text, JsonObject json, com.workshopcraft.simplebooks.api.@Nullable TaskSpec spec) {}
 
     /** kind is item, xp, xp_levels, command or loot_table. */
     public record Reward(String kind, @Nullable String item, long count, @Nullable JsonElement data,

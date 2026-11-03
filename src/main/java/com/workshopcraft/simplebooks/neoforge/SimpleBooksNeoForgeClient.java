@@ -25,12 +25,16 @@ public class SimpleBooksNeoForgeClient {
         SimpleBooksClient.init();
         //? if >=26.1 {
         SimpleBooks.toServer = ClientPacketDistributor::sendToServer;
+        SimpleBooks.toServerAction = ClientPacketDistributor::sendToServer;
         modBus.addListener((AddClientReloadListenersEvent e) -> e.addListener(BookRegistry.ID, new BookRegistry()));
         //?} else {
         /*SimpleBooks.toServer = p -> PacketDistributor.sendToServer(p);
+        SimpleBooks.toServerAction = p -> PacketDistributor.sendToServer(p);
         modBus.addListener((RegisterClientReloadListenersEvent e) -> e.registerReloadListener(new BookRegistry()));
         *///?}
         modBus.addListener((EntityRenderersEvent.RegisterRenderers e) -> e.registerBlockEntityRenderer(SimpleBooksContent.STAND_ENTITY, BookStandRenderer::new));
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent.LoggingOut e) ->
+                com.workshopcraft.simplebooks.quest.QuestClientStore.clear());
         NeoForge.EVENT_BUS.addListener((RegisterClientCommandsEvent e) -> e.getDispatcher().register(SimpleBooksClient.command()));
     }
 }

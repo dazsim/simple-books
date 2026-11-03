@@ -5,6 +5,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.workshopcraft.simplebooks.SimpleBooks;
+import com.workshopcraft.simplebooks.api.SimpleBooksApi;
+import com.workshopcraft.simplebooks.api.TaskProblems;
+import com.workshopcraft.simplebooks.api.TaskSpec;
+import com.workshopcraft.simplebooks.api.TaskType;
 import com.workshopcraft.simplebooks.quest.Problems.Level;
 import com.workshopcraft.simplebooks.quest.QuestDefs.*;
 import org.jspecify.annotations.Nullable;
@@ -703,10 +707,40 @@ public final class QuestParser {
         out.remove("requires");
         out.addProperty("id", id);
         if (custom) {
-            // fields belong to the task type (phase 1 API)
-            if (!trusted) info(ptr + "/type", "custom task type " + type + ", needs the task API (phase 1)");
             long count = o.has("count") && num(o.get("count")) ? o.get("count").getAsLong() : 1;
-            return new Task(id, type, List.of(), count, false, "both", true, false, null, null, null, null, null, null, null, null, null, out);
+            TaskType tt = SimpleBooksApi.taskType(type);
+            TaskSpec spec = null;
+            if (tt == null && !trusted) {
+                error(ptr + "/type", "no task type " + type + " is registered");
+                return null;
+            }
+            if (tt != null) {
+                boolean[] failed = {false};
+                TaskProblems tp = new TaskProblems() {
+                    public void error(String field, String message) {
+                        failed[0] = true;
+                        if (!trusted) QuestParser.this.error(ptr + "/" + field, message);
+                    }
+
+                    public void warn(String field, String message) {
+                        if (!trusted) QuestParser.this.warn(ptr + "/" + field, message);
+                    }
+                };
+                try {
+                    spec = tt.parse(out, tp);
+                    if (spec != null) count = tt.target(spec);
+                } catch (Exception ex) {
+                    tp.error("type", type + " could not read this task: " + ex);
+                }
+                if (failed[0] || spec == null) {
+                    if (!trusted) {
+                        if (!failed[0]) error(ptr + "/type", type + " rejected this task");
+                        return null;
+                    }
+                    spec = null;
+                }
+            }
+            return new Task(id, type, List.of(), count, false, "both", true, false, null, null, null, null, null, null, null, null, null, out, spec);
         }
         List<String> items = new ArrayList<>();
         if (ITEM_TASKS.contains(type)) {
@@ -759,7 +793,7 @@ public final class QuestParser {
         r.skip("requires");
         r.finish();
         return new Task(id, type, List.copyOf(items), count, consume, handIn, teamTotal, fromStats, match, block, entity,
-                dimension, biome, adv, stat, value, text, out);
+                dimension, biome, adv, stat, value, text, out, null);
     }
 
     private @Nullable String need(R r, String key, String ptr, boolean tag) {

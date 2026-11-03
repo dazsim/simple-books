@@ -17,6 +17,9 @@ final class SimpleBooksForgeClient {
     static void init(IEventBus modBus) {
         SimpleBooksClient.init();
         SimpleBooks.toServer = SimpleBooksForge.CHANNEL::sendToServer;
+        SimpleBooks.toServerAction = SimpleBooksForge.CHANNEL::sendToServer;
+        MinecraftForge.EVENT_BUS.addListener((net.minecraftforge.client.event.ClientPlayerNetworkEvent.LoggingOut e) ->
+                com.workshopcraft.simplebooks.quest.QuestClientStore.clear());
         modBus.addListener((RegisterClientReloadListenersEvent e) -> e.registerReloadListener(new BookRegistry()));
         modBus.addListener((EntityRenderersEvent.RegisterRenderers e) -> e.registerBlockEntityRenderer(SimpleBooksContent.STAND_ENTITY, BookStandRenderer::new));
         MinecraftForge.EVENT_BUS.addListener((RegisterClientCommandsEvent e) -> e.getDispatcher().register(SimpleBooksClient.command()));

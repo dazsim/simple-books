@@ -4,7 +4,10 @@
     "package": "com.workshopcraft.simplebooks.mixin",
     "compatibilityLevel": "JAVA_${java}",${refmap}
     "mixins": [
-        "PackRepositoryMixin"
+        "FurnaceResultSlotMixin",
+        "PackRepositoryMixin",
+        "PlayerAdvancementsMixin",
+        "ServerPlayerStatMixin"
     ],
     "injectors": {
         "defaultRequire": 1

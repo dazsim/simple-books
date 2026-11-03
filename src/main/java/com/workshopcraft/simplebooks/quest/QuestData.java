@@ -6,7 +6,14 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.storage.LevelResource;
 import org.jspecify.annotations.Nullable;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 //? if >=1.21.5 {
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.saveddata.SavedDataType;
@@ -15,11 +22,11 @@ import net.minecraft.world.level.saveddata.SavedDataType;
 import net.minecraft.util.datafix.DataFixTypes;
 *///?}
 
-/** The world's quest save. A save it cannot read is kept as raw NBT and written back untouched. */
+/** The world's quest save. A save it cannot read is copied to a backup and replaced with a fresh one. */
 public class QuestData extends SavedData {
     public static final String NAME = "simplebooks_quests";
-    private QuestSave.Data data = QuestSave.Data.EMPTY;
-    private @Nullable CompoundTag raw;
+    private QuestWorld world = QuestWorld.of(QuestSave.Data.EMPTY);
+    private @Nullable String bad;
 
     //? if >=1.21.5 {
     public static final SavedDataType<QuestData> TYPE = new SavedDataType<>(SimpleBooks.id("quests"), QuestData::new,
@@ -41,41 +48,66 @@ public class QuestData extends SavedData {
 
     public static QuestData get(MinecraftServer server) {
         //? if >=1.21.5 {
-        return server.getDataStorage().computeIfAbsent(TYPE);
+        QuestData d = server.getDataStorage().computeIfAbsent(TYPE);
         //?} else if >=1.20.5 {
-        /*return server.overworld().getDataStorage().computeIfAbsent(FACTORY, NAME);
+        /*QuestData d = server.overworld().getDataStorage().computeIfAbsent(FACTORY, NAME);
         *///?} else {
-        /*return server.overworld().getDataStorage().computeIfAbsent(QuestData::load, QuestData::new, NAME);
+        /*QuestData d = server.overworld().getDataStorage().computeIfAbsent(QuestData::load, QuestData::new, NAME);
+        *///?}
+        if (d.bad != null) {
+            backup(server, d.bad);
+            d.bad = null;
+            d.setDirty();
+        }
+        return d;
+    }
+
+    static Path file(MinecraftServer server) {
+        Path data = server.getWorldPath(LevelResource.ROOT).resolve("data");
+        //? if >=1.21.5 {
+        return data.resolve("simplebooks").resolve("quests.dat");
+        //?} else {
+        /*return data.resolve(NAME + ".dat");
         *///?}
     }
 
-
-    public QuestSave.Data data() {
-        return data;
+    private static void backup(MinecraftServer server, String why) {
+        Path file = file(server);
+        Path copy = file.resolveSibling(file.getFileName() + "." + new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()) + ".bak");
+        try {
+            Files.copy(file, copy, StandardCopyOption.REPLACE_EXISTING);
+            SimpleBooks.LOG.warn("Quest save {}. A copy is at {} and quests start fresh.", why, copy);
+        } catch (Exception e) {
+            SimpleBooks.LOG.warn("Quest save {}. Could not copy it to {} ({}), quests start fresh.", why, copy, e.toString());
+        }
     }
 
-    /** True when the file came from a newer Simple Books or could not be read; nothing may change it then. */
-    public boolean locked() {
-        return raw != null;
+    public QuestWorld world() {
+        return world;
+    }
+
+    public QuestSave.Data data() {
+        return world.save();
     }
 
     static QuestData load(CompoundTag tag) {
         QuestData d = new QuestData();
         int version = tag.contains("version") ? number(tag.get("version")) : QuestSave.VERSION;
         if (version > QuestSave.VERSION) {
-            SimpleBooks.LOG.error("Quest save is version {} from a newer Simple Books (this one reads up to {}). It is kept as it is and quests will not save until you update.",
-                    version, QuestSave.VERSION);
-            d.raw = tag.copy();
+            d.bad = "is version " + version + " from a newer Simple Books (this one reads up to " + QuestSave.VERSION + ")";
             return d;
         }
-        var result = QuestSave.Data.CODEC.parse(NbtOps.INSTANCE, tag);
-        var error = result.error();
-        if (error.isPresent() || result.result().isEmpty()) {
-            SimpleBooks.LOG.error("Quest save could not be read, it is kept as it is: {}", error.map(Object::toString).orElse("empty"));
-            d.raw = tag.copy();
-            return d;
+        try {
+            var result = QuestSave.Data.CODEC.parse(NbtOps.INSTANCE, tag);
+            var error = result.error();
+            if (error.isPresent() || result.result().isEmpty()) {
+                d.bad = "could not be read (" + error.map(Object::toString).orElse("empty") + ")";
+                return d;
+            }
+            d.world = QuestWorld.of(result.result().get());
+        } catch (Exception e) {
+            d.bad = "could not be read (" + e + ")";
         }
-        d.data = result.result().get();
         return d;
     }
 
@@ -90,8 +122,7 @@ public class QuestData extends SavedData {
     }
 
     CompoundTag toTag() {
-        if (raw != null) return raw.copy();
-        Tag t = QuestSave.Data.CODEC.encodeStart(NbtOps.INSTANCE, data).getOrThrow(
+        Tag t = QuestSave.Data.CODEC.encodeStart(NbtOps.INSTANCE, world.save()).getOrThrow(
                 //? if <1.20.5 {
                 /*false, e -> SimpleBooks.LOG.error("Quest save could not be written: {}", e)
                 *///?}

@@ -41,6 +41,7 @@ public final class QuestManager {
     static void set(QuestDefs d) {
         defs = d;
         packets = null;
+        QuestEngine.defsChanged();
     }
 
     public static void serverStarted(MinecraftServer server) {
@@ -48,9 +49,9 @@ public final class QuestManager {
         Problems p = new Problems(true);
         checkRegistries(server, defs, null, p);
         checkConfig(config, defs, p);
-        QuestData data = QuestData.get(server);
-        if (!data.locked())
-            SimpleBooks.LOG.info("Quest save: {} teams, {} with progress", data.data().teams().size(), data.data().progress().size());
+        QuestEngine.start(server);
+        QuestWorld w = QuestEngine.world();
+        SimpleBooks.LOG.info("Quest save: {} teams, {} with progress", w.teams.size(), w.progress.size());
     }
 
     /** After /reload, once tags and loot tables are in place. */
@@ -226,7 +227,8 @@ public final class QuestManager {
     // ---- commands ----
 
     public static void registerCommands(CommandDispatcher<CommandSourceStack> d) {
-        d.register(Commands.literal("sbquests")
+        QuestCommands.registerTeam(d);
+        var root = Commands.literal("sbquests")
                 .requires(
                         //? if >=26.1 {
                         Commands.hasPermission(Commands.LEVEL_GAMEMASTERS)
@@ -238,7 +240,9 @@ public final class QuestManager {
                         .executes(c -> validate(c, null))
                         .then(Commands.argument("book", StringArgumentType.greedyString())
                                 .suggests((c, b) -> SharedSuggestionProvider.suggest(defs.books().keySet(), b))
-                                .executes(c -> validate(c, StringArgumentType.getString(c, "book"))))));
+                                .executes(c -> validate(c, StringArgumentType.getString(c, "book")))));
+        QuestCommands.addAdmin(root);
+        d.register(root);
     }
 
     private static final int SHOW = 30;

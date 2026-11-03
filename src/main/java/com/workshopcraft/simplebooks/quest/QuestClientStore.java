@@ -9,11 +9,54 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
-/** Quest definitions as the server sent them. Nothing reads them yet in phase 0. */
+/** Quest definitions and the player's team and progress, as the server sent them. */
 public final class QuestClientStore {
     private static final List<QuestParser.Entry> pending = new ArrayList<>();
     private static volatile QuestDefs defs = QuestDefs.EMPTY;
+    private static volatile JsonObject state = new JsonObject();
+    private static volatile int version;
+    /** Set by the client entrypoint: shows a toast, opens a book. */
+    public static Consumer<JsonObject> toasts = o -> {};
+    public static Consumer<JsonObject> opens = o -> {};
+
+    /** Team and quest progress; see QuestEngine.state for the shape. */
+    public static JsonObject state() {
+        return state;
+    }
+
+    /** Goes up whenever defs or state change, so screens know to redraw. */
+    public static int version() {
+        return version;
+    }
+
+    /** On disconnect: nothing from the last server is kept. */
+    public static synchronized void clear() {
+        pending.clear();
+        defs = QuestDefs.EMPTY;
+        state = new JsonObject();
+        version++;
+    }
+
+    static void accept(QuestSyncPacket p) {
+        JsonObject o;
+        try {
+            o = JsonParser.parseString(new String(p.json(), StandardCharsets.UTF_8)).getAsJsonObject();
+        } catch (Exception e) {
+            SimpleBooks.LOG.error("Bad quest {} packet: {}", p.kind(), e.toString());
+            return;
+        }
+        switch (p.kind()) {
+            case "state" -> {
+                state = o;
+                version++;
+            }
+            case "toast" -> toasts.accept(o);
+            case "open" -> opens.accept(o);
+            default -> {}
+        }
+    }
 
     private QuestClientStore() {}
 
@@ -42,6 +85,7 @@ public final class QuestClientStore {
             Problems problems = new Problems(false);
             defs = QuestParser.parse(List.copyOf(pending), true, problems);
             pending.clear();
+            version++;
             int quests = 0;
             for (QuestDefs.Book b : defs.books().values()) quests += b.quests().size();
             SimpleBooks.LOG.info("Quest definitions from server: {} books, {} quests, {} problems",
