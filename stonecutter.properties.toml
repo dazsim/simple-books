@@ -1,7 +1,7 @@
 mod.id = "simplebooks"
 mod.name = "Simple Books"
 mod.group = "com.workshopcraft.simplebooks"
-mod.version = "1.1.0"
+mod.version = "1.2.0"
 mod.author = "workshopcraft"
 mod.description = "Guide books for mods, written as JSON pages and templates."
 
