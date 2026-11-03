@@ -67,6 +67,7 @@ tasks {
             "neoforge" to if (modern) "[26.1.0.0-beta,)" else "[21.1,)",
             "java" to requiredJava.majorVersion,
             "refmap" to "",
+            "logo_key" to if (sc.current.parsed >= "26.3") "iconFile" else "logoFile",
         )
         inputs.properties(props)
         filesMatching(listOf("META-INF/neoforge.mods.toml", "pack.mcmeta", "simplebooks.mixins.json")) { expand(props) }
