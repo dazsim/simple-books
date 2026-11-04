@@ -66,7 +66,7 @@ public class HandInBoxScreen extends Screen {
     public static void open(JsonObject o) {
         HandInBoxScreen screen = new HandInBoxScreen(o);
         var mc = net.minecraft.client.Minecraft.getInstance();
-        //? if >=26.3 {
+        //? if >=26.2 {
         /*mc.schedule(() -> mc.gui.setScreen(screen));
         *///?} else if >=26.1 {
         mc.schedule(() -> mc.setScreen(screen));

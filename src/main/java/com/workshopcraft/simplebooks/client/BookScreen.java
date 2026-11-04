@@ -47,7 +47,7 @@ public class BookScreen extends Screen {
     public static void open(Identifier book, int spread, int hand, net.minecraft.core.@Nullable BlockPos stand) {
         BookScreen screen = new BookScreen(book, Math.max(0, spread), hand, stand);
         var mc = net.minecraft.client.Minecraft.getInstance();
-        //? if >=26.3 {
+        //? if >=26.2 {
         /*mc.schedule(() -> mc.gui.setScreen(screen));
         *///?} else if >=26.1 {
         mc.schedule(() -> mc.setScreen(screen));

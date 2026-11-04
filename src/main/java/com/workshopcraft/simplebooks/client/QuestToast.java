@@ -64,7 +64,7 @@ final class QuestToast implements Toast {
         if (st.isEmpty()) st = ItemRef.parse(new JsonPrimitive("minecraft:writable_book")).stack();
         QuestToast t = new QuestToast(head, line, st, kind.equals("secret"));
         Minecraft mc = Minecraft.getInstance();
-        //? if >=26.3 {
+        //? if >=26.2 {
         /*mc.gui.toastManager().addToast(t);
         *///?} else if >=26.1 {
         mc.getToastManager().addToast(t);

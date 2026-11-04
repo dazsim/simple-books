@@ -93,7 +93,7 @@ public class HandInBoxRenderer implements BlockEntityRenderer<HandInBoxBlockEnti
 
     private static boolean lookedAt(HandInBoxBlockEntity be, float partial) {
         Minecraft mc = Minecraft.getInstance();
-        //? if >=26.3 {
+        //? if >=26.2 {
         /*boolean hidden = mc.gui.hud.isHidden();
         *///?} else {
         boolean hidden = mc.options.hideGui;

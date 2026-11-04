@@ -109,7 +109,7 @@ public final class SimpleBooksClient {
     }
 
     private static void say(Component c) {
-        //? if >=26.3 {
+        //? if >=26.2 {
         /*Minecraft.getInstance().gui.hud.getChat().addClientSystemMessage(c);
         *///?} else if >=26.1 {
         Minecraft.getInstance().gui.getChat().addClientSystemMessage(c);

@@ -33,6 +33,14 @@ deps.fabric_api = "0.155.3+26.1.2"
 mod.mc_compat = "[26.1,26.2)"
 deps.neo_loader = "26.1.2.122"
 
+[fabric."26.2"]
+mod.mc_compat = "~26.2"
+deps.fabric_api = "0.161.0+26.2"
+
+[neoforge."26.2"]
+mod.mc_compat = "[26.2,26.3)"
+deps.neo_loader = "26.2.0.93"
+
 [fabric."26.3"]
 mod.mc_compat = "~26.3"
 deps.fabric_api = "0.165.0+26.3"
