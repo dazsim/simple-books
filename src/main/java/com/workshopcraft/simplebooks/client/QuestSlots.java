@@ -496,17 +496,44 @@ final class QuestSlots {
         for (QuestDefs.Decoration d : decos) if (d.layer().equals("front")) decoration(d, ox, oy);
         int start = s.hits.size();
         List<Spread.Hit> nodes = new ArrayList<>();
+        boolean editing = QuestEdit.active();
+        if (editing) {
+            int c0 = minC - 1, c1 = maxC + 1, r0 = minR - 1, r1 = maxR + 1;
+            for (int col = c0; col <= c1; col++) for (int row = r0; row <= r1; row++) {
+                boolean taken = false;
+                for (int[] c : at.values()) if (c[0] == col && c[1] == row) { taken = true; break; }
+                if (taken) continue;
+                float cx = ox + col * CELL_W, cy = oy + row * CELL_H;
+                if (cx + CELL_W < x || cx > x + w || cy + CELL_H < y || cy > y + h) continue;
+                s.fill(cx + 4, cy + 4, cx + CELL_W - 4, cy + CELL_H - 4, (s.color("$rule") & 0x00FFFFFF) | 0x22000000);
+                nodes.add(new Spread.Hit(Math.max(x, cx), Math.max(y, cy), Math.min(x + w, cx + CELL_W), Math.min(y + h, cy + CELL_H),
+                        new QuestEdit.Cell(chapter, col, row)));
+            }
+        }
         for (QuestDefs.Quest q : vis) {
             int[] c = at.get(q.id());
             float nx = ox + c[0] * CELL_W + (CELL_W - NODE) / 2, ny = oy + c[1] * CELL_H + (CELL_H - NODE) / 2;
             boolean in = nx + NODE > x && nx < x + w && ny + NODE > y && ny < y + h;
             boolean hov = in && over(Math.max(x, nx), Math.max(y, ny), Math.min(x + w, nx + NODE), Math.min(y + h, ny + NODE));
             if (hov) focus.put(chapter, q.id());
-            node(qb, q, nx, ny, hov);
+            boolean sel = editing && q.id().equals(QuestEdit.selected);
+            if (sel) {
+                int hi = s.color("$line_done");
+                s.fill(nx - 4, ny - 4, nx + NODE + 4, ny, hi);
+                s.fill(nx - 4, ny + NODE, nx + NODE + 4, ny + NODE + 4, hi);
+                s.fill(nx - 4, ny, nx, ny + NODE, hi);
+                s.fill(nx + NODE, ny, nx + NODE + 4, ny + NODE, hi);
+            }
+            node(qb, q, nx, ny, hov || sel);
             if (in) {
-                Component tip = Texts.of(q.title()).copy().append(": ").append(sub(qb, q, st(q.id()), str(st(q.id()), "s")));
-                nodes.add(new Spread.Hit(Math.max(x, nx), Math.max(y, ny), Math.min(x + w, nx + NODE), Math.min(y + h, ny + NODE),
-                        s.link(QuestBook.detailId(q.id()), tip)));
+                if (editing) {
+                    nodes.add(new Spread.Hit(Math.max(x, nx), Math.max(y, ny), Math.min(x + w, nx + NODE), Math.min(y + h, ny + NODE),
+                            new QuestEdit.Node(q.id())));
+                } else {
+                    Component tip = Texts.of(q.title()).copy().append(": ").append(sub(qb, q, st(q.id()), str(st(q.id()), "s")));
+                    nodes.add(new Spread.Hit(Math.max(x, nx), Math.max(y, ny), Math.min(x + w, nx + NODE), Math.min(y + h, ny + NODE),
+                            s.link(QuestBook.detailId(q.id()), tip)));
+                }
             }
         }
         s.hits.subList(start, s.hits.size()).clear();

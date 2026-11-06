@@ -160,6 +160,23 @@ public class BookScreen extends Screen {
             }
             g.fill(MARK_X + 4, MARK_Y + 4, MARK_X + MARK_W - 4, MARK_Y + 6, s.color("$mark_line"));
         }
+        if (isQuestBook() && QuestEdit.canEdit()) {
+            float ey = 8;
+            String[][] tools = QuestEdit.on
+                    ? new String[][]{{"Done", "toggle"}, {"Link", "link"}, {"Unlink", "unlink"}, {"Del", "delete"}, {"Edit", "props"}, {"Chapter", "chapter"}, {"Pool", "pool"}, {"Undo", "undo"}}
+                    : new String[][]{{"Edit", "toggle"}};
+            float tx = Spread.L;
+            for (String[] t : tools) {
+                float tw = font.width(t[0]) * 2 + 16;
+                boolean hi = in(mx, my, tx, ey, tw, 24);
+                s.fill(tx, ey, tx + tw, ey + 24, s.color(hi ? "$mark_hover" : "$mark"));
+                s.ctext(Component.literal(t[0]), tx + tw / 2, ey + 4, 1, s.color("$page"));
+                s.hits.add(new Spread.Hit(tx, ey, tx + tw, ey + 24, "toggle".equals(t[1]) ? "edit_toggle" : new QuestEdit.Tool(t[1])));
+                tx += tw + 8;
+            }
+            if (QuestEdit.status != null && !QuestEdit.status.isEmpty())
+                s.text(Component.literal(QuestEdit.status), Spread.L, ey + 28, 0.85f, s.color("$ink"));
+        }
         g.pop();
         if (markHover) g.tooltip(font, Component.translatable("simplebooks.contents"), mouseX, mouseY);
         if (turnFrom >= 0 || parts.size() < 2) hits = turnFrom >= 0 ? List.of() : s.hits;
@@ -254,12 +271,22 @@ public class BookScreen extends Screen {
             if (bk != null && bk.contentsIndex() >= 0 && in(mx, my, MARK_X, MARK_Y, MARK_W, MARK_H))
                 return spread == bk.contentsIndex() || turn(bk.contentsIndex(), true);
             for (Spread.Hit h : hits) {
-                if (h.contains(mx, my) && h.target() instanceof QuestSlots.Act a && QuestSlots.press(a)) {
+                if (!h.contains(mx, my)) continue;
+                if ("edit_toggle".equals(h.target())) {
+                    QuestEdit.toggle(bookId);
                     minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
                     return true;
                 }
-                if (h.contains(mx, my) && h.target() instanceof Spread.Jump j) return j.spread() == spread || turn(j.spread(), true);
-                if (h.contains(mx, my) && h.target() instanceof Identifier target) {
+                if (QuestEdit.press(h.target())) {
+                    minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                    return true;
+                }
+                if (h.target() instanceof QuestSlots.Act a && QuestSlots.press(a)) {
+                    minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                    return true;
+                }
+                if (h.target() instanceof Spread.Jump j) return j.spread() == spread || turn(j.spread(), true);
+                if (h.target() instanceof Identifier target) {
                     Book b = book();
                     int idx = b == null ? -1 : b.indexOf(target);
                     if (idx >= 0) return turn(idx, true);
@@ -272,10 +299,18 @@ public class BookScreen extends Screen {
     }
 
     private boolean key(int k) {
+        if (QuestEdit.active()) {
+            QuestEdit.key(k);
+            if (k == 261 || k == 76 || k == 85 || k == 69) return true; // del, L, U, E
+        }
         if ((k == InputConstants.KEY_RIGHT || k == InputConstants.KEY_PAGEDOWN) && spread < spreads() - 1) return turn(spread + 1, false);
         if ((k == InputConstants.KEY_LEFT || k == InputConstants.KEY_PAGEUP) && spread > 0) return turn(spread - 1, false);
-        if (k == InputConstants.KEY_BACKSPACE && !history.isEmpty()) return turn(history.pop(), false);
+        if (k == InputConstants.KEY_BACKSPACE && !history.isEmpty() && !QuestEdit.active()) return turn(history.pop(), false);
         return false;
+    }
+
+    private boolean isQuestBook() {
+        return com.workshopcraft.simplebooks.quest.QuestClientStore.defs().books().containsKey(bookId.toString());
     }
 
     //? if >=1.20.2 {
@@ -302,6 +337,34 @@ public class BookScreen extends Screen {
     }
     *///?}
 
+    //? if >=26.1 {
+    @Override
+    public boolean mouseReleased(net.minecraft.client.input.MouseButtonEvent e) {
+        return release(e.x(), e.y()) || super.mouseReleased(e);
+    }
+    //?} else {
+    /*@Override
+    public boolean mouseReleased(double x, double y, int button) {
+        return release(x, y) || super.mouseReleased(x, y, button);
+    }
+    *///?}
+
+    private boolean release(double x, double y) {
+        if (!QuestEdit.active() || QuestEdit.dragId == null) return false;
+        float mx = (float) ((x - ox) / scale), my = (float) ((y - oy) / scale);
+        QuestEdit.Cell cell = null;
+        for (Spread.Hit h : hits) {
+            if (h.contains(mx, my) && h.target() instanceof QuestEdit.Cell c) cell = c;
+            if (h.contains(mx, my) && h.target() instanceof QuestEdit.Node) {
+                // dropped on a node: cancel move
+                QuestEdit.dragId = null;
+                return true;
+            }
+        }
+        QuestEdit.dragEnd(cell);
+        return true;
+    }
+
     private QuestSlots.@org.jspecify.annotations.Nullable Pan panAt(double x, double y) {
         float mx = (float) ((x - ox) / scale), my = (float) ((y - oy) / scale);
         for (Spread.Hit h : hits) if (h.contains(mx, my) && h.target() instanceof QuestSlots.Pan p) return p;
@@ -309,6 +372,7 @@ public class BookScreen extends Screen {
     }
 
     private boolean drag(double x, double y, double dx, double dy) {
+        if (QuestEdit.active() && QuestEdit.dragId != null) return true;
         QuestSlots.Pan p = panAt(x, y);
         return p != null && QuestSlots.pan(p, -dx / scale, -dy / scale);
     }

@@ -656,6 +656,10 @@ Admin commands (permission level 2). A player name means that player's team.
 - `cooldown` text in days: only `s`, `m` and `h` are read.
 - Expecting offline members' items to count towards a team item task. Only online members count.
 
+### Quest editor
+
+Ops (permission level 2+) and players in creative can open Edit on a quest book. In edit mode on a tree chapter you can add quests (empty cell), move them (drag), delete, and link or unlink dependencies. Edit opens title, text, tasks and rewards (JSON for custom types). Chapter opens background, lines and decorations. Changes are checked on the server, written under `config/simplebooks/data/...`, then hot-reloaded. Undo reverses the last write. Datapack books that are not already in the config pack are saved as a copy there (chat notes that).
+
 ### Custom task types
 
 Mods can add task types with their own JSON fields. The API is in `com.workshopcraft.simplebooks.api` and uses plain string ids on every version. Register on both sides, so the book can show the task:
