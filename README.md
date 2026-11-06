@@ -437,6 +437,7 @@ Hand the book out with `first_join_book` (below), a `/give` (see [Optional integ
 | `pool` | board chapters only: the pool to show. Default is the pool with the chapter's file name |
 | `background` | optional backdrop behind the chapter's pages: a texture id (`mypack:textures/gui/bg.png`), or `{ "texture": "...", "mode": "stretch"|"tile", "tile": 64 }`. `stretch` (default) fills the page; `tile` repeats using `tile` as the width in spread units (default 64) |
 | `decorations` | tree chapters only: free-placed images and text that scroll with the skill tree, see below |
+| `lines` | tree chapters only: how dependency arrows are drawn. `elbow` (default) is the stepped path; `diagonal` is a straight line from node edge to node edge with the arrowhead along it |
 | `requires`, `disabled` | see [Requires and overrides](#requires-and-overrides) |
 
 Tree decorations (each entry is an image or a text, not both):
@@ -450,7 +451,7 @@ Tree decorations (each entry is an image or a text, not both):
 
 `x`/`y`/`width`/`height` are in the tree's own space (cell `(0,0)` is at `0,0`, same units as quest `pos`), so they move when the tree is panned. `layer` is `behind` (default, under the link lines) or `front` (over the lines, under the quest nodes). Text also takes `scale`, `colour` (or `color`) and `centred`.
 
-A quest may set its own `background` the same way; that overrides the chapter for that quest's pages (and for a story page). You can also put `background` inside the quest's `page` object.
+A quest may set its own `background` the same way; that overrides the chapter for that quest's pages (and for a story page). You can also put `background` inside the quest's `page` object. A quest may also set `lines` (`elbow` or `diagonal`) to override the chapter for every link drawn into that quest.
 
 ### Quests
 
@@ -496,6 +497,8 @@ A quest may set its own `background` the same way; that overrides the chapter fo
 | `tiers` | milestones, see [Milestones](#milestones) |
 | `exclusive` | `{ "group": "starter_path", "lock_on": "choose" }`, see [Branching paths](#branching-paths) |
 | `toast` | `complete` (default), `unlock`, `both` or `none` |
+| `background` | optional; same shape as the chapter field, overrides it for this quest's pages |
+| `lines` | optional; `elbow` or `diagonal`. Overrides the chapter for links into this quest |
 | `requires`, `disabled` | see [Requires and overrides](#requires-and-overrides) |
 
 Quest states, per team: hidden, locked, available, in progress, complete, and closed for a rival path that was not taken. On top of complete each player has their own claimable or claimed.
@@ -649,7 +652,7 @@ Admin commands (permission level 2). A player name means that player's team.
 - A pool quest that its pool does not list, or a board chapter that also has normal quests.
 - Tags in item rewards (rewards need one item id), or `nbt` on 1.21.1 and later (use `components`).
 - A custom reward `type` with no mod registered for it, or both a built-in key (`item`, `xp`, ...) and a `type` on the same entry.
-- Tree `decorations` on a checklist, story or board chapter (they are ignored there).
+- Tree `decorations` or `lines` on a checklist, story or board chapter (they are ignored there).
 - `cooldown` text in days: only `s`, `m` and `h` are read.
 - Expecting offline members' items to count towards a team item task. Only online members count.
 

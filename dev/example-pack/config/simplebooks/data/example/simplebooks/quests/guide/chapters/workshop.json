@@ -3,5 +3,6 @@
   "icon": "minecraft:smithing_table",
   "sort": 5,
   "layout": "tree",
-  "text": "A small tree laid out by hand with pos."
+  "lines": "diagonal",
+  "text": "A small tree laid out by hand with pos. Links are diagonal."
 }

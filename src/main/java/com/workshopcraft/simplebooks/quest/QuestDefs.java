@@ -39,14 +39,14 @@ public record QuestDefs(Map<String, Book> books) {
 
     public record Chapter(String id, String title, String icon, int sort, String layout, List<String> depends,
                           String visibility, String text, @Nullable String pool, @Nullable Background background,
-                          List<Decoration> decorations, JsonObject json) {}
+                          List<Decoration> decorations, String lines, JsonObject json) {}
 
     public record Quest(String id, @Nullable String chapter, @Nullable String pool, int sort, int @Nullable [] pos,
                         String title, String subtitle, String icon, String text, @Nullable JsonObject page,
                         List<String> depends, String dependsMode, String visibility, boolean optional,
                         List<Task> tasks, String taskMode, List<Reward> rewards, List<Reward> chooseOne,
                         @Nullable Repeat repeat, List<Tier> tiers, @Nullable Exclusive exclusive, String toast,
-                        @Nullable Background background, JsonObject json) {}
+                        @Nullable Background background, @Nullable String lines, JsonObject json) {}
 
     /** Custom (namespaced) types keep their fields in json; spec is what their TaskType parsed (null on a client without it). */
     public record Task(String id, String type, List<String> items, long count, boolean consume, String handIn,

@@ -320,6 +320,32 @@ public class Spread {
         }
     }
 
+    /** Thick line from (x0,y0) to (x1,y1) as a rotated fill; half is half-thickness. */
+    void thickLine(float x0, float y0, float x1, float y1, float half, int col) {
+        if (!draw || g == null) return;
+        float dx = x1 - x0, dy = y1 - y0;
+        float len = (float) Math.hypot(dx, dy);
+        if (len < 0.5f) return;
+        g.push();
+        g.translate(x0, y0);
+        g.rotate((float) Math.atan2(dy, dx));
+        g.fill(0, Math.round(-half), Math.round(len), Math.round(half), col);
+        g.pop();
+    }
+
+    /** Arrowhead at (x,y) pointing along angle radians, tip on the tip. */
+    void arrowAlong(float x, float y, float angle, float u, int col) {
+        if (!draw || g == null) return;
+        g.push();
+        g.translate(x, y);
+        g.rotate(angle);
+        for (int i = 0; i < 5; i++) {
+            float a = -2 - 2 * i, b = 2 + 2 * i;
+            g.fill(Math.round(-2 - 2 * i), Math.round(a), Math.round(-2 * i), Math.round(b), col);
+        }
+        g.pop();
+    }
+
     void slot(float x, float y, float s) {
         float k = Math.max(1, s / 18);
         int dark = color("$slot_shadow"), light = color("$slot_light");

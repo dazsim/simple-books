@@ -486,9 +486,13 @@ final class QuestSlots {
         QuestDefs.Chapter ch = qb.chapters().get(chapter);
         List<QuestDefs.Decoration> decos = ch == null ? List.of() : ch.decorations();
         for (QuestDefs.Decoration d : decos) if (d.layer().equals("behind")) decoration(d, ox, oy);
+        String chLines = ch == null || ch.lines() == null ? "elbow" : ch.lines();
         for (QuestDefs.Quest q : vis)
             for (String d : q.depends())
-                if (shown.contains(d)) link(at.get(d), at.get(q.id()), ox, oy, str(st(d), "s").equals("complete"));
+                if (shown.contains(d)) {
+                    String style = q.lines() != null ? q.lines() : chLines;
+                    link(at.get(d), at.get(q.id()), ox, oy, str(st(d), "s").equals("complete"), style);
+                }
         for (QuestDefs.Decoration d : decos) if (d.layer().equals("front")) decoration(d, ox, oy);
         int start = s.hits.size();
         List<Spread.Hit> nodes = new ArrayList<>();
@@ -520,11 +524,23 @@ final class QuestSlots {
         s.hits.add(new Spread.Hit(x, y, x + w, y + h, new Pan(chapter, maxX, maxY)));
     }
 
-    private void link(int[] a, int[] b, float ox, float oy, boolean done) {
+    private void link(int[] a, int[] b, float ox, float oy, boolean done, String style) {
         int col = s.color(done ? "$line_done" : "$line_todo");
         float ax = ox + a[0] * CELL_W + CELL_W / 2, ay = oy + a[1] * CELL_H + CELL_H / 2;
         float bx = ox + b[0] * CELL_W + CELL_W / 2, by = oy + b[1] * CELL_H + CELL_H / 2;
         float t = 2, e = NODE / 2;
+        if ("diagonal".equals(style)) {
+            float dx = bx - ax, dy = by - ay;
+            float m = Math.max(Math.abs(dx), Math.abs(dy));
+            if (m < 1e-3f) return;
+            float ua = e / m, ub = 1 - e / m;
+            if (ub <= ua) return;
+            float x0 = ax + dx * ua, y0 = ay + dy * ua, x1 = ax + dx * ub, y1 = ay + dy * ub;
+            float ang = (float) Math.atan2(dy, dx);
+            s.thickLine(x0, y0, x1, y1, t, col);
+            s.arrowAlong(x1, y1, ang, t, col);
+            return;
+        }
         if (a[0] < b[0]) {
             float x0 = ax + e, x1 = bx - e, m = b[0] - a[0] == 1 ? (x0 + x1) / 2 : x1 - (CELL_W - NODE) / 2;
             s.fill(x0, ay - t, m + t, ay + t, col);

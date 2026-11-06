@@ -66,7 +66,7 @@ public final class QuestParser {
     private static final class CB {
         Entry e; JsonObject out; String title, icon, layout, visibility, text; @Nullable String pool; int sort;
         List<String> depends = new ArrayList<>();
-        @Nullable Background background; List<Decoration> decorations = List.of();
+        @Nullable Background background; List<Decoration> decorations = List.of(); String lines = "elbow";
     }
 
     private static final class QB {
@@ -74,7 +74,7 @@ public final class QuestParser {
         String title, subtitle, icon, text, dependsMode, visibility, taskMode, toast; @Nullable JsonObject page;
         boolean optional; List<String> depends = new ArrayList<>(); List<Task> tasks = new ArrayList<>();
         List<Reward> rewards = List.of(), chooseOne = List.of(); @Nullable Repeat repeat; List<Tier> tiers = new ArrayList<>();
-        @Nullable Exclusive exclusive; @Nullable Background background;
+        @Nullable Exclusive exclusive; @Nullable Background background; @Nullable String lines;
     }
 
     private static final class PB {
@@ -267,12 +267,12 @@ public final class QuestParser {
 
         Map<String, Chapter> chapterDefs = new TreeMap<>();
         for (CB c : chapters.values())
-            chapterDefs.put(c.e.id(), new Chapter(c.e.id(), c.title, c.icon, c.sort, c.layout, List.copyOf(c.depends), c.visibility, c.text, c.pool, c.background, c.decorations, c.out));
+            chapterDefs.put(c.e.id(), new Chapter(c.e.id(), c.title, c.icon, c.sort, c.layout, List.copyOf(c.depends), c.visibility, c.text, c.pool, c.background, c.decorations, c.lines, c.out));
         Map<String, Quest> questDefs = new TreeMap<>();
         for (QB q : quests.values())
             questDefs.put(q.e.id(), new Quest(q.e.id(), q.chapter, q.pool, q.sort, q.pos, q.title, q.subtitle, q.icon, q.text, q.page,
                     List.copyOf(q.depends), q.dependsMode, q.visibility, q.optional, List.copyOf(q.tasks), q.taskMode,
-                    q.rewards, q.chooseOne, q.repeat, List.copyOf(q.tiers), q.exclusive, q.toast, q.background, q.out));
+                    q.rewards, q.chooseOne, q.repeat, List.copyOf(q.tiers), q.exclusive, q.toast, q.background, q.lines, q.out));
         if (!trusted && problems.logging()) {
             int n = questDefs.size();
             SimpleBooks.LOG.info("Quest book {}: {} chapters, {} quests, {} pools, {} broken, {} skipped", bookId,
@@ -511,6 +511,8 @@ public final class QuestParser {
         c.pool = r.opt("pool");
         c.background = background(r, "background", "");
         c.decorations = decorations(r, c.layout);
+        c.lines = r.oneOf("lines", "elbow", "elbow", "diagonal");
+        if (!c.layout.equals("tree") && o.has("lines") && !trusted) warn("/lines", "only used by tree chapters");
         r.skip("requires", "disabled");
         r.finish();
         if (bad) return null;
@@ -602,6 +604,8 @@ public final class QuestParser {
         q.taskMode = r.oneOf("task_mode", "all", "all", "any");
         q.toast = r.oneOf("toast", "complete", "complete", "unlock", "both", "none");
         q.background = background(r, "background", "");
+        if (o.has("lines")) q.lines = r.oneOf("lines", "elbow", "elbow", "diagonal");
+        else r.skip("lines");
         if (q.background == null && q.page != null && q.page.has("background")) {
             R pr = new R(q.page, "/page");
             q.background = background(pr, "background", "/page");
