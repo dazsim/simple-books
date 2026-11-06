@@ -25,9 +25,7 @@ public final class SimpleBooksClient {
             Identifier book = o.has("book") ? Identifier.tryParse(o.get("book").getAsString()) : null;
             if (book != null) BookScreen.open(book, o.has("spread") ? o.get("spread").getAsInt() : 0, -2, null);
         };
-        com.workshopcraft.simplebooks.quest.QuestClientStore.langRefresh = () -> Minecraft.getInstance().execute(() -> {
-            if (Minecraft.getInstance().screen != null) Minecraft.getInstance().screen.rebuildWidgets();
-        });
+        com.workshopcraft.simplebooks.quest.QuestClientStore.langRefresh = () -> {};
     }
 
     /** /simplebooks open|validate|list, built for any client command source type. */
