@@ -1,6 +1,5 @@
 package com.workshopcraft.simplebooks.client;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.workshopcraft.simplebooks.SimpleBooks;
@@ -13,12 +12,17 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /** Chapter settings: title, lines, background, decorations JSON. */
 public class QuestChapterEditScreen extends Screen {
     private final String chapterId;
     private final @Nullable Screen parent;
     private EditBox title, lines, background, decorations;
     private String error = "";
+    private final List<int[]> labels = new ArrayList<>();
+    private final List<String> labelNames = new ArrayList<>();
 
     public QuestChapterEditScreen(String chapterId, @Nullable Screen parent) {
         super(Component.literal("Chapter " + QuestEdit.shortName(chapterId)));
@@ -28,16 +32,28 @@ public class QuestChapterEditScreen extends Screen {
 
     @Override
     protected void init() {
+        labels.clear();
+        labelNames.clear();
         QuestDefs.Chapter c = find();
         JsonObject o = c == null ? new JsonObject() : c.json();
-        int cx = width / 2, y = 40;
-        title = box(cx - 150, y, QuestEditForms.displayText(str(o, "title"))); y += 28;
-        lines = box(cx - 150, y, str(o, "lines").isEmpty() ? "elbow" : str(o, "lines")); y += 28;
-        background = box(cx - 150, y, o.has("background") ? o.get("background").toString() : ""); y += 28;
-        decorations = box(cx - 150, y, o.has("decorations") ? o.get("decorations").toString() : "[]");
+        int cx = width / 2, y = 28;
+        int x = cx - 150;
+        mark("Title", x, y); y += 10;
+        title = box(x, y, QuestEditForms.displayText(str(o, "title"))); y += 28;
+        mark("Lines (elbow|diagonal)", x, y); y += 10;
+        lines = box(x, y, str(o, "lines").isEmpty() ? "elbow" : str(o, "lines")); y += 28;
+        mark("Background", x, y); y += 10;
+        background = box(x, y, o.has("background") ? o.get("background").toString() : ""); y += 28;
+        mark("Decorations JSON", x, y); y += 10;
+        decorations = box(x, y, o.has("decorations") ? o.get("decorations").toString() : "[]");
         decorations.setWidth(300); y += 36;
         addRenderableWidget(Button.builder(Component.literal("Save"), b -> save()).bounds(cx - 100, y, 90, 20).build());
         addRenderableWidget(Button.builder(Component.literal("Cancel"), b -> minecraft.setScreen(parent)).bounds(cx + 10, y, 90, 20).build());
+    }
+
+    private void mark(String name, int x, int y) {
+        labelNames.add(name);
+        labels.add(new int[]{x, y});
     }
 
     private EditBox box(int x, int y, String v) {
@@ -89,8 +105,10 @@ public class QuestChapterEditScreen extends Screen {
     @Override
     public void extractRenderState(net.minecraft.client.gui.GuiGraphicsExtractor gg, int mouseX, int mouseY, float a) {
         super.extractRenderState(gg, mouseX, mouseY, a);
-        int x = width / 2 - 150;
-        gg.text(font, Component.literal("Title / lines (elbow|diagonal) / background / decorations JSON"), x, 20, 0xFFFFFF, false);
+        for (int i = 0; i < labels.size(); i++) {
+            int[] p = labels.get(i);
+            gg.text(font, Component.literal(labelNames.get(i)), p[0], p[1], 0xA0A0A0, false);
+        }
         if (!error.isEmpty()) gg.text(font, Component.literal(error), 20, height - 30, 0xFF5555, false);
     }
     //?} else {
@@ -98,6 +116,10 @@ public class QuestChapterEditScreen extends Screen {
     public void render(net.minecraft.client.gui.GuiGraphics gg, int mouseX, int mouseY, float a) {
         renderBackground(gg, mouseX, mouseY, a);
         super.render(gg, mouseX, mouseY, a);
+        for (int i = 0; i < labels.size(); i++) {
+            int[] p = labels.get(i);
+            gg.drawString(font, labelNames.get(i), p[0], p[1], 0xA0A0A0);
+        }
         if (!error.isEmpty()) gg.drawString(font, error, 20, height - 30, 0xFF5555);
     }
     *///?}

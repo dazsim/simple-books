@@ -25,6 +25,8 @@ public class QuestPoolEditScreen extends Screen {
     private final List<EditBox> weights = new ArrayList<>();
     private String error = "";
     private int scroll;
+    private final List<int[]> labels = new ArrayList<>();
+    private final List<String> labelNames = new ArrayList<>();
 
     public QuestPoolEditScreen(String poolId, @Nullable Screen parent) {
         super(Component.literal("Pool " + QuestEdit.shortName(poolId)));
@@ -39,7 +41,14 @@ public class QuestPoolEditScreen extends Screen {
         clearWidgets();
         questIds.clear();
         weights.clear();
-        int x = 20, y = 28;
+        labels.clear();
+        labelNames.clear();
+        int x = 20, y = 16;
+        mark("Offers", x, y);
+        mark("Cooldown", x + 80, y);
+        mark("Reroll", x + 180, y);
+        mark("Reroll cost JSON", x + 260, y);
+        y += 10;
         offers = field(x, y, 60, draft.has("offers") ? draft.get("offers").getAsString() : "3");
         String cd = "";
         if (draft.has("refresh") && draft.get("refresh").isJsonObject() && draft.getAsJsonObject("refresh").has("cooldown"))
@@ -67,7 +76,10 @@ public class QuestPoolEditScreen extends Screen {
         y += 24;
         JsonArray qs = quests();
         int start = scroll;
-        int end = Math.min(qs.size(), start + Math.max(1, (height - y - 50) / 24));
+        int end = Math.min(qs.size(), start + Math.max(1, (height - y - 50) / 34));
+        mark("Quest id", x, y);
+        mark("Weight", x + 230, y);
+        y += 10;
         for (int i = start; i < end; i++) {
             JsonObject e = qs.get(i).getAsJsonObject();
             EditBox q = field(x, y, 220, e.has("quest") ? e.get("quest").getAsString() : "");
@@ -93,6 +105,11 @@ public class QuestPoolEditScreen extends Screen {
         int by = height - 28;
         addRenderableWidget(Button.builder(Component.literal("Save"), b -> save()).bounds(width / 2 - 100, by, 90, 20).build());
         addRenderableWidget(Button.builder(Component.literal("Cancel"), b -> minecraft.setScreen(parent)).bounds(width / 2 + 10, by, 90, 20).build());
+    }
+
+    private void mark(String name, int x, int y) {
+        labelNames.add(name);
+        labels.add(new int[]{x, y});
     }
 
     private JsonArray quests() {
@@ -151,12 +168,6 @@ public class QuestPoolEditScreen extends Screen {
                 return;
             }
         }
-        try {
-            if (!rerollCost.getValue().isBlank()) com.google.gson.JsonParser.parseString(rerollCost.getValue());
-        } catch (Exception e) {
-            error = "Bad reroll cost JSON: " + e.getMessage();
-            return;
-        }
         SimpleBooks.toServerEdit.accept(new QuestEditPacket("put_pool", poolId, draft.toString()));
         QuestEdit.status = "Saved pool " + QuestEdit.shortName(poolId) + ".";
         minecraft.setScreen(parent);
@@ -174,8 +185,10 @@ public class QuestPoolEditScreen extends Screen {
     @Override
     public void extractRenderState(net.minecraft.client.gui.GuiGraphicsExtractor gg, int mouseX, int mouseY, float a) {
         super.extractRenderState(gg, mouseX, mouseY, a);
-        gg.text(font, Component.literal("offers  cooldown  reroll  cost JSON"), 20, 10, 0xFFFFFF, false);
-        gg.text(font, Component.literal("quest id                         weight"), 20, 48, 0xCCCCCC, false);
+        for (int i = 0; i < labels.size(); i++) {
+            int[] p = labels.get(i);
+            gg.text(font, Component.literal(labelNames.get(i)), p[0], p[1], 0xA0A0A0, false);
+        }
         if (!error.isEmpty()) gg.text(font, Component.literal(error), 20, height - 44, 0xFF5555, false);
     }
     //?} else {
@@ -183,6 +196,10 @@ public class QuestPoolEditScreen extends Screen {
     public void render(net.minecraft.client.gui.GuiGraphics gg, int mouseX, int mouseY, float a) {
         renderBackground(gg, mouseX, mouseY, a);
         super.render(gg, mouseX, mouseY, a);
+        for (int i = 0; i < labels.size(); i++) {
+            int[] p = labels.get(i);
+            gg.drawString(font, labelNames.get(i), p[0], p[1], 0xA0A0A0);
+        }
         if (!error.isEmpty()) gg.drawString(font, error, 20, height - 44, 0xFF5555);
     }
     *///?}

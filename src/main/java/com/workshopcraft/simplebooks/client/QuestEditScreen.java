@@ -27,6 +27,8 @@ public class QuestEditScreen extends Screen {
     private JsonObject draft;
     private int taskIndex, rewardIndex;
     private String error = "";
+    private final List<int[]> labels = new ArrayList<>();
+    private final List<String> labelNames = new ArrayList<>();
 
     public QuestEditScreen(String questId, @Nullable Screen parent) {
         super(Component.literal("Edit " + QuestEdit.shortName(questId)));
@@ -39,14 +41,16 @@ public class QuestEditScreen extends Screen {
     @Override
     protected void init() {
         clearWidgets();
+        labels.clear();
+        labelNames.clear();
         titleKey = str(draft, "title");
         subtitleKey = str(draft, "subtitle");
         textKey = str(draft, "text");
-        int x = 20, y = 28;
-        title = addField(x, y, 360, QuestEditForms.displayText(titleKey)); y += 24;
-        subtitle = addField(x, y, 360, QuestEditForms.displayText(subtitleKey)); y += 24;
-        icon = addField(x, y, 360, str(draft, "icon")); y += 24;
-        text = addField(x, y, 360, QuestEditForms.displayText(textKey)); y += 28;
+        int x = 20, y = 16;
+        title = labeled("Title", x, y, 360, QuestEditForms.displayText(titleKey)); y += 32;
+        subtitle = labeled("Subtitle", x, y, 360, QuestEditForms.displayText(subtitleKey)); y += 32;
+        icon = labeled("Icon", x, y, 360, str(draft, "icon")); y += 32;
+        text = labeled("Text", x, y, 360, QuestEditForms.displayText(textKey)); y += 34;
 
         JsonArray tarr = arr(draft, "tasks");
         if (tarr.isEmpty()) tarr.add(new JsonObject());
@@ -82,6 +86,7 @@ public class QuestEditScreen extends Screen {
             commitRows();
             rebuild();
         }).bounds(x + 420, y - 24, 80, 20).build());
+        addTaskLabels(x, y, taskRow);
         addTaskFields(x, y, taskRow);
         y += 72;
 
@@ -119,11 +124,52 @@ public class QuestEditScreen extends Screen {
             commitRows();
             rebuild();
         }).bounds(x + 420, y - 24, 80, 20).build());
+        addRewardLabels(x, y, rewardRow);
         addRewardFields(x, y, rewardRow);
 
         int by = height - 28;
         addRenderableWidget(Button.builder(Component.literal("Save"), b -> save()).bounds(width / 2 - 100, by, 90, 20).build());
         addRenderableWidget(Button.builder(Component.literal("Cancel"), b -> minecraft.setScreen(parent)).bounds(width / 2 + 10, by, 90, 20).build());
+    }
+
+    private EditBox labeled(String name, int x, int y, int w, String value) {
+        mark(name, x, y);
+        return addField(x, y + 10, w, value);
+    }
+
+    private void mark(String name, int x, int y) {
+        labelNames.add(name);
+        labels.add(new int[]{x, y});
+    }
+
+    private void addTaskLabels(int x, int y, QuestEditForms.TaskRow row) {
+        if (row.useRaw) { mark("Raw JSON", x, y - 10); return; }
+        mark("Id", x, y - 10);
+        switch (row.type) {
+            case "item", "craft", "smelt", "pickup", "use" -> {
+                mark("Item", x + 90, y - 10);
+                mark("Count", x + 240, y - 10);
+            }
+            case "place", "break" -> { mark("Block", x, y + 12); mark("Count", x + 150, y + 12); }
+            case "kill" -> { mark("Entity", x, y + 12); mark("Count", x + 150, y + 12); }
+            case "dimension" -> mark("Dimension", x, y + 12);
+            case "biome" -> mark("Biome", x, y + 12);
+            case "advancement" -> mark("Advancement", x, y + 12);
+            case "stat" -> { mark("Stat", x, y + 12); mark("Count", x + 210, y + 12); }
+            case "checkbox" -> mark("Checkbox text", x, y + 12);
+            default -> mark("Raw JSON", x, y + 12);
+        }
+    }
+
+    private void addRewardLabels(int x, int y, QuestEditForms.RewardRow row) {
+        if (row.useRaw) { mark("Raw JSON", x, y - 10); return; }
+        switch (row.kind) {
+            case "item" -> { mark("Item", x, y - 10); mark("Count", x + 150, y - 10); }
+            case "xp", "xp_levels" -> mark("Amount", x, y - 10);
+            case "command" -> { mark("Command", x, y - 10); mark("Label", x, y + 12); mark("Icon", x + 150, y + 12); }
+            case "loot_table" -> mark("Loot table", x, y - 10);
+            default -> mark("Raw JSON", x, y - 10);
+        }
     }
 
     private void addTaskFields(int x, int y, QuestEditForms.TaskRow row) {
@@ -243,7 +289,6 @@ public class QuestEditScreen extends Screen {
         minecraft.setScreen(parent);
     }
 
-    /** Drop empty form placeholders so Save works when the quest had no tasks/rewards. */
     private static void prunePlaceholders(JsonArray a, boolean tasks) {
         for (int i = a.size() - 1; i >= 0; i--) {
             if (!a.get(i).isJsonObject()) continue;
@@ -278,10 +323,13 @@ public class QuestEditScreen extends Screen {
     @Override
     public void extractRenderState(net.minecraft.client.gui.GuiGraphicsExtractor gg, int mouseX, int mouseY, float a) {
         super.extractRenderState(gg, mouseX, mouseY, a);
-        gg.text(font, Component.literal("Title / Subtitle / Icon / Text"), 20, 10, 0xFFFFFF, false);
+        for (int i = 0; i < labels.size(); i++) {
+            int[] p = labels.get(i);
+            gg.text(font, Component.literal(labelNames.get(i)), p[0], p[1], 0xA0A0A0, false);
+        }
         if (taskRow != null && !taskRow.item.getValue().isBlank()) {
             String err = QuestEditForms.itemError(taskRow.item.getValue());
-            if (err != null) gg.text(font, Component.literal(err), 400, 130, 0xFF5555, false);
+            if (err != null) gg.text(font, Component.literal(err), 400, 150, 0xFF5555, false);
         }
         if (!error.isEmpty()) gg.text(font, Component.literal(error), 20, height - 44, 0xFF5555, false);
     }
@@ -290,6 +338,10 @@ public class QuestEditScreen extends Screen {
     public void render(net.minecraft.client.gui.GuiGraphics gg, int mouseX, int mouseY, float a) {
         renderBackground(gg, mouseX, mouseY, a);
         super.render(gg, mouseX, mouseY, a);
+        for (int i = 0; i < labels.size(); i++) {
+            int[] p = labels.get(i);
+            gg.drawString(font, labelNames.get(i), p[0], p[1], 0xA0A0A0);
+        }
         if (!error.isEmpty()) gg.drawString(font, error, 20, height - 44, 0xFF5555);
     }
     *///?}
