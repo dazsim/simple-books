@@ -435,7 +435,22 @@ Hand the book out with `first_join_book` (below), a `/give` (see [Optional integ
 | `depends` | chapter or quest refs; until they are done the chapter is locked |
 | `visibility` | `locked` (default, shown greyed out with what it needs), `visible`, or `hidden` (no tab or contents entry until unlocked) |
 | `pool` | board chapters only: the pool to show. Default is the pool with the chapter's file name |
+| `background` | optional backdrop behind the chapter's pages: a texture id (`mypack:textures/gui/bg.png`), or `{ "texture": "...", "mode": "stretch"|"tile", "tile": 64 }`. `stretch` (default) fills the page; `tile` repeats using `tile` as the width in spread units (default 64) |
+| `decorations` | tree chapters only: free-placed images and text that scroll with the skill tree, see below |
 | `requires`, `disabled` | see [Requires and overrides](#requires-and-overrides) |
+
+Tree decorations (each entry is an image or a text, not both):
+
+```json
+"decorations": [
+  { "image": "mypack:textures/gui/banner.png", "x": 20, "y": -36, "width": 192, "height": 64, "layer": "behind" },
+  { "text": "Craft and build", "x": 116, "y": -20, "scale": 1.2, "colour": "#faeed2", "centred": true, "layer": "front" }
+]
+```
+
+`x`/`y`/`width`/`height` are in the tree's own space (cell `(0,0)` is at `0,0`, same units as quest `pos`), so they move when the tree is panned. `layer` is `behind` (default, under the link lines) or `front` (over the lines, under the quest nodes). Text also takes `scale`, `colour` (or `color`) and `centred`.
+
+A quest may set its own `background` the same way; that overrides the chapter for that quest's pages (and for a story page). You can also put `background` inside the quest's `page` object.
 
 ### Quests
 
@@ -521,6 +536,7 @@ Each entry in `rewards` or `choose_one` is one of:
 | `{ "xp_levels": 5 }` | experience levels |
 | `{ "command": "effect give @s minecraft:speed 60 1", "label": "Speed for a minute", "icon": "minecraft:sugar" }` | runs a command as the claiming player (`@s`), output hidden, at `command_reward_permission` |
 | `{ "loot_table": "mypack:rewards/stone_age" }` | one roll of the loot table |
+| `{ "type": "mymod:repair_area", "area": "spawn", "label": "Repair the crater", "icon": "mymod:repair_kit" }` | a custom reward from another mod, see [Custom reward types](#custom-reward-types). `label` and `icon` are what the book shows when that mod is missing on a client |
 
 Every player claims each finished quest once, even after changing teams, and a late joiner can claim what the team already did. The book, tabs and the guide tooltip show rewards waiting.
 
@@ -632,6 +648,8 @@ Admin commands (permission level 2). A player name means that player's team.
 - An `exclusive` group with one quest, or `depends` on two rivals of one group with `depends_mode` `all` (it can never unlock).
 - A pool quest that its pool does not list, or a board chapter that also has normal quests.
 - Tags in item rewards (rewards need one item id), or `nbt` on 1.21.1 and later (use `components`).
+- A custom reward `type` with no mod registered for it, or both a built-in key (`item`, `xp`, ...) and a `type` on the same entry.
+- Tree `decorations` on a checklist, story or board chapter (they are ignored there).
 - `cooldown` text in days: only `s`, `m` and `h` are read.
 - Expecting offline members' items to count towards a team item task. Only online members count.
 
@@ -673,6 +691,38 @@ Keep Simple Books optional: compile against it `compileOnly` (`modCompileOnly` w
 - Forge and NeoForge: in `InterModEnqueueEvent`, `InterModComms.sendTo("simplebooks", "plugin", () -> "com.example.mymod.SimpleBooksCompat")`.
 
 Calls from your own code (such as `produced` above) must check that Simple Books is loaded first. With no code at all, a mod can register a custom stat or fire an advancement, and packs use the `stat` or `advancement` task.
+
+### Custom reward types
+
+Mods can add reward types the same way. Register on both sides so the book can show them:
+
+```java
+public final class SimpleBooksCompat implements SimpleBooksPlugin {
+    @Override
+    public void register() {
+        SimpleBooksApi.registerRewardType("mymod:repair_area", new RewardType() {
+            @Override
+            public RewardSpec parse(JsonObject json, RewardProblems problems) {
+                RewardSpec spec = RewardSpec.of(json);
+                if (spec.string("area", "").isBlank()) problems.error("area", "missing");
+                return spec;
+            }
+
+            @Override
+            public Display display(RewardSpec spec) {
+                return new Display("mymod:repair_kit", "Repair " + spec.string("area", "area"));
+            }
+
+            @Override
+            public void grant(RewardContext ctx, RewardSpec spec) {
+                MyMod.repair(ctx.teamId(), spec.string("area", ""));
+            }
+        });
+    }
+}
+```
+
+The quest then uses `{ "type": "mymod:repair_area", "area": "spawn", "label": "Repair the crater", "icon": "mymod:repair_kit" }`. `grant` runs on the server when that player claims, with the claiming player and their team id and name in `RewardContext`. Put a `label` and `icon` on the entry so clients without your mod still show something sensible; an unknown type fails `/sbquests validate` on the server. Use the same Fabric entrypoint or Forge/NeoForge IMC plugin as for task types.
 
 ### Team sources
 

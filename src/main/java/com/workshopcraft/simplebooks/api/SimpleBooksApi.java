@@ -13,6 +13,7 @@ import java.util.function.Predicate;
 /** The public quest API. Ids are plain strings such as "mymod:power_produced". */
 public final class SimpleBooksApi {
     private static final Map<String, TaskType> TYPES = new ConcurrentHashMap<>();
+    private static final Map<String, RewardType> REWARDS = new ConcurrentHashMap<>();
     private static final Map<String, TeamSource> TEAM_SOURCES = new ConcurrentHashMap<>();
 
     static {
@@ -29,6 +30,16 @@ public final class SimpleBooksApi {
 
     public static @Nullable TaskType taskType(String id) {
         return TYPES.get(id);
+    }
+
+    /** Register during mod init (or from a SimpleBooksPlugin), before data packs load. */
+    public static void registerRewardType(String id, RewardType type) {
+        if (!id.contains(":")) throw new IllegalArgumentException("reward type id needs a namespace: " + id);
+        if (REWARDS.putIfAbsent(id, type) != null) throw new IllegalStateException("reward type " + id + " is already registered");
+    }
+
+    public static @Nullable RewardType rewardType(String id) {
+        return REWARDS.get(id);
     }
 
     /**

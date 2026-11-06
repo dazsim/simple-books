@@ -38,14 +38,15 @@ public record QuestDefs(Map<String, Book> books) {
     }
 
     public record Chapter(String id, String title, String icon, int sort, String layout, List<String> depends,
-                          String visibility, String text, @Nullable String pool, JsonObject json) {}
+                          String visibility, String text, @Nullable String pool, @Nullable Background background,
+                          List<Decoration> decorations, JsonObject json) {}
 
     public record Quest(String id, @Nullable String chapter, @Nullable String pool, int sort, int @Nullable [] pos,
                         String title, String subtitle, String icon, String text, @Nullable JsonObject page,
                         List<String> depends, String dependsMode, String visibility, boolean optional,
                         List<Task> tasks, String taskMode, List<Reward> rewards, List<Reward> chooseOne,
                         @Nullable Repeat repeat, List<Tier> tiers, @Nullable Exclusive exclusive, String toast,
-                        JsonObject json) {}
+                        @Nullable Background background, JsonObject json) {}
 
     /** Custom (namespaced) types keep their fields in json; spec is what their TaskType parsed (null on a client without it). */
     public record Task(String id, String type, List<String> items, long count, boolean consume, String handIn,
@@ -54,14 +55,18 @@ public record QuestDefs(Map<String, Book> books) {
                        @Nullable String advancement, @Nullable String stat, @Nullable String value,
                        @Nullable String text, JsonObject json, com.workshopcraft.simplebooks.api.@Nullable TaskSpec spec) {}
 
-    /** kind is item, xp, xp_levels, command or loot_table. */
+    /**
+     * kind is item, xp, xp_levels, command, loot_table, or a namespaced custom type id.
+     * spec is set for custom types when the providing mod is installed (null on a client without it).
+     */
     public record Reward(String kind, @Nullable String item, long count, @Nullable JsonElement data,
                          @Nullable String command, @Nullable String label, @Nullable String icon,
-                         @Nullable String lootTable, JsonObject json) {}
-
-    public record Repeat(long cooldown, int limit) {}
+                         @Nullable String lootTable, JsonObject json,
+                         com.workshopcraft.simplebooks.api.@Nullable RewardSpec spec) {}
 
     public record Tier(long count, List<Reward> rewards, @Nullable String title) {}
+
+    public record Repeat(long cooldown, int limit) {}
 
     public record Exclusive(String group, String lockOn) {}
 
@@ -69,4 +74,14 @@ public record QuestDefs(Map<String, Book> books) {
                        List<PoolEntry> entries, JsonObject json) {}
 
     public record PoolEntry(String quest, int weight, List<String> depends) {}
+
+    /** Optional page or chapter backdrop. mode is stretch or tile; tile is the tile width in spread units when tiling. */
+    public record Background(String texture, String mode, float tile) {}
+
+    /**
+     * A free-placed image or text on a tree chapter. Coordinates are in the tree's own space (same units as
+     * quest pos cells: cell (0,0) is at 0,0), so they scroll with the graph. layer is behind or front of link lines.
+     */
+    public record Decoration(@Nullable String image, @Nullable String text, float x, float y, float width, float height,
+                            float scale, @Nullable String colour, boolean centred, String layer) {}
 }

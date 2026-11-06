@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.workshopcraft.simplebooks.SimpleBooks;
 import com.workshopcraft.simplebooks.api.Display;
+import com.workshopcraft.simplebooks.api.RewardType;
 import com.workshopcraft.simplebooks.api.SimpleBooksApi;
 import com.workshopcraft.simplebooks.api.TaskType;
 import com.workshopcraft.simplebooks.quest.QuestActionPacket;
@@ -482,9 +483,13 @@ final class QuestSlots {
         float ox = (maxX > 0 ? x + PAD - o[0] : x + (w - gw) / 2) - minC * CELL_W;
         float oy = (maxY > 0 ? y + PAD - o[1] : y + PAD) - minR * CELL_H;
         s.clip(x, y, x + w, y + h);
+        QuestDefs.Chapter ch = qb.chapters().get(chapter);
+        List<QuestDefs.Decoration> decos = ch == null ? List.of() : ch.decorations();
+        for (QuestDefs.Decoration d : decos) if (d.layer().equals("behind")) decoration(d, ox, oy);
         for (QuestDefs.Quest q : vis)
             for (String d : q.depends())
                 if (shown.contains(d)) link(at.get(d), at.get(q.id()), ox, oy, str(st(d), "s").equals("complete"));
+        for (QuestDefs.Decoration d : decos) if (d.layer().equals("front")) decoration(d, ox, oy);
         int start = s.hits.size();
         List<Spread.Hit> nodes = new ArrayList<>();
         for (QuestDefs.Quest q : vis) {
@@ -548,6 +553,20 @@ final class QuestSlots {
 
     private void arrowHead(float x, float y, int col) {
         for (int i = 0; i < 5; i++) s.fill(x - 2 - 2 * i, y - 2 - 2 * i, x - 2 * i, y + 2 + 2 * i, col);
+    }
+
+    private void decoration(QuestDefs.Decoration d, float ox, float oy) {
+        float x = ox + d.x(), y = oy + d.y();
+        if (d.image() != null) {
+            s.image(d.image(), x, y, d.width(), d.height(), null, false);
+            return;
+        }
+        if (d.text() == null) return;
+        Component c = Texts.of(d.text());
+        int col = d.colour() == null || d.colour().isEmpty() ? s.color("$ink") : s.color(d.colour());
+        float sc = d.scale() <= 0 ? 1 : d.scale();
+        if (d.centred()) s.ctext(c, x, y, sc, col);
+        else s.text(c, x, y, sc, col);
     }
 
     private void node(QuestDefs.Book qb, QuestDefs.Quest q, float x, float y, boolean hov) {
@@ -903,7 +922,12 @@ final class QuestSlots {
     private void reward(QuestDefs.Reward r, float x, float y, float w) {
         String icon;
         Component label;
-        switch (r.kind()) {
+        if (r.kind().contains(":")) {
+            RewardType rt = r.spec() != null ? SimpleBooksApi.rewardType(r.kind()) : null;
+            Display d = rt != null ? rt.display(r.spec()) : null;
+            icon = d != null && !d.icon().isEmpty() ? d.icon() : "minecraft:paper";
+            label = d != null && !d.text().isEmpty() ? Texts.of(d.text()) : Component.literal(r.kind());
+        } else switch (r.kind()) {
             case "item" -> {
                 icon = r.item() == null ? "minecraft:barrier" : r.item();
                 label = r.count() > 1 ? tr("simplebooks.count", r.count(), ref(icon).name()) : ref(icon).name();
@@ -927,6 +951,7 @@ final class QuestSlots {
         }
         if (r.icon() != null && ItemRef.known(r.icon())) icon = r.icon();
         if (r.label() != null && !r.label().isEmpty()) label = Texts.of(r.label());
+        if (!ItemRef.known(icon)) icon = "minecraft:paper";
         s.slotItem(ref(icon), x, y, 44);
         s.text(Component.literal(fit(label, w - 60)), x + 58, y + 14, 1, s.color("$ink"));
     }

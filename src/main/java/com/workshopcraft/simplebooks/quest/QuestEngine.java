@@ -6,6 +6,9 @@ import com.workshopcraft.simplebooks.api.TeamSource;
 import com.workshopcraft.simplebooks.GuideItem;
 import com.workshopcraft.simplebooks.SimpleBooks;
 import com.workshopcraft.simplebooks.SimpleBooksConfig;
+import com.workshopcraft.simplebooks.api.RewardContext;
+import com.workshopcraft.simplebooks.api.RewardSpec;
+import com.workshopcraft.simplebooks.api.RewardType;
 import com.workshopcraft.simplebooks.api.SimpleBooksApi;
 import com.workshopcraft.simplebooks.api.TaskSpec;
 import com.workshopcraft.simplebooks.api.TaskType;
@@ -1143,13 +1146,23 @@ public final class QuestEngine {
             mine.put(quest, new QuestSave.Claim(last, 0, pick ? choice : -1));
         }
         changed(t);
-        for (Reward w : give) reward(player, w);
+        for (Reward w : give) reward(player, t, w);
         flush();
         return Result.ok("Claimed " + q.title());
     }
 
-    static void reward(ServerPlayer p, Reward w) {
+    static void reward(ServerPlayer p, Team t, Reward w) {
         try {
+            if (w.kind().contains(":")) {
+                RewardType rt = SimpleBooksApi.rewardType(w.kind());
+                RewardSpec spec = w.spec();
+                if (rt == null || spec == null) {
+                    SimpleBooks.LOG.warn("Quest reward {} skipped for {}: type not available", w.json(), p.getScoreboardName());
+                    return;
+                }
+                rt.grant(new RewardContext(server, p, t.id, t.name), spec);
+                return;
+            }
             switch (w.kind()) {
                 case "item" -> {
                     ItemStack one = QuestMc.stack(server, w.item(), w.data());

@@ -3,7 +3,7 @@ package com.workshopcraft.simplebooks.quest;
 import com.workshopcraft.simplebooks.SimpleBooks;
 import com.workshopcraft.simplebooks.api.SimpleBooksPlugin;
 
-/** Runs plugins handed over by the loader (Fabric entrypoint or IMC), and the dev sample type. */
+/** Runs plugins handed over by the loader (Fabric entrypoint or IMC), and the dev sample types. */
 public final class QuestPlugins {
     private QuestPlugins() {}
 
@@ -27,6 +27,9 @@ public final class QuestPlugins {
                 SimpleBooks.LOG.error("Simple Books plugin {} failed: {}", p.getClass().getName(), e.toString());
             }
         }
-        if (SimpleBooks.dev) new DevHeightTask().register();
+        if (SimpleBooks.dev) {
+            new DevHeightTask().register();
+            new DevTestReward().register();
+        }
     }
 }

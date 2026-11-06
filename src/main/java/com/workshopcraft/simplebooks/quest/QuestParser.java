@@ -5,6 +5,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.workshopcraft.simplebooks.SimpleBooks;
+import com.workshopcraft.simplebooks.api.RewardProblems;
+import com.workshopcraft.simplebooks.api.RewardSpec;
+import com.workshopcraft.simplebooks.api.RewardType;
 import com.workshopcraft.simplebooks.api.SimpleBooksApi;
 import com.workshopcraft.simplebooks.api.TaskProblems;
 import com.workshopcraft.simplebooks.api.TaskSpec;
@@ -63,6 +66,7 @@ public final class QuestParser {
     private static final class CB {
         Entry e; JsonObject out; String title, icon, layout, visibility, text; @Nullable String pool; int sort;
         List<String> depends = new ArrayList<>();
+        @Nullable Background background; List<Decoration> decorations = List.of();
     }
 
     private static final class QB {
@@ -70,7 +74,7 @@ public final class QuestParser {
         String title, subtitle, icon, text, dependsMode, visibility, taskMode, toast; @Nullable JsonObject page;
         boolean optional; List<String> depends = new ArrayList<>(); List<Task> tasks = new ArrayList<>();
         List<Reward> rewards = List.of(), chooseOne = List.of(); @Nullable Repeat repeat; List<Tier> tiers = new ArrayList<>();
-        @Nullable Exclusive exclusive;
+        @Nullable Exclusive exclusive; @Nullable Background background;
     }
 
     private static final class PB {
@@ -263,12 +267,12 @@ public final class QuestParser {
 
         Map<String, Chapter> chapterDefs = new TreeMap<>();
         for (CB c : chapters.values())
-            chapterDefs.put(c.e.id(), new Chapter(c.e.id(), c.title, c.icon, c.sort, c.layout, List.copyOf(c.depends), c.visibility, c.text, c.pool, c.out));
+            chapterDefs.put(c.e.id(), new Chapter(c.e.id(), c.title, c.icon, c.sort, c.layout, List.copyOf(c.depends), c.visibility, c.text, c.pool, c.background, c.decorations, c.out));
         Map<String, Quest> questDefs = new TreeMap<>();
         for (QB q : quests.values())
             questDefs.put(q.e.id(), new Quest(q.e.id(), q.chapter, q.pool, q.sort, q.pos, q.title, q.subtitle, q.icon, q.text, q.page,
                     List.copyOf(q.depends), q.dependsMode, q.visibility, q.optional, List.copyOf(q.tasks), q.taskMode,
-                    q.rewards, q.chooseOne, q.repeat, List.copyOf(q.tiers), q.exclusive, q.toast, q.out));
+                    q.rewards, q.chooseOne, q.repeat, List.copyOf(q.tiers), q.exclusive, q.toast, q.background, q.out));
         if (!trusted && problems.logging()) {
             int n = questDefs.size();
             SimpleBooks.LOG.info("Quest book {}: {} chapters, {} quests, {} pools, {} broken, {} skipped", bookId,
@@ -505,6 +509,8 @@ public final class QuestParser {
         c.visibility = r.oneOf("visibility", "locked", "visible", "locked", "hidden");
         c.text = r.str("text", "");
         c.pool = r.opt("pool");
+        c.background = background(r, "background", "");
+        c.decorations = decorations(r, c.layout);
         r.skip("requires", "disabled");
         r.finish();
         if (bad) return null;
@@ -595,6 +601,12 @@ public final class QuestParser {
         q.optional = r.bool("optional", false);
         q.taskMode = r.oneOf("task_mode", "all", "all", "any");
         q.toast = r.oneOf("toast", "complete", "complete", "unlock", "both", "none");
+        q.background = background(r, "background", "");
+        if (q.background == null && q.page != null && q.page.has("background")) {
+            R pr = new R(q.page, "/page");
+            q.background = background(pr, "background", "/page");
+            pr.skip(q.page.keySet().toArray(new String[0]));
+        }
         JsonObject out = clean(o);
 
         JsonArray tasks = r.arr("tasks");
@@ -839,15 +851,73 @@ public final class QuestParser {
     }
 
     private @Nullable Reward reward(JsonObject o, String ptr) {
+        String type = o.has("type") && o.get("type").isJsonPrimitive() ? o.get("type").getAsString() : "";
+        boolean custom = type.contains(":");
         List<String> kinds = new ArrayList<>();
         for (String k : new String[]{"item", "xp", "xp_levels", "command", "loot_table"}) if (o.has(k)) kinds.add(k);
-        if (kinds.isEmpty()) {
-            error(ptr, "unknown reward, use item, xp, xp_levels, command or loot_table");
+        if (custom && !kinds.isEmpty()) {
+            error(ptr, "custom reward type cannot also set " + String.join(" or ", kinds));
             return null;
         }
-        if (kinds.size() > 1) {
+        if (!custom && kinds.isEmpty()) {
+            error(ptr, "unknown reward, use item, xp, xp_levels, command, loot_table or a namespaced type");
+            return null;
+        }
+        if (!custom && kinds.size() > 1) {
             error(ptr, "one reward per entry, found " + String.join(" and ", kinds));
             return null;
+        }
+        if (custom) {
+            if (!trusted) {
+                String ns = type.substring(0, type.indexOf(':'));
+                if (!ns.equals("minecraft") && !ns.equals(SimpleBooks.MOD_ID) && !SimpleBooks.modLoaded.test(ns)) {
+                    info(ptr + "/type", "reward type " + type + " is from " + ns + ", which is not loaded; reward skipped");
+                    return null;
+                }
+            }
+            R r = new R(o, ptr);
+            r.str("type", "");
+            String label = r.opt("label");
+            String icon = r.opt("icon");
+            if (icon != null) checkId(icon, ptr + "/icon", false);
+            // custom types own the rest of the fields
+            for (String k : o.keySet()) if (!k.equals("requires")) r.skip(k);
+            r.skip("requires");
+            r.finish();
+            JsonObject out = o.deepCopy();
+            out.remove("requires");
+            RewardType rt = SimpleBooksApi.rewardType(type);
+            RewardSpec spec = null;
+            if (rt == null && !trusted) {
+                error(ptr + "/type", "no reward type " + type + " is registered");
+                return null;
+            }
+            if (rt != null) {
+                boolean[] failed = {false};
+                RewardProblems rp = new RewardProblems() {
+                    public void error(String field, String message) {
+                        failed[0] = true;
+                        if (!trusted) QuestParser.this.error(ptr + "/" + field, message);
+                    }
+
+                    public void warn(String field, String message) {
+                        if (!trusted) QuestParser.this.warn(ptr + "/" + field, message);
+                    }
+                };
+                try {
+                    spec = rt.parse(out, rp);
+                } catch (Exception ex) {
+                    rp.error("type", type + " could not read this reward: " + ex);
+                }
+                if (failed[0] || spec == null) {
+                    if (!trusted) {
+                        if (!failed[0]) error(ptr + "/type", type + " rejected this reward");
+                        return null;
+                    }
+                    spec = null;
+                }
+            }
+            return new Reward(type, null, 1, null, null, label, icon, null, out, spec);
         }
         R r = new R(o, ptr);
         String kind = kinds.get(0);
@@ -887,7 +957,89 @@ public final class QuestParser {
         r.finish();
         JsonObject out = o.deepCopy();
         out.remove("requires");
-        return new Reward(kind, item, count, data, command, label, icon, loot, out);
+        return new Reward(kind, item, count, data, command, label, icon, loot, out, null);
+    }
+
+    private @Nullable Background background(R r, String key, String ptr) {
+        JsonElement e = r.raw(key);
+        if (e == null) return null;
+        String base = ptr.isEmpty() ? "/" + key : ptr + "/" + key;
+        if (e.isJsonPrimitive() && e.getAsJsonPrimitive().isString()) {
+            String tex = e.getAsString();
+            if (tex.isBlank()) {
+                error(base, "empty");
+                return null;
+            }
+            checkId(tex, base, false);
+            return new Background(tex, "stretch", 0);
+        }
+        if (!e.isJsonObject()) {
+            error(base, "must be a texture id or an object");
+            return null;
+        }
+        R br = new R(e.getAsJsonObject(), base);
+        String tex = br.str("texture", "");
+        if (tex.isBlank()) error(base + "/texture", "missing");
+        else checkId(tex, base + "/texture", false);
+        String mode = br.oneOf("mode", "stretch", "stretch", "tile");
+        float tile = br.lng("tile", 64);
+        if (mode.equals("tile") && tile < 1) error(base + "/tile", "must be at least 1");
+        br.finish();
+        return new Background(tex, mode, mode.equals("tile") ? tile : 0);
+    }
+
+    private List<Decoration> decorations(R r, String layout) {
+        JsonArray arr = r.arr("decorations");
+        if (arr == null) return List.of();
+        if (!layout.equals("tree") && !trusted) warn("/decorations", "only used by tree chapters");
+        List<Decoration> list = new ArrayList<>();
+        for (int i = 0; i < arr.size(); i++) {
+            String ptr = "/decorations/" + i;
+            if (!arr.get(i).isJsonObject()) {
+                error(ptr, "must be an object");
+                continue;
+            }
+            JsonObject o = arr.get(i).getAsJsonObject();
+            R dr = new R(o, ptr);
+            String image = dr.opt("image");
+            String text = dr.opt("text");
+            if (image == null && text == null) {
+                error(ptr, "need image or text");
+                continue;
+            }
+            if (image != null && text != null) {
+                error(ptr, "one of image or text, not both");
+                continue;
+            }
+            if (image != null) checkId(image, ptr + "/image", false);
+            float x = dr.lng("x", 0), y = dr.lng("y", 0);
+            float width = 0, height = 0, scale = 1;
+            String colour = null;
+            boolean centred = false;
+            if (image != null) {
+                width = dr.lng("width", 0);
+                height = dr.lng("height", 0);
+                if (width < 1) error(ptr + "/width", "must be at least 1");
+                if (height < 1) error(ptr + "/height", "must be at least 1");
+            } else {
+                JsonElement sc = dr.raw("scale");
+                if (sc == null) scale = 1;
+                else if (sc.isJsonPrimitive() && sc.getAsJsonPrimitive().isNumber()) scale = sc.getAsFloat();
+                else {
+                    error(ptr + "/scale", "must be a number");
+                    scale = 1;
+                }
+                if (scale <= 0) error(ptr + "/scale", "must be more than 0");
+                colour = dr.opt("colour");
+                if (colour == null) colour = dr.opt("color");
+                centred = dr.bool("centred", false);
+                if (o.has("centered")) centred = dr.bool("centered", centred);
+            }
+            String layer = dr.oneOf("layer", "behind", "behind", "front");
+            dr.finish();
+            list.add(new Decoration(image, text, x, y, width, height, scale, colour, centred, layer));
+        }
+        return List.copyOf(list);
     }
 
     private long cooldown(String text, String ptr) {
