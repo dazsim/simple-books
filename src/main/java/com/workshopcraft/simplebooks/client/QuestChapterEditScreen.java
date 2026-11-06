@@ -42,8 +42,8 @@ public class QuestChapterEditScreen extends Screen {
 
     private EditBox box(int x, int y, String v) {
         EditBox b = new EditBox(font, x, y, 300, 20, Component.literal(""));
-        b.setValue(v == null ? "" : v);
         b.setMaxLength(20000);
+        b.setValue(v == null ? "" : v);
         addRenderableWidget(b);
         return b;
     }

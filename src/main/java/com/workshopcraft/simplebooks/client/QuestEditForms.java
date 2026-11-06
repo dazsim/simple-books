@@ -96,8 +96,8 @@ final class QuestEditForms {
 
         static EditBox box(Font font, int x, int y, int w, String v) {
             EditBox b = new EditBox(font, x, y, w, 18, Component.literal(""));
-            b.setValue(v == null ? "" : v);
             b.setMaxLength(20000);
+            b.setValue(v == null ? "" : v);
             return b;
         }
 

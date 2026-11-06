@@ -102,8 +102,8 @@ public class QuestPoolEditScreen extends Screen {
 
     private EditBox field(int x, int y, int w, String v) {
         EditBox b = new EditBox(font, x, y, w, 20, Component.literal(""));
-        b.setValue(v == null ? "" : v);
         b.setMaxLength(10000);
+        b.setValue(v == null ? "" : v);
         addRenderableWidget(b);
         return b;
     }

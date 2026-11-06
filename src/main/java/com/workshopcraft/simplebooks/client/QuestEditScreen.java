@@ -179,8 +179,8 @@ public class QuestEditScreen extends Screen {
 
     private EditBox addField(int x, int y, int w, String value) {
         EditBox box = new EditBox(font, x, y, w, 20, Component.literal(""));
-        box.setValue(value == null ? "" : value);
         box.setMaxLength(10000);
+        box.setValue(value == null ? "" : value);
         addRenderableWidget(box);
         return box;
     }
