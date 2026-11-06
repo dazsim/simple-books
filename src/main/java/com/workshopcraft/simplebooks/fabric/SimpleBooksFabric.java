@@ -12,6 +12,7 @@ import com.workshopcraft.simplebooks.quest.QuestEngine;
 import com.workshopcraft.simplebooks.quest.QuestManager;
 import com.workshopcraft.simplebooks.quest.QuestPlugins;
 import com.workshopcraft.simplebooks.quest.QuestSyncPacket;
+import com.workshopcraft.simplebooks.quest.QuestLangPacket;
 import com.workshopcraft.simplebooks.quest.QuestReload;
 import com.workshopcraft.simplebooks.registry.SimpleBooksContent;
 import net.fabricmc.api.ModInitializer;
@@ -50,6 +51,7 @@ public class SimpleBooksFabric implements ModInitializer {
         PayloadTypeRegistry.serverboundPlay().register(QuestEditPacket.TYPE, QuestEditPacket.STREAM_CODEC);
         PayloadTypeRegistry.clientboundPlay().register(QuestDefsPacket.TYPE, QuestDefsPacket.STREAM_CODEC);
         PayloadTypeRegistry.clientboundPlay().register(QuestSyncPacket.TYPE, QuestSyncPacket.STREAM_CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(QuestLangPacket.TYPE, QuestLangPacket.STREAM_CODEC);
         ServerPlayNetworking.registerGlobalReceiver(PageTurn.TYPE, (payload, ctx) -> payload.handle(ctx.player()));
         ServerPlayNetworking.registerGlobalReceiver(QuestActionPacket.TYPE, (payload, ctx) -> payload.handle(ctx.player()));
         ServerPlayNetworking.registerGlobalReceiver(QuestEditPacket.TYPE, (payload, ctx) -> payload.handle(ctx.player()));
@@ -96,6 +98,9 @@ public class SimpleBooksFabric implements ModInitializer {
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> QuestEngine.logout(handler.player));
         QuestEngine.sender = SimpleBooksFabric::sendSync;
         QuestEditor.sendDefs = SimpleBooksFabric::sendQuests;
+        QuestEditor.sendLang = (player, pkt) -> {
+            if (ServerPlayNetworking.canSend(player, QuestLangPacket.TYPE)) ServerPlayNetworking.send(player, pkt);
+        };
         QuestPlugins.run(FabricLoader.getInstance().getEntrypoints("simplebooks", SimpleBooksPlugin.class));
     }
 

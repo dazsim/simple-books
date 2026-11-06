@@ -581,8 +581,10 @@ public class Spread {
         JsonObject so = book.section(sec);
         if (so.has("title")) return Texts.of(so.get("title").getAsString());
         String key = "book." + book.id().getNamespace() + "." + book.id().getPath().replace('/', '.') + ".section." + sec;
-        return net.minecraft.locale.Language.getInstance().has(key) ? Component.translatable(key)
-                : Component.literal(sec.isEmpty() ? "Other" : Character.toUpperCase(sec.charAt(0)) + sec.substring(1).replace('_', ' '));
+        if (com.workshopcraft.simplebooks.quest.QuestClientStore.lang.containsKey(key)
+                || net.minecraft.locale.Language.getInstance().has(key))
+            return Texts.of(key);
+        return Component.literal(sec.isEmpty() ? "Other" : Character.toUpperCase(sec.charAt(0)) + sec.substring(1).replace('_', ' '));
     }
 
     void roundRect(float x0, float y0, float x1, float y1, float r, int col) {

@@ -11,6 +11,7 @@ import com.workshopcraft.simplebooks.quest.QuestEngine;
 import com.workshopcraft.simplebooks.quest.QuestManager;
 import com.workshopcraft.simplebooks.quest.QuestPlugins;
 import com.workshopcraft.simplebooks.quest.QuestSyncPacket;
+import com.workshopcraft.simplebooks.quest.QuestLangPacket;
 import com.workshopcraft.simplebooks.quest.QuestReload;
 import com.workshopcraft.simplebooks.registry.SimpleBooksContent;
 import net.minecraft.core.registries.Registries;
@@ -55,6 +56,9 @@ public class SimpleBooksNeoForge {
         QuestEngine.sender = (p, x) -> {
             if (p.connection.hasChannel(QuestSyncPacket.TYPE)) PacketDistributor.sendToPlayer(p, x);
         };
+        QuestEditor.sendLang = (p, pkt) -> {
+            if (p.connection.hasChannel(QuestLangPacket.TYPE)) PacketDistributor.sendToPlayer(p, pkt);
+        };
         ConfigPack.createFolders();
         modBus.addListener((RegisterEvent e) -> {
             e.register(Registries.DATA_COMPONENT_TYPE, h -> SimpleBooksContent.registerComponents(h::register));
@@ -68,7 +72,8 @@ public class SimpleBooksNeoForge {
                 .playToServer(QuestActionPacket.TYPE, QuestActionPacket.STREAM_CODEC, (payload, ctx) -> payload.handle((ServerPlayer) ctx.player()))
                 .playToServer(QuestEditPacket.TYPE, QuestEditPacket.STREAM_CODEC, (payload, ctx) -> payload.handle((ServerPlayer) ctx.player()))
                 .playToClient(QuestDefsPacket.TYPE, QuestDefsPacket.STREAM_CODEC, (payload, ctx) -> payload.handle())
-                .playToClient(QuestSyncPacket.TYPE, QuestSyncPacket.STREAM_CODEC, (payload, ctx) -> payload.handle()));
+                .playToClient(QuestSyncPacket.TYPE, QuestSyncPacket.STREAM_CODEC, (payload, ctx) -> payload.handle())
+                .playToClient(QuestLangPacket.TYPE, QuestLangPacket.STREAM_CODEC, (payload, ctx) -> payload.handle()));
         modBus.addListener((InterModProcessEvent e) -> QuestPlugins.run(
                 InterModComms.getMessages(SimpleBooks.MOD_ID, "plugin"::equals).map(m -> m.messageSupplier().get()).toList()));
         modBus.addListener((BuildCreativeModeTabContentsEvent e) -> {

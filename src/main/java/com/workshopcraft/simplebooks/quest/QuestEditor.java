@@ -39,6 +39,8 @@ public final class QuestEditor {
     private static final Map<UUID, Deque<Undo>> UNDOS = new HashMap<>();
     /** Loader sets this to push quest defs packets to one player. */
     public static Consumer<ServerPlayer> sendDefs = p -> {};
+    /** Loader sets this to push a lang override packet to one player. */
+    public static java.util.function.BiConsumer<ServerPlayer, QuestLangPacket> sendLang = (p, pkt) -> {};
 
     private QuestEditor() {}
 
@@ -303,6 +305,10 @@ public final class QuestEditor {
             SimpleBooks.LOG.warn("Could not write {}: {}", langPath, ex.toString());
             return null;
         }
+        QuestLangPacket pkt = new QuestLangPacket(lang.toString());
+        MinecraftServer server = QuestEngine.server();
+        if (server != null)
+            for (ServerPlayer p : server.getPlayerList().getPlayers()) sendLang.accept(p, pkt);
         return "Updated " + ns + "/lang/en_us.json.";
     }
 

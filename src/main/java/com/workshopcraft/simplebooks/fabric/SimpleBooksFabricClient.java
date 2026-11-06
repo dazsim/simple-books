@@ -9,6 +9,7 @@ import com.workshopcraft.simplebooks.quest.QuestActionPacket;
 import com.workshopcraft.simplebooks.quest.QuestClientStore;
 import com.workshopcraft.simplebooks.quest.QuestDefsPacket;
 import com.workshopcraft.simplebooks.quest.QuestSyncPacket;
+import com.workshopcraft.simplebooks.quest.QuestLangPacket;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import com.workshopcraft.simplebooks.registry.SimpleBooksContent;
 import net.fabricmc.api.ClientModInitializer;
@@ -54,6 +55,7 @@ public class SimpleBooksFabricClient implements ClientModInitializer {
         //? if >=1.20.5 {
         ClientPlayNetworking.registerGlobalReceiver(QuestDefsPacket.TYPE, (payload, ctx) -> payload.handle());
         ClientPlayNetworking.registerGlobalReceiver(QuestSyncPacket.TYPE, (payload, ctx) -> payload.handle());
+        ClientPlayNetworking.registerGlobalReceiver(QuestLangPacket.TYPE, (payload, ctx) -> payload.handle());
         //?} else {
         /*ClientPlayNetworking.registerGlobalReceiver(QuestDefsPacket.ID, (client, handler, buf, sender) -> QuestDefsPacket.read(buf).handle());
         ClientPlayNetworking.registerGlobalReceiver(QuestSyncPacket.ID, (client, handler, buf, sender) -> {

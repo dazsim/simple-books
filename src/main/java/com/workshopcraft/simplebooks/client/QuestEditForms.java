@@ -22,13 +22,13 @@ final class QuestEditForms {
 
     static boolean isLangKey(String s) {
         if (s == null || s.isBlank() || s.contains(" ")) return false;
+        if (com.workshopcraft.simplebooks.quest.QuestClientStore.lang.containsKey(s)) return true;
         return net.minecraft.locale.Language.getInstance().has(s) || s.chars().filter(c -> c == '.').count() >= 2;
     }
 
     static String displayText(String raw) {
         if (raw == null) return "";
-        if (isLangKey(raw) && net.minecraft.locale.Language.getInstance().has(raw))
-            return net.minecraft.locale.Language.getInstance().getOrDefault(raw);
+        if (isLangKey(raw)) return Texts.resolve(raw);
         return raw;
     }
 

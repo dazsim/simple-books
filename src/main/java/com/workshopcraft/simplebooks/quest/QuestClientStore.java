@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /** Quest definitions and the player's team and progress, as the server sent them. */
@@ -18,10 +19,13 @@ public final class QuestClientStore {
     private static volatile JsonObject state = new JsonObject();
     private static volatile int version;
     private static volatile long stateAt;
+    /** Editor lang overrides (key -> text). */
+    public static final Map<String, String> lang = new ConcurrentHashMap<>();
     /** Set by the client entrypoint: shows a toast, opens a book. */
     public static Consumer<JsonObject> toasts = o -> {};
     public static Consumer<JsonObject> opens = o -> {};
     public static Consumer<JsonObject> boxes = o -> {};
+    public static Runnable langRefresh = () -> {};
 
     /** Team and quest progress; see QuestEngine.state for the shape. */
     public static JsonObject state() {
@@ -43,6 +47,7 @@ public final class QuestClientStore {
         pending.clear();
         defs = QuestDefs.EMPTY;
         state = new JsonObject();
+        lang.clear();
         version++;
     }
 
@@ -64,6 +69,19 @@ public final class QuestClientStore {
             case "open" -> opens.accept(o);
             case "box" -> boxes.accept(o);
             default -> {}
+        }
+    }
+
+    static void acceptLang(QuestLangPacket p) {
+        try {
+            JsonObject o = JsonParser.parseString(p.json()).getAsJsonObject();
+            for (var e : o.entrySet())
+                if (e.getValue().isJsonPrimitive())
+                    lang.put(e.getKey(), e.getValue().getAsString());
+            version++;
+            langRefresh.run();
+        } catch (Exception e) {
+            SimpleBooks.LOG.error("Bad quest lang packet: {}", e.toString());
         }
     }
 
