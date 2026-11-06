@@ -1413,6 +1413,7 @@ public final class QuestEngine {
         JsonObject paths = new JsonObject();
         world.exclusive.getOrDefault(t.id, Map.of()).forEach(paths::addProperty);
         o.add("paths", paths);
+        o.addProperty("can_edit", QuestEditor.canEdit(player));
         return o;
     }
 

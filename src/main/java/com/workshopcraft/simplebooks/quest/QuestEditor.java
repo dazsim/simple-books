@@ -32,7 +32,8 @@ public final class QuestEditor {
         static Result no(String m) { return new Result(false, m); }
     }
 
-    private record Undo(Path path, byte @Nullable [] prev, boolean existed) {}
+    private record FileSnap(Path path, byte @Nullable [] prev, boolean existed) {}
+    private record Undo(List<FileSnap> files) {}
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
     private static final Map<UUID, Deque<Undo>> UNDOS = new HashMap<>();
@@ -68,6 +69,11 @@ public final class QuestEditor {
         } catch (Exception e) {
             return Result.no("Bad JSON: " + e.getMessage());
         }
+        JsonObject langUpdates = null;
+        if (body.has("_lang") && body.get("_lang").isJsonObject()) {
+            langUpdates = body.getAsJsonObject("_lang").deepCopy();
+            body.remove("_lang");
+        }
         Path path;
         try {
             path = configPath(kind, id);
@@ -89,20 +95,22 @@ public final class QuestEditor {
             errors.add(next.books().get(book).broken().get(id));
         if (!errors.isEmpty()) return Result.no("Not saved:\n" + String.join("\n", errors));
 
+        List<FileSnap> snaps = new ArrayList<>();
+        String langNote = writeLang(langUpdates, book, snaps);
         boolean copied = !Files.isRegularFile(path);
-        byte[] prev = readBytes(path);
-        boolean existed = prev != null;
+        snaps.add(new FileSnap(path, readBytes(path), Files.isRegularFile(path)));
         try {
             Files.createDirectories(path.getParent());
             Files.writeString(path, GSON.toJson(body) + "\n", StandardCharsets.UTF_8);
         } catch (Exception e) {
             return Result.no("Could not write " + path + ": " + e);
         }
-        pushUndo(player, new Undo(path, prev, existed));
+        pushUndo(player, new Undo(snaps));
         apply(next);
         String note = copied
                 ? "Saved a copy to config/simplebooks/" + pathLabel(path) + " (was not in the config pack)."
                 : "Saved " + shortId(id) + ".";
+        if (langNote != null) note = note + " " + langNote;
         return Result.ok(note);
     }
 
@@ -129,14 +137,10 @@ public final class QuestEditor {
         boolean existed = prev != null || Files.isRegularFile(path);
         try {
             if (Files.isRegularFile(path)) Files.delete(path);
-            else if (prev == null) {
-                // lived only in a higher pack; write a tombstone note by ensuring config has no file
-                // and drop from in-memory defs. Player is told.
-            }
         } catch (Exception e) {
             return Result.no("Could not delete " + path + ": " + e);
         }
-        pushUndo(player, new Undo(path, prev, existed));
+        pushUndo(player, new Undo(List.of(new FileSnap(path, prev, existed))));
         apply(next);
         return Result.ok(existed && prev != null
                 ? "Deleted " + shortId(id) + " from the config pack."
@@ -148,11 +152,13 @@ public final class QuestEditor {
         if (stack == null || stack.isEmpty()) return Result.no("Nothing to undo.");
         Undo u = stack.pop();
         try {
-            if (u.existed() && u.prev() != null) {
-                Files.createDirectories(u.path().getParent());
-                Files.write(u.path(), u.prev());
-            } else if (Files.isRegularFile(u.path())) {
-                Files.delete(u.path());
+            for (FileSnap f : u.files()) {
+                if (f.existed() && f.prev() != null) {
+                    Files.createDirectories(f.path().getParent());
+                    Files.write(f.path(), f.prev());
+                } else if (Files.isRegularFile(f.path())) {
+                    Files.delete(f.path());
+                }
             }
         } catch (Exception e) {
             return Result.no("Undo failed: " + e);
@@ -271,6 +277,33 @@ public final class QuestEditor {
     private static String shortId(String id) {
         int slash = id.indexOf('/');
         return slash < 0 ? id : id.substring(slash + 1);
+    }
+
+    /** Write _lang key->text into assets/<bookNs>/lang/en_us.json. */
+    private static @Nullable String writeLang(@Nullable JsonObject lang, String bookId, List<FileSnap> snaps) {
+        if (lang == null || lang.size() == 0) return null;
+        int colon = bookId.indexOf(':');
+        String ns = colon < 0 ? "minecraft" : bookId.substring(0, colon);
+        Path langPath = ConfigPack.root().resolve("assets").resolve(ns).resolve("lang").resolve("en_us.json");
+        JsonObject file = new JsonObject();
+        byte[] prev = readBytes(langPath);
+        if (prev != null) {
+            try {
+                JsonElement el = JsonParser.parseString(new String(prev, StandardCharsets.UTF_8));
+                if (el.isJsonObject()) file = el.getAsJsonObject();
+            } catch (Exception ignored) {}
+        }
+        snaps.add(new FileSnap(langPath, prev, prev != null));
+        for (var e : lang.entrySet())
+            if (e.getValue().isJsonPrimitive()) file.addProperty(e.getKey(), e.getValue().getAsString());
+        try {
+            Files.createDirectories(langPath.getParent());
+            Files.writeString(langPath, GSON.toJson(file) + "\n", StandardCharsets.UTF_8);
+        } catch (Exception ex) {
+            SimpleBooks.LOG.warn("Could not write {}: {}", langPath, ex.toString());
+            return null;
+        }
+        return "Updated " + ns + "/lang/en_us.json.";
     }
 
     public static void clearUndos(UUID player) {

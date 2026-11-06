@@ -12,11 +12,16 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import org.jspecify.annotations.Nullable;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /** Client-side quest book edit mode: toggle, selection, tree ops, and sends to the server. */
 final class QuestEdit {
     record Node(String id) {}
     record Cell(String chapter, int col, int row) {}
     record Tool(String op) {}
+    record Deco(String chapter, int index) {}
+    record DecoResize(String chapter, int index) {}
 
     static boolean on;
     static @Nullable String selected;
@@ -24,12 +29,20 @@ final class QuestEdit {
     static @Nullable String dragId;
     static @Nullable String bookId;
     static @Nullable String status;
+    static @Nullable String decoChapter;
+    static int decoSel = -1;
+    static boolean decoDragging, decoResizing;
+    /** Live overrides while dragging: index -> {x,y,w,h}. */
+    static final Map<Integer, float[]> decoPos = new HashMap<>();
 
     private QuestEdit() {}
 
     static boolean canEdit() {
         LocalPlayer p = Minecraft.getInstance().player;
         if (p == null) return false;
+        JsonObject st = QuestClientStore.state();
+        if (st.has("can_edit")) return st.get("can_edit").getAsBoolean();
+        // fallback before the first state packet
         if (p.isCreative()) return true;
         //? if >=26.1 {
         var mc = Minecraft.getInstance();
@@ -57,7 +70,11 @@ final class QuestEdit {
         selected = null;
         linkFrom = null;
         dragId = null;
-        status = on ? "Edit mode on. Drag nodes, click empty cell to add, L to link, Del to delete, U to undo." : "Edit mode off.";
+        decoChapter = null;
+        decoSel = -1;
+        decoDragging = decoResizing = false;
+        decoPos.clear();
+        status = on ? "Edit mode on. Drag nodes or decorations, click empty cell to add, L to link, Del to delete, U to undo." : "Edit mode off.";
     }
 
     static boolean press(Object target) {
@@ -105,6 +122,10 @@ final class QuestEdit {
                     if (pool == null) status = "Select a board/pool quest, or a quest in a board chapter.";
                     else Minecraft.getInstance().setScreen(new QuestPoolEditScreen(pool, Minecraft.getInstance().screen));
                 }
+                case "add_image" -> addDecoration(true);
+                case "add_text" -> addDecoration(false);
+                case "deco_layer" -> toggleDecoLayer();
+                case "deco_delete" -> deleteDeco();
                 default -> {}
             }
             return true;
@@ -132,20 +153,160 @@ final class QuestEdit {
             addQuest(c.chapter(), c.col(), c.row());
             return true;
         }
+        if (target instanceof Deco d) {
+            decoChapter = d.chapter();
+            decoSel = d.index();
+            decoDragging = true;
+            decoResizing = false;
+            status = "Decoration " + (d.index() + 1) + " selected.";
+            return true;
+        }
+        if (target instanceof DecoResize d) {
+            decoChapter = d.chapter();
+            decoSel = d.index();
+            decoDragging = false;
+            decoResizing = true;
+            status = "Resize decoration " + (d.index() + 1) + ".";
+            return true;
+        }
         return false;
     }
 
     static void dragEnd(@Nullable Cell cell) {
-        if (!active() || dragId == null) return;
-        if (cell != null) moveQuest(dragId, cell.col(), cell.row());
-        dragId = null;
+        if (!active()) return;
+        if (dragId != null) {
+            if (cell != null) moveQuest(dragId, cell.col(), cell.row());
+            dragId = null;
+        }
+        if (decoDragging || decoResizing) {
+            saveDecorations();
+            decoDragging = decoResizing = false;
+        }
+    }
+
+    /** Tree-space drag delta for the selected decoration. */
+    static void decoDrag(float treeDx, float treeDy) {
+        if (!active() || decoSel < 0 || decoChapter == null) return;
+        float[] cur = decoPos.computeIfAbsent(decoSel, i -> {
+            QuestDefs.Decoration d = decoAt(decoChapter, i);
+            return d == null ? new float[]{0, 0, 64, 64} : new float[]{d.x(), d.y(), Math.max(8, d.width()), Math.max(8, d.height())};
+        });
+        if (decoResizing) {
+            cur[2] = Math.max(8, cur[2] + treeDx);
+            cur[3] = Math.max(8, cur[3] + treeDy);
+        } else if (decoDragging) {
+            cur[0] += treeDx;
+            cur[1] += treeDy;
+        }
+    }
+
+    private static void addDecoration(boolean image) {
+        String ch = decoChapter != null ? decoChapter : (selected == null ? null : chapterOf(selected));
+        if (ch == null) { status = "Select a quest in the chapter first."; return; }
+        decoChapter = ch;
+        QuestDefs.Chapter c = chapter(ch);
+        if (c == null) return;
+        JsonObject o = c.json().deepCopy();
+        JsonArray arr = o.has("decorations") && o.get("decorations").isJsonArray() ? o.getAsJsonArray("decorations") : new JsonArray();
+        JsonObject d = new JsonObject();
+        if (image) {
+            d.addProperty("image", "minecraft:textures/gui/sprites/widget/button.png");
+            d.addProperty("x", 0);
+            d.addProperty("y", -40);
+            d.addProperty("width", 64);
+            d.addProperty("height", 32);
+            d.addProperty("layer", "behind");
+        } else {
+            d.addProperty("text", "Label");
+            d.addProperty("x", 40);
+            d.addProperty("y", -20);
+            d.addProperty("centred", true);
+            d.addProperty("layer", "front");
+        }
+        arr.add(d);
+        o.add("decorations", arr);
+        send("put_chapter", ch, o);
+        decoSel = arr.size() - 1;
+        decoPos.clear();
+        status = "Added " + (image ? "image" : "text") + " decoration.";
+    }
+
+    private static void toggleDecoLayer() {
+        if (decoChapter == null || decoSel < 0) { status = "Select a decoration first."; return; }
+        QuestDefs.Chapter c = chapter(decoChapter);
+        if (c == null) return;
+        JsonObject o = c.json().deepCopy();
+        if (!o.has("decorations") || !o.get("decorations").isJsonArray()) return;
+        JsonArray arr = o.getAsJsonArray("decorations");
+        if (decoSel >= arr.size()) return;
+        JsonObject d = arr.get(decoSel).getAsJsonObject();
+        String layer = d.has("layer") ? d.get("layer").getAsString() : "behind";
+        d.addProperty("layer", layer.equals("front") ? "behind" : "front");
+        send("put_chapter", decoChapter, o);
+        status = "Decoration layer: " + d.get("layer").getAsString() + ".";
+    }
+
+    private static void deleteDeco() {
+        if (decoChapter == null || decoSel < 0) { status = "Select a decoration first."; return; }
+        QuestDefs.Chapter c = chapter(decoChapter);
+        if (c == null) return;
+        JsonObject o = c.json().deepCopy();
+        if (!o.has("decorations") || !o.get("decorations").isJsonArray()) return;
+        JsonArray arr = o.getAsJsonArray("decorations");
+        if (decoSel >= arr.size()) return;
+        arr.remove(decoSel);
+        if (arr.size() == 0) o.remove("decorations");
+        else o.add("decorations", arr);
+        send("put_chapter", decoChapter, o);
+        decoSel = -1;
+        decoPos.clear();
+        status = "Deleted decoration.";
+    }
+
+    private static void saveDecorations() {
+        if (decoChapter == null || decoPos.isEmpty()) return;
+        QuestDefs.Chapter c = chapter(decoChapter);
+        if (c == null) return;
+        JsonObject o = c.json().deepCopy();
+        if (!o.has("decorations") || !o.get("decorations").isJsonArray()) return;
+        JsonArray arr = o.getAsJsonArray("decorations");
+        for (var e : decoPos.entrySet()) {
+            int i = e.getKey();
+            if (i < 0 || i >= arr.size()) continue;
+            JsonObject d = arr.get(i).getAsJsonObject();
+            float[] p = e.getValue();
+            d.addProperty("x", Math.round(p[0]));
+            d.addProperty("y", Math.round(p[1]));
+            if (d.has("image")) {
+                d.addProperty("width", Math.round(p[2]));
+                d.addProperty("height", Math.round(p[3]));
+            }
+        }
+        send("put_chapter", decoChapter, o);
+        decoPos.clear();
+        status = "Saved decorations.";
+    }
+
+    static QuestDefs.@Nullable Decoration decoAt(String chapterId, int index) {
+        QuestDefs.Chapter c = chapter(chapterId);
+        if (c == null || index < 0 || index >= c.decorations().size()) return null;
+        return c.decorations().get(index);
+    }
+
+    private static QuestDefs.@Nullable Chapter chapter(String id) {
+        for (QuestDefs.Book b : QuestClientStore.defs().books().values()) {
+            QuestDefs.Chapter c = b.chapters().get(id);
+            if (c != null) return c;
+        }
+        return null;
     }
 
     static void key(int key) {
         if (!active()) return;
         // Del / Backspace delete, L link, U undo, E props
         if (key == 261 || key == 259) { // delete / backspace
-            if (selected != null) deleteQuest(selected);
+            if (decoSel >= 0) deleteDeco();
+            else if (selected != null) deleteQuest(selected);
         } else if (key == 76) { // L
             press(new Tool("link"));
         } else if (key == 85) { // U
