@@ -200,6 +200,18 @@ final class QuestEdit {
         }
     }
 
+
+    /** Tree-space point near the current map view centre (or the selected node). */
+    private static float[] decoSpawn(String ch) {
+        if (selected != null) {
+            QuestDefs.Quest q = quest(selected);
+            if (q != null && q.pos() != null && q.pos().length >= 2)
+                return new float[]{q.pos()[0] * QuestSlots.CELL_W + 30, q.pos()[1] * QuestSlots.CELL_H + 24};
+        }
+        float[] pan = QuestSlots.panned.getOrDefault(ch, new float[]{0, 0});
+        return new float[]{pan[0] + 180, pan[1] + 160};
+    }
+
     private static void addDecoration(boolean image) {
         String ch = decoChapter != null ? decoChapter : (selected == null ? null : chapterOf(selected));
         if (ch == null) { status = "Select a quest in the chapter first."; return; }
@@ -208,18 +220,19 @@ final class QuestEdit {
         if (c == null) return;
         JsonObject o = c.json().deepCopy();
         JsonArray arr = o.has("decorations") && o.get("decorations").isJsonArray() ? o.getAsJsonArray("decorations") : new JsonArray();
+        float[] at = decoSpawn(ch);
         JsonObject d = new JsonObject();
         if (image) {
             d.addProperty("image", "minecraft:textures/gui/sprites/widget/button.png");
-            d.addProperty("x", 0);
-            d.addProperty("y", -40);
+            d.addProperty("x", at[0]);
+            d.addProperty("y", at[1]);
             d.addProperty("width", 64);
             d.addProperty("height", 32);
             d.addProperty("layer", "behind");
         } else {
             d.addProperty("text", "Label");
-            d.addProperty("x", 40);
-            d.addProperty("y", -20);
+            d.addProperty("x", at[0] + 40);
+            d.addProperty("y", at[1] + 20);
             d.addProperty("centred", true);
             d.addProperty("layer", "front");
         }
