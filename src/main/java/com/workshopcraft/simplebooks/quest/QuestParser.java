@@ -31,9 +31,9 @@ public final class QuestParser {
 
     public static final Set<String> TASK_TYPES = Set.of("item", "craft", "smelt", "pickup", "advancement", "place",
             "break", "dimension", "biome", "checkbox", "kill", "use", "stat");
-    static final Set<String> COUNTING = Set.of("item", "craft", "smelt", "pickup", "place", "break", "kill", "use", "stat");
-    static final Set<String> ITEM_TASKS = Set.of("item", "craft", "smelt", "pickup", "use");
-    static final Set<String> STATS_TASKS = Set.of("craft", "smelt", "pickup", "place", "break", "kill", "use", "stat");
+    public static final Set<String> COUNTING = Set.of("item", "craft", "smelt", "pickup", "place", "break", "kill", "use", "stat");
+    public static final Set<String> ITEM_TASKS = Set.of("item", "craft", "smelt", "pickup", "use");
+    public static final Set<String> STATS_TASKS = Set.of("craft", "smelt", "pickup", "place", "break", "kill", "use", "stat");
     //? if >=1.20.5 {
     static final String DATA_KEY = "components", OTHER_DATA_KEY = "nbt";
     //?} else {

@@ -31,7 +31,7 @@ public class QuestChapterEditScreen extends Screen {
         QuestDefs.Chapter c = find();
         JsonObject o = c == null ? new JsonObject() : c.json();
         int cx = width / 2, y = 40;
-        title = box(cx - 150, y, str(o, "title")); y += 28;
+        title = box(cx - 150, y, QuestEditForms.displayText(str(o, "title"))); y += 28;
         lines = box(cx - 150, y, str(o, "lines").isEmpty() ? "elbow" : str(o, "lines")); y += 28;
         background = box(cx - 150, y, o.has("background") ? o.get("background").toString() : ""); y += 28;
         decorations = box(cx - 150, y, o.has("decorations") ? o.get("decorations").toString() : "[]");
@@ -51,7 +51,10 @@ public class QuestChapterEditScreen extends Screen {
     private void save() {
         QuestDefs.Chapter c = find();
         JsonObject o = c == null ? new JsonObject() : c.json().deepCopy();
-        if (!title.getValue().isBlank()) o.addProperty("title", title.getValue());
+        JsonObject lang = new JsonObject();
+        String titleKey = c != null ? (c.json().has("title") && c.json().get("title").isJsonPrimitive() ? c.json().get("title").getAsString() : "") : "";
+        QuestEditForms.putText(o, lang, "title", titleKey, title.getValue());
+        if (lang.size() > 0) o.add("_lang", lang);
         String ln = lines.getValue().trim();
         if (ln.equals("elbow") || ln.isEmpty()) o.remove("lines");
         else o.addProperty("lines", ln);

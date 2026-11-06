@@ -485,7 +485,13 @@ final class QuestSlots {
         s.clip(x, y, x + w, y + h);
         QuestDefs.Chapter ch = qb.chapters().get(chapter);
         List<QuestDefs.Decoration> decos = ch == null ? List.of() : ch.decorations();
-        for (QuestDefs.Decoration d : decos) if (d.layer().equals("behind")) decoration(d, ox, oy);
+        boolean editing = QuestEdit.active();
+        if (!editing) {
+            for (QuestDefs.Decoration d : decos) if (d.layer().equals("behind")) decoration(d, ox, oy);
+        } else {
+            for (int i = 0; i < decos.size(); i++)
+                if (decos.get(i).layer().equals("behind")) decorationAt(decos.get(i), i, ox, oy);
+        }
         String chLines = ch == null || ch.lines() == null ? "elbow" : ch.lines();
         for (QuestDefs.Quest q : vis)
             for (String d : q.depends())
@@ -493,10 +499,14 @@ final class QuestSlots {
                     String style = q.lines() != null ? q.lines() : chLines;
                     link(at.get(d), at.get(q.id()), ox, oy, str(st(d), "s").equals("complete"), style);
                 }
-        for (QuestDefs.Decoration d : decos) if (d.layer().equals("front")) decoration(d, ox, oy);
+        if (!editing) {
+            for (QuestDefs.Decoration d : decos) if (d.layer().equals("front")) decoration(d, ox, oy);
+        } else {
+            for (int i = 0; i < decos.size(); i++)
+                if (decos.get(i).layer().equals("front")) decorationAt(decos.get(i), i, ox, oy);
+        }
         int start = s.hits.size();
         List<Spread.Hit> nodes = new ArrayList<>();
-        boolean editing = QuestEdit.active();
         if (editing) {
             int c0 = minC - 1, c1 = maxC + 1, r0 = minR - 1, r1 = maxR + 1;
             for (int col = c0; col <= c1; col++) for (int row = r0; row <= r1; row++) {
@@ -533,6 +543,41 @@ final class QuestSlots {
                     Component tip = Texts.of(q.title()).copy().append(": ").append(sub(qb, q, st(q.id()), str(st(q.id()), "s")));
                     nodes.add(new Spread.Hit(Math.max(x, nx), Math.max(y, ny), Math.min(x + w, nx + NODE), Math.min(y + h, ny + NODE),
                             s.link(QuestBook.detailId(q.id()), tip)));
+                }
+            }
+        }
+        if (editing && ch != null) {
+            List<QuestDefs.Decoration> all = ch.decorations();
+            for (int i = 0; i < all.size(); i++) {
+                QuestDefs.Decoration d = all.get(i);
+                float[] ov = QuestEdit.decoPos.get(i);
+                float dx = ov != null ? ov[0] : d.x(), dy = ov != null ? ov[1] : d.y();
+                float dw, dh;
+                if (d.image() != null) {
+                    dw = ov != null ? ov[2] : d.width();
+                    dh = ov != null ? ov[3] : d.height();
+                } else {
+                    Component tc = Texts.of(d.text() == null ? "" : d.text());
+                    float sc = d.scale() <= 0 ? 1 : d.scale();
+                    dw = Math.max(40, s.textW(tc, sc));
+                    dh = 20 * sc;
+                    if (d.centred()) dx -= dw / 2;
+                }
+                float sx = ox + dx, sy = oy + dy;
+                boolean sel = chapter.equals(QuestEdit.decoChapter) && i == QuestEdit.decoSel;
+                if (sel) {
+                    int hi = s.color("$line_done");
+                    s.fill(sx - 2, sy - 2, sx + dw + 2, sy, hi);
+                    s.fill(sx - 2, sy + dh, sx + dw + 2, sy + dh + 2, hi);
+                    s.fill(sx - 2, sy, sx, sy + dh, hi);
+                    s.fill(sx + dw, sy, sx + dw + 2, sy + dh, hi);
+                }
+                nodes.add(new Spread.Hit(Math.max(x, sx), Math.max(y, sy), Math.min(x + w, sx + dw), Math.min(y + h, sy + dh),
+                        new QuestEdit.Deco(chapter, i)));
+                if (d.image() != null) {
+                    float hx = sx + dw - 10, hy = sy + dh - 10;
+                    s.fill(hx, hy, hx + 10, hy + 10, s.color("$line_todo"));
+                    nodes.add(new Spread.Hit(hx, hy, hx + 10, hy + 10, new QuestEdit.DecoResize(chapter, i)));
                 }
             }
         }
@@ -596,6 +641,22 @@ final class QuestSlots {
 
     private void arrowHead(float x, float y, int col) {
         for (int i = 0; i < 5; i++) s.fill(x - 2 - 2 * i, y - 2 - 2 * i, x - 2 * i, y + 2 + 2 * i, col);
+    }
+
+    private void decorationAt(QuestDefs.Decoration d, int index, float ox, float oy) {
+        float[] ov = QuestEdit.decoPos.get(index);
+        float x = ox + (ov != null ? ov[0] : d.x()), y = oy + (ov != null ? ov[1] : d.y());
+        if (d.image() != null) {
+            float w = ov != null ? ov[2] : d.width(), h = ov != null ? ov[3] : d.height();
+            s.image(d.image(), x, y, w, h, null, false);
+            return;
+        }
+        if (d.text() == null) return;
+        Component c = Texts.of(d.text());
+        int col = d.colour() == null || d.colour().isEmpty() ? s.color("$ink") : s.color(d.colour());
+        float sc = d.scale() <= 0 ? 1 : d.scale();
+        if (d.centred()) s.ctext(c, x, y, sc, col);
+        else s.text(c, x, y, sc, col);
     }
 
     private void decoration(QuestDefs.Decoration d, float ox, float oy) {

@@ -658,7 +658,7 @@ Admin commands (permission level 2). A player name means that player's team.
 
 ### Quest editor
 
-Ops (permission level 2+) and players in creative can open Edit on a quest book. In edit mode on a tree chapter you can add quests (empty cell), move them (drag), delete, and link or unlink dependencies. Edit opens title, text, tasks and rewards (JSON for custom types). Chapter opens background, lines and decorations. Changes are checked on the server, written under `config/simplebooks/data/...`, then hot-reloaded. Undo reverses the last write. Datapack books that are not already in the config pack are saved as a copy there (chat notes that).
+Ops (permission level 2+) and players in creative can open Edit on a quest book. The server sends a `can_edit` flag in the quest state so dedicated-server ops in survival get the button too. In edit mode on a tree chapter you can add quests (empty cell), move them (drag), delete, and link or unlink dependencies; decorations can be added, dragged, resized (images), layered and deleted. Edit opens title, text, built-in task and reward forms (type, item or `#tag`, count, consume, and so on) with raw JSON for custom types. Chapter opens background, lines and decorations. Pool opens offers, refresh, reroll and a quest list with weights. Changes are checked on the server, written under `config/simplebooks/data/...`, then hot-reloaded. When a text field already holds a lang key, the new wording is written to `config/simplebooks/assets/<ns>/lang/en_us.json` and the key stays in the quest file. Undo reverses the last write. Datapack books that are not already in the config pack are saved as a copy there (chat notes that).
 
 ### Custom task types
 

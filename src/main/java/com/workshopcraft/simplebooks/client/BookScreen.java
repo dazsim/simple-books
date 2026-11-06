@@ -163,7 +163,7 @@ public class BookScreen extends Screen {
         if (isQuestBook() && QuestEdit.canEdit()) {
             float ey = 8;
             String[][] tools = QuestEdit.on
-                    ? new String[][]{{"Done", "toggle"}, {"Link", "link"}, {"Unlink", "unlink"}, {"Del", "delete"}, {"Edit", "props"}, {"Chapter", "chapter"}, {"Pool", "pool"}, {"Undo", "undo"}}
+                    ? new String[][]{{"Done", "toggle"}, {"Link", "link"}, {"Unlink", "unlink"}, {"Del", "delete"}, {"Edit", "props"}, {"Chapter", "chapter"}, {"Pool", "pool"}, {"+Img", "add_image"}, {"+Txt", "add_text"}, {"Layer", "deco_layer"}, {"-Deco", "deco_delete"}, {"Undo", "undo"}}
                     : new String[][]{{"Edit", "toggle"}};
             float tx = Spread.L;
             for (String[] t : tools) {
@@ -373,6 +373,10 @@ public class BookScreen extends Screen {
 
     private boolean drag(double x, double y, double dx, double dy) {
         if (QuestEdit.active() && QuestEdit.dragId != null) return true;
+        if (QuestEdit.active() && (QuestEdit.decoDragging || QuestEdit.decoResizing)) {
+            QuestEdit.decoDrag((float) (dx / scale), (float) (dy / scale));
+            return true;
+        }
         QuestSlots.Pan p = panAt(x, y);
         return p != null && QuestSlots.pan(p, -dx / scale, -dy / scale);
     }
