@@ -10,5 +10,9 @@
       "type": "checkbox",
       "text": "Have a look around"
     }
-  ]
+  ],
+  "background": {
+    "texture": "example:textures/gui/story_bg.png",
+    "mode": "stretch"
+  }
 }

@@ -6,5 +6,37 @@
   "depends": [
     "basics/look"
   ],
-  "text": "Each skill opens the ones after it. Click a skill to read it."
+  "text": "Each skill opens the ones after it. Click a skill to read it.",
+  "background": {
+    "texture": "example:textures/gui/chapter_bg.png",
+    "mode": "tile",
+    "tile": 64
+  },
+  "decorations": [
+    {
+      "image": "example:textures/gui/tree_banner.png",
+      "x": 20,
+      "y": -36,
+      "width": 192,
+      "height": 64,
+      "layer": "behind"
+    },
+    {
+      "text": "Craft and build",
+      "x": 116,
+      "y": -20,
+      "scale": 1.2,
+      "colour": "#faeed2",
+      "centred": true,
+      "layer": "front"
+    },
+    {
+      "image": "example:textures/gui/leaf.png",
+      "x": 260,
+      "y": 8,
+      "width": 40,
+      "height": 40,
+      "layer": "front"
+    }
+  ]
 }

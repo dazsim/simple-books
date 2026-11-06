@@ -6,5 +6,9 @@
   "depends": [
     "basics/look"
   ],
-  "text": "A short story told one quest at a time."
+  "text": "A short story told one quest at a time.",
+  "background": {
+    "texture": "example:textures/gui/story_bg.png",
+    "mode": "stretch"
+  }
 }

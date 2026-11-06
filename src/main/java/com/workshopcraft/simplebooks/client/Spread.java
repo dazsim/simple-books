@@ -472,6 +472,39 @@ public class Spread {
             }
     }
 
+    /** Optional quest/chapter backdrop from page json, drawn over the paper before slots. */
+    private void pageBackground() {
+        if (!draw || g == null || page == null || !page.json().has("background")) return;
+        JsonElement raw = page.json().get("background");
+        String tex;
+        String mode = "stretch";
+        float tile = 0;
+        if (raw.isJsonPrimitive() && raw.getAsJsonPrimitive().isString()) {
+            tex = raw.getAsString();
+            mode = str(page.json(), "background_mode", "stretch");
+            if (page.json().has("background_tile") && page.json().get("background_tile").isJsonPrimitive())
+                tile = page.json().get("background_tile").getAsFloat();
+        } else if (raw.isJsonObject()) {
+            JsonObject o = raw.getAsJsonObject();
+            tex = str(o, "texture", "");
+            mode = str(o, "mode", "stretch");
+            if (o.has("tile") && o.get("tile").isJsonPrimitive()) tile = o.get("tile").getAsFloat();
+        } else return;
+        if (tex.isEmpty()) return;
+        Identifier id = Identifier.tryParse(tex);
+        if (id == null) return;
+        int[] size = BookRegistry.imageSize(id);
+        if (size == null) return;
+        float tw = mode.equals("tile") ? (tile > 0 ? tile : 64) : 0;
+        if (half != null) {
+            int x0 = onRight ? SPINE : PX0, x1 = onRight ? PX1 : SPINE;
+            paper(id, x0, x1, tw, size);
+        } else {
+            paper(id, PX0, SPINE, tw, size);
+            paper(id, SPINE, PX1, tw, size);
+        }
+    }
+
     // ---------- chapter tabs ----------
 
     /** Tabs on the fore edge, drawn before the frame so their roots sit under the cover. */
@@ -644,6 +677,7 @@ public class Spread {
             if (half == null || half.part() == 0) errorPage(page.file(), page.errors());
             return;
         }
+        pageBackground();
         Template t = page.template();
         if (half != null) {
             cursors.putAll(half.cursors());

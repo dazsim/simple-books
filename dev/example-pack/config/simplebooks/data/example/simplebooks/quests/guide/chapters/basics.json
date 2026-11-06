@@ -3,5 +3,6 @@
   "icon": "minecraft:oak_sapling",
   "sort": 1,
   "layout": "checklist",
-  "text": "A few things to do on your first day. Tick them off as you go."
+  "text": "A few things to do on your first day. Tick them off as you go.",
+  "background": "example:textures/gui/chapter_bg.png"
 }

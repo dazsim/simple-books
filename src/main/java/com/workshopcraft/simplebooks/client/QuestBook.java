@@ -204,6 +204,8 @@ final class QuestBook {
                     pj.addProperty("quest", q.id());
                     pj.addProperty("sort", -90000 + i * 10);
                     pj.addProperty("contents", false);
+                    putBackground(pj, q.background());
+                    putBackground(pj, ch.background());
                     flowOn(pages, new Book.Page(detailId(q.id()), "(quest " + q.id() + ")", pj, dt, new ArrayList<>(dt.errors())), id, json, base);
                 }
             }
@@ -233,7 +235,16 @@ final class QuestBook {
         pj.addProperty("chapter", cid);
         pj.addProperty("sort", -100000 + p);
         if (p > 0) pj.addProperty("contents", false);
+        putBackground(pj, ch.background());
         return pj;
+    }
+
+    /** Puts a backdrop on the page json; page/quest values win over the chapter. */
+    static void putBackground(JsonObject pj, QuestDefs.@Nullable Background bg) {
+        if (bg == null || bg.texture().isEmpty() || pj.has("background")) return;
+        pj.addProperty("background", bg.texture());
+        pj.addProperty("background_mode", bg.mode());
+        if (bg.tile() > 0) pj.addProperty("background_tile", bg.tile());
     }
 
     /** One spread per quest; a locked one keeps its page content back. */
@@ -260,6 +271,8 @@ final class QuestBook {
             pj.addProperty("sort", -100000 + i * 10);
             if (i == 0) pj.addProperty("contents_title", ch.title().isEmpty() ? q.title() : ch.title());
             else pj.addProperty("contents", false);
+            putBackground(pj, q.background());
+            putBackground(pj, ch.background());
             flowOn(pages, new Book.Page(detailId(q.id()), "(story " + q.id() + ")", pj, t, new ArrayList<>(t.errors())), bookId, bookJson, base);
         }
     }

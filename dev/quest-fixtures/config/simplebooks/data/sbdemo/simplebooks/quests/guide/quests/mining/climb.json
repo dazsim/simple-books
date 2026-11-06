@@ -1,1 +1,1 @@
-{ "chapter": "mining", "sort": 5, "title": "Back to the top", "optional": true, "tasks": [ { "id": "h", "type": "simplebooks:dev_height", "count": 120 } ] }
+{"chapter": "mining", "sort": 5, "title": "Back to the top", "optional": true, "tasks": [{"id": "h", "type": "simplebooks:dev_height", "count": 120}], "rewards": [{"type": "simplebooks:dev_toast", "text": "You made it back up.", "label": "A word from the sky", "icon": "minecraft:feather"}]}
