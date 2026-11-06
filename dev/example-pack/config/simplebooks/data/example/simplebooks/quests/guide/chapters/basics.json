@@ -4,5 +4,8 @@
   "sort": 1,
   "layout": "checklist",
   "text": "A few things to do on your first day. Tick them off as you go.",
-  "background": "example:textures/gui/chapter_bg.png"
+  "background": {
+    "texture": "example:textures/gui/story_bg.png",
+    "mode": "stretch"
+  }
 }

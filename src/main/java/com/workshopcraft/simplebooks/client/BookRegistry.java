@@ -70,7 +70,14 @@ public class BookRegistry extends SimplePreparableReloadListener<BookRegistry.Lo
     }
 
     public static int @Nullable [] imageSize(Identifier tex) {
-        return loaded.images.get(tex);
+        int[] cached = loaded.images.get(tex);
+        if (cached != null) return cached;
+        // quest backgrounds and decorations are not listed in book JSON, so look them up live
+        var mc = net.minecraft.client.Minecraft.getInstance();
+        if (mc == null) return null;
+        int[] size = pngSize(mc.getResourceManager(), tex);
+        if (size != null) loaded.images.put(tex, size);
+        return size;
     }
 
     static void warn(String msg) {

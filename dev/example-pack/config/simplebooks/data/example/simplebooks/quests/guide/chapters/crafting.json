@@ -15,27 +15,27 @@
   "decorations": [
     {
       "image": "example:textures/gui/tree_banner.png",
-      "x": 20,
-      "y": -36,
-      "width": 192,
+      "x": 180,
+      "y": -30,
+      "width": 200,
       "height": 64,
       "layer": "behind"
     },
     {
       "text": "Craft and build",
-      "x": 116,
-      "y": -20,
-      "scale": 1.2,
+      "x": 280,
+      "y": -12,
+      "scale": 1.3,
       "colour": "#faeed2",
       "centred": true,
       "layer": "front"
     },
     {
       "image": "example:textures/gui/leaf.png",
-      "x": 260,
-      "y": 8,
-      "width": 40,
-      "height": 40,
+      "x": 420,
+      "y": 40,
+      "width": 48,
+      "height": 48,
       "layer": "front"
     }
   ]

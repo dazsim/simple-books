@@ -12,7 +12,7 @@
     }
   ],
   "background": {
-    "texture": "example:textures/gui/story_bg.png",
+    "texture": "example:textures/gui/chapter_bg.png",
     "mode": "stretch"
   }
 }
