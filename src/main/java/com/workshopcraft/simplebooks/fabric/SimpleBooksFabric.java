@@ -5,6 +5,8 @@ import com.workshopcraft.simplebooks.PageTurn;
 import com.workshopcraft.simplebooks.SimpleBooks;
 import com.workshopcraft.simplebooks.api.SimpleBooksPlugin;
 import com.workshopcraft.simplebooks.quest.QuestActionPacket;
+import com.workshopcraft.simplebooks.quest.QuestEditPacket;
+import com.workshopcraft.simplebooks.quest.QuestEditor;
 import com.workshopcraft.simplebooks.quest.QuestDefsPacket;
 import com.workshopcraft.simplebooks.quest.QuestEngine;
 import com.workshopcraft.simplebooks.quest.QuestManager;
@@ -45,10 +47,12 @@ public class SimpleBooksFabric implements ModInitializer {
         //? if >=26.1 {
         PayloadTypeRegistry.serverboundPlay().register(PageTurn.TYPE, PageTurn.STREAM_CODEC);
         PayloadTypeRegistry.serverboundPlay().register(QuestActionPacket.TYPE, QuestActionPacket.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(QuestEditPacket.TYPE, QuestEditPacket.STREAM_CODEC);
         PayloadTypeRegistry.clientboundPlay().register(QuestDefsPacket.TYPE, QuestDefsPacket.STREAM_CODEC);
         PayloadTypeRegistry.clientboundPlay().register(QuestSyncPacket.TYPE, QuestSyncPacket.STREAM_CODEC);
         ServerPlayNetworking.registerGlobalReceiver(PageTurn.TYPE, (payload, ctx) -> payload.handle(ctx.player()));
         ServerPlayNetworking.registerGlobalReceiver(QuestActionPacket.TYPE, (payload, ctx) -> payload.handle(ctx.player()));
+        ServerPlayNetworking.registerGlobalReceiver(QuestEditPacket.TYPE, (payload, ctx) -> payload.handle(ctx.player()));
         CreativeModeTabEvents.modifyOutputEvent(SimpleBooksContent.FUNCTIONAL_TAB).register(e -> {
             e.accept(SimpleBooksContent.STAND_ITEM);
             e.accept(SimpleBooksContent.HAND_IN_BOX_ITEM);
@@ -61,6 +65,7 @@ public class SimpleBooksFabric implements ModInitializer {
         PayloadTypeRegistry.playS2C().register(QuestSyncPacket.TYPE, QuestSyncPacket.STREAM_CODEC);
         ServerPlayNetworking.registerGlobalReceiver(PageTurn.TYPE, (payload, ctx) -> payload.handle(ctx.player()));
         ServerPlayNetworking.registerGlobalReceiver(QuestActionPacket.TYPE, (payload, ctx) -> payload.handle(ctx.player()));
+        ServerPlayNetworking.registerGlobalReceiver(QuestEditPacket.TYPE, (payload, ctx) -> payload.handle(ctx.player()));
         ItemGroupEvents.modifyEntriesEvent(SimpleBooksContent.FUNCTIONAL_TAB).register(e -> {
             e.accept(SimpleBooksContent.STAND_ITEM);
             e.accept(SimpleBooksContent.HAND_IN_BOX_ITEM);
@@ -90,6 +95,7 @@ public class SimpleBooksFabric implements ModInitializer {
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> QuestEngine.login(handler.player));
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> QuestEngine.logout(handler.player));
         QuestEngine.sender = SimpleBooksFabric::sendSync;
+        QuestEditor.sendDefs = SimpleBooksFabric::sendQuests;
         QuestPlugins.run(FabricLoader.getInstance().getEntrypoints("simplebooks", SimpleBooksPlugin.class));
     }
 

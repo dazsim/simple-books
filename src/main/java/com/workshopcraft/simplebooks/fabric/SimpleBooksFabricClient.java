@@ -31,10 +31,12 @@ public class SimpleBooksFabricClient implements ClientModInitializer {
         //? if >=26.1 {
         SimpleBooks.toServer = ClientPlayNetworking::send;
         SimpleBooks.toServerAction = ClientPlayNetworking::send;
+        SimpleBooks.toServerEdit = ClientPlayNetworking::send;
         ResourceLoader.get(PackType.CLIENT_RESOURCES).registerReloadListener(BookRegistry.ID, new BookRegistry());
         //?} else if >=1.20.5 {
         /*SimpleBooks.toServer = ClientPlayNetworking::send;
         SimpleBooks.toServerAction = ClientPlayNetworking::send;
+        SimpleBooks.toServerEdit = ClientPlayNetworking::send;
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new Books());
         *///?} else {
         /*SimpleBooks.toServer = p -> {

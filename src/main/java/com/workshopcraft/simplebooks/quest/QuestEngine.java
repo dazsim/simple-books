@@ -168,6 +168,7 @@ public final class QuestEngine {
     }
 
     public static void logout(ServerPlayer p) {
+        QuestEditor.clearUndos(p.getUUID());
         if (server == null) return;
         Team t = world.teamOf(p.getUUID().toString());
         if (t == null) return;

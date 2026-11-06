@@ -27,6 +27,7 @@ public class SimpleBooksNeoForgeClient {
         //? if >=26.1 {
         SimpleBooks.toServer = ClientPacketDistributor::sendToServer;
         SimpleBooks.toServerAction = ClientPacketDistributor::sendToServer;
+        SimpleBooks.toServerEdit = ClientPacketDistributor::sendToServer;
         modBus.addListener((AddClientReloadListenersEvent e) -> e.addListener(BookRegistry.ID, new BookRegistry()));
         //?} else {
         /*SimpleBooks.toServer = p -> PacketDistributor.sendToServer(p);

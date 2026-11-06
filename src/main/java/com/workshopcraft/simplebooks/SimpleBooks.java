@@ -26,6 +26,7 @@ public final class SimpleBooks {
     public static Opener opener = (book, spread, hand, stand) -> {};
     public static Consumer<PageTurn> toServer = p -> {};
     public static Consumer<com.workshopcraft.simplebooks.quest.QuestActionPacket> toServerAction = p -> {};
+    public static Consumer<com.workshopcraft.simplebooks.quest.QuestEditPacket> toServerEdit = p -> {};
     /** Set by the loader in a development run; turns on the sample task type and dev commands. */
     public static boolean dev;
     public static Predicate<String> modLoaded = id -> true;

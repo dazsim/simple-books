@@ -4,6 +4,8 @@ import com.workshopcraft.simplebooks.ConfigPack;
 import com.workshopcraft.simplebooks.PageTurn;
 import com.workshopcraft.simplebooks.SimpleBooks;
 import com.workshopcraft.simplebooks.quest.QuestActionPacket;
+import com.workshopcraft.simplebooks.quest.QuestEditPacket;
+import com.workshopcraft.simplebooks.quest.QuestEditor;
 import com.workshopcraft.simplebooks.quest.QuestDefsPacket;
 import com.workshopcraft.simplebooks.quest.QuestEngine;
 import com.workshopcraft.simplebooks.quest.QuestManager;
@@ -46,6 +48,10 @@ public class SimpleBooksNeoForge {
         //?} else {
         /*SimpleBooks.dev = !net.neoforged.fml.loading.FMLEnvironment.production;
         *///?}
+        QuestEditor.sendDefs = p -> {
+            if (p.connection.hasChannel(QuestDefsPacket.TYPE))
+                for (QuestDefsPacket q : QuestManager.packets()) PacketDistributor.sendToPlayer(p, q);
+        };
         QuestEngine.sender = (p, x) -> {
             if (p.connection.hasChannel(QuestSyncPacket.TYPE)) PacketDistributor.sendToPlayer(p, x);
         };
@@ -60,6 +66,7 @@ public class SimpleBooksNeoForge {
         modBus.addListener((RegisterPayloadHandlersEvent e) -> e.registrar("2")
                 .playToServer(PageTurn.TYPE, PageTurn.STREAM_CODEC, (payload, ctx) -> payload.handle((ServerPlayer) ctx.player()))
                 .playToServer(QuestActionPacket.TYPE, QuestActionPacket.STREAM_CODEC, (payload, ctx) -> payload.handle((ServerPlayer) ctx.player()))
+                .playToServer(QuestEditPacket.TYPE, QuestEditPacket.STREAM_CODEC, (payload, ctx) -> payload.handle((ServerPlayer) ctx.player()))
                 .playToClient(QuestDefsPacket.TYPE, QuestDefsPacket.STREAM_CODEC, (payload, ctx) -> payload.handle())
                 .playToClient(QuestSyncPacket.TYPE, QuestSyncPacket.STREAM_CODEC, (payload, ctx) -> payload.handle()));
         modBus.addListener((InterModProcessEvent e) -> QuestPlugins.run(
