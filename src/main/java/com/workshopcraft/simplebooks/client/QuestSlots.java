@@ -1143,7 +1143,14 @@ final class QuestSlots {
             if (q == null) continue;
             float ry = y + i * rh;
             s.fill(x, ry + 4, x + w, ry + rh - 4, s.color("$line") & 0x60FFFFFF);
+            int hitAt = s.hits.size();
             row(qb, q, x + 10, ry, w - 20, rh);
+            if (QuestEdit.active()) {
+                s.hits.subList(hitAt, s.hits.size()).clear();
+                boolean sel = on.get(i).equals(QuestEdit.selected);
+                if (sel) s.fill(x, ry + 4, x + 4, ry + rh - 4, s.color("$line_done"));
+                s.hits.add(new Spread.Hit(x, ry, x + w, ry + rh, new QuestEdit.Node(on.get(i))));
+            }
         }
     }
 

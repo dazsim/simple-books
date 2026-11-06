@@ -220,11 +220,17 @@ public class QuestEditScreen extends Screen {
     private void save() {
         error = "";
         commitRows();
-        if (taskRow != null) {
+        prunePlaceholders(arr(draft, "tasks"), true);
+        prunePlaceholders(arr(draft, "rewards"), false);
+        if (!draft.has("tasks") || !draft.get("tasks").isJsonArray() || draft.getAsJsonArray("tasks").isEmpty())
+            draft.remove("tasks");
+        if (!draft.has("rewards") || !draft.get("rewards").isJsonArray() || draft.getAsJsonArray("rewards").isEmpty())
+            draft.remove("rewards");
+        if (draft.has("tasks") && taskRow != null) {
             String err = taskRow.validate();
             if (err != null) { error = err; return; }
         }
-        if (rewardRow != null) {
+        if (draft.has("rewards") && rewardRow != null) {
             String err = rewardRow.validate();
             if (err != null) { error = err; return; }
         }
@@ -235,6 +241,20 @@ public class QuestEditScreen extends Screen {
         SimpleBooks.toServerEdit.accept(new QuestEditPacket("put_quest", questId, draft.toString()));
         QuestEdit.status = "Saved " + QuestEdit.shortName(questId) + ".";
         minecraft.setScreen(parent);
+    }
+
+    /** Drop empty form placeholders so Save works when the quest had no tasks/rewards. */
+    private static void prunePlaceholders(JsonArray a, boolean tasks) {
+        for (int i = a.size() - 1; i >= 0; i--) {
+            if (!a.get(i).isJsonObject()) continue;
+            JsonObject o = a.get(i).getAsJsonObject();
+            if (o.size() == 0) { a.remove(i); continue; }
+            if (!tasks && o.has("item") && o.get("item").getAsString().isBlank()
+                    && !o.has("xp") && !o.has("xp_levels") && !o.has("command") && !o.has("loot_table") && !o.has("type"))
+                a.remove(i);
+            else if (tasks && !o.has("type") && !o.has("id"))
+                a.remove(i);
+        }
     }
 
     private static JsonArray arr(JsonObject o, String key) {

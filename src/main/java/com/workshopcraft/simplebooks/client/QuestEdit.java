@@ -332,7 +332,13 @@ final class QuestEdit {
         pos.add(col);
         pos.add(row);
         o.add("pos", pos);
-        o.add("tasks", new JsonArray());
+        JsonArray tasks = new JsonArray();
+        JsonObject t = new JsonObject();
+        t.addProperty("id", "todo");
+        t.addProperty("type", "checkbox");
+        t.addProperty("text", "Finish this quest");
+        tasks.add(t);
+        o.add("tasks", tasks);
         send("put_quest", id, o);
         selected = id;
         status = "Added " + shortName(id) + " at " + col + "," + row + ".";
