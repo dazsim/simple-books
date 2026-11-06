@@ -213,6 +213,7 @@ final class QuestEditForms {
             int i = indexOf(REWARD_KINDS, kind);
             kind = REWARD_KINDS[(i + 1) % REWARD_KINDS.length];
             useRaw = kind.equals("custom");
+            if (useRaw) raw.setValue("{\"type\":\"custom:json\"}");
         }
 
         @Nullable String validate() {
@@ -229,7 +230,10 @@ final class QuestEditForms {
         }
 
         JsonObject toJson() {
-            if (useRaw) return JsonParser.parseString(raw.getValue().isBlank() ? "{}" : raw.getValue()).getAsJsonObject();
+            if (useRaw) {
+                String v = raw.getValue().isBlank() ? "{\"type\":\"custom:json\"}" : raw.getValue();
+                return JsonParser.parseString(v).getAsJsonObject();
+            }
             JsonObject o = new JsonObject();
             long c = parseLong(count.getValue(), 1);
             switch (kind) {
